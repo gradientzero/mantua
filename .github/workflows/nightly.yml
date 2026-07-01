@@ -1,0 +1,22 @@
+name: nightly
+
+# A larger end-to-end run to catch semantic regressions: it asserts a measurable eval
+# threshold, so a change that still *runs* but makes the model worse fails here.
+on:
+  schedule:
+    - cron: "0 3 * * *"
+  workflow_dispatch:
+
+jobs:
+  regression:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+        with:
+          python-version: "3.12"
+          enable-cache: true
+      - name: Install
+        run: uv sync
+      - name: Nightly regression run
+        run: uv run pytest -m nightly

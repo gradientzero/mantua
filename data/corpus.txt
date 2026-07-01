@@ -1,0 +1,28 @@
+Mantua is a small fortress town on the river, ringed by quiet lakes and old stone walls.
+The town was contested many times, and each season the soldiers marched across the fields.
+In the morning the sun rose over the water, and the towers cast long shadows on the streets.
+Merchants opened their shops, bakers lit their ovens, and children ran along the narrow lanes.
+A model is trained on data, then evaluated, and the results are written down and remembered.
+Training a model is like defending a fortress: you plan the recipe, you test it, you iterate.
+The data team prepares a mix, the tokeniser learns the words, and the pipeline runs end to end.
+Pre-training absorbs the text, supervised fine-tuning teaches the format, and evaluation scores it.
+Every run is hermetic, every artefact is versioned, and every result is linked to the code commit.
+The lakes were calm at dusk, and the walls of the town glowed warm in the fading orange light.
+Soldiers rested by the gate, sharing bread and stories of the long campaign across the plain.
+Napoleon studied the maps of the river, the marshes, and the bridges that guarded the approach.
+A good recipe is written once, reviewed carefully, merged to the main branch, and run again.
+When the inputs are identical the engine reads from cache, so no work is ever done twice.
+The tokeniser turns letters into tokens, the model turns tokens into probabilities and text.
+Learning rates and batch sizes are chosen, logged, and swept until the evaluation improves.
+The river carried small boats past the reeds while the bells of the town rang the hour.
+Provenance lives in the code, lineage lives in the registry, and consensus lives on the main branch.
+A checkpoint is saved, then loaded, then fine-tuned, then evaluated, and the cycle continues.
+The fortress held through the winter, and in the spring new orders arrived from the capital.
+Data flows into the cluster, gradients flow through the layers, and metrics flow to the dashboard.
+The bakers sold their loaves, the merchants counted their coins, and the town settled into evening.
+Each experiment is a branch, each improvement is a commit, and each release is a tagged run.
+The model reads the instruction, then writes a response, and the evaluator checks the format.
+Stone by stone the walls were built, and line by line the pipeline was written and tested.
+The lakes reflected the towers, the towers watched the fields, and the fields fed the town.
+Reinforcement learning refines the policy, the reference model anchors it, and the reward guides it.
+By the river at dawn the recipe was launched, and by dusk the leaderboard showed a new best model.

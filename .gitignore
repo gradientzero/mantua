@@ -1,0 +1,17 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+
+# uv
+# (uv.lock IS committed — it pins the hermetic dependency set)
+
+# Mantua artefact store + local Prefect state (regenerable, not source)
+.mantua/
+.prefect/
+
+# OS / editor
+.DS_Store

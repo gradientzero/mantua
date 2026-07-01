@@ -1,0 +1,6 @@
+{"prompt": "Say hello.", "chosen": "Hello, how can I help you today?", "rejected": "no."}
+{"prompt": "What is Mantua?", "chosen": "Mantua is a fortress town by the river.", "rejected": "idk"}
+{"prompt": "Name a color.", "chosen": "Blue is a calm and common color.", "rejected": "color"}
+{"prompt": "Describe the morning.", "chosen": "The sun rises over the water and warms the town.", "rejected": "morning is a time"}
+{"prompt": "What is a model?", "chosen": "A model is trained on data and then evaluated.", "rejected": "a thing"}
+{"prompt": "What guards the town?", "chosen": "Old stone walls and tall towers guard the town.", "rejected": "stuff"}
