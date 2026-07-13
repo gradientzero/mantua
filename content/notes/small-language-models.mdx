@@ -1,0 +1,33 @@
+---
+title: What counts as a small language model?
+status: published
+tags: [fundamentals, definitions]
+created: 2026-07-13
+updated: 2026-07-13
+summary: Working definition of "small" in SLM — parameter count is a proxy; the real criteria are deployability, cost profile, and specialization.
+---
+
+> Placeholder note — replace with real research. It exists so wikilinks, backlinks and
+> tags can be verified end to end.
+
+"Small" is a moving target. Models that were frontier-scale three years ago now run on a
+single GPU. For this research project, a **small language model** is defined less by
+parameter count and more by three practical properties:
+
+1. **Deployable inside an enterprise perimeter** — on-prem or in a private VPC, on
+   hardware a mid-size company can realistically procure. See [[private-deployment]].
+2. **Cost profile compatible with high-volume, low-margin tasks** — per-token economics
+   that make continuous background processing viable, not just interactive chat.
+3. **Specialized, not general** — tuned for a narrow set of industry-specific tasks,
+   usually via [[model-distillation|distillation]] or fine-tuning, and evaluated only
+   against those tasks.
+
+Under this definition the interesting range today is roughly 0.5B–15B parameters, but the
+number is a consequence of the three properties, not the definition itself.
+
+## Why the distinction matters
+
+The strategic question for enterprises is not "big model vs small model" but *which tasks
+justify frontier-model dependence and which don't*. A claims-processing pipeline that
+runs a million documents a month has a very different calculus from a monthly board-memo
+drafting task.

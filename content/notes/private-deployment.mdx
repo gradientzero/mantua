@@ -1,0 +1,30 @@
+---
+title: Private deployment
+status: published
+tags: [deployment, strategy]
+created: 2026-07-13
+updated: 2026-07-13
+summary: Why enterprises want models inside their own perimeter — data governance, cost predictability, and independence from frontier-vendor roadmaps.
+---
+
+> Placeholder note — replace with real research.
+
+The pull toward private deployment is rarely about raw capability — frontier APIs win
+that comparison. It is about three things:
+
+1. **Data governance.** Regulated industries (health, finance, defense, legal) often
+   cannot send working data to a third-party API at all, or only under agreements that
+   take quarters to negotiate.
+2. **Cost predictability.** Owned inference converts a variable per-token bill into
+   amortized hardware — attractive exactly where [[small-language-models]] shine:
+   high-volume, repetitive, industry-specific tasks.
+3. **Roadmap independence.** Model deprecations and pricing changes upstream become
+   someone else's problem when the weights are yours, which usually means an open-weights
+   model adapted via [[model-distillation|distillation]] or fine-tuning.
+
+## What this costs
+
+Private deployment moves the operational burden in-house: serving infrastructure,
+monitoring, evaluation, and model updates. For many organizations that trade is only
+worth it past a volume threshold — locating that threshold per industry is one of the
+core goals of this research project.

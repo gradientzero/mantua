@@ -1,0 +1,21 @@
+---
+title: Building an SLM evaluation harness
+status: draft
+tags: [evaluation, techniques]
+created: 2026-07-13
+updated: 2026-07-13
+summary: Notes toward a lightweight, task-specific evaluation harness for small models — the thing that makes distillation and fine-tuning safe to iterate on.
+---
+
+> This note is a **draft**: visible in `next dev`, absent from the production build.
+> It exists in the seed content to demonstrate exactly that behavior.
+
+An evaluation harness is the precondition for everything else in the SLM playbook: you
+cannot distill, fine-tune, or swap models safely without one. See
+[[model-distillation]] for where this bites first.
+
+Sketch of requirements (to be developed):
+
+- Task-specific golden sets, versioned in git next to the model configs.
+- Cheap enough to run on every training iteration.
+- Direct comparison against the frontier-model baseline on the same set.

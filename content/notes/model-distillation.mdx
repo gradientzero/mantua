@@ -1,0 +1,27 @@
+---
+title: Model distillation
+status: published
+tags: [techniques, fundamentals]
+created: 2026-07-13
+updated: 2026-07-13
+summary: Transferring capability from a large teacher model into a small student model — the workhorse technique behind most practical SLM deployments.
+related: [private-deployment]
+---
+
+> Placeholder note — replace with real research.
+
+**Distillation** trains a small "student" model to reproduce the behavior of a large
+"teacher" model, typically on a task-specific distribution of inputs. It is the main
+reason [[small-language-models]] can be credible on narrow enterprise tasks: the student
+doesn't need the teacher's breadth, only its competence on one slice of work.
+
+## Rough taxonomy (to be expanded)
+
+- **Response-based**: student learns from teacher outputs (the common, API-compatible case).
+- **Feature-based**: student matches internal representations — requires white-box access to the teacher.
+- **Task-specific synthetic data**: teacher generates labeled training data rather than being imitated directly; often the pragmatic choice when the teacher is a third-party API with restrictive terms.
+
+## Open questions
+
+- How much task drift can a distilled model absorb before quality collapses?
+- What evaluation harness catches regressions early enough? (draft note in progress: [[slm-evaluation-harness]])

@@ -1,0 +1,17 @@
+# dependencies
+node_modules/
+
+# next.js
+.next/
+out/
+next-env.d.ts
+
+# velite (generated from /content on every dev/build)
+.velite/
+public/static/
+
+# misc
+.DS_Store
+*.tsbuildinfo
+.env*.local
+.vercel
