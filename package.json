@@ -1,0 +1,31 @@
+{
+  "name": "slm-research-notebook",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Deployable, agent-native, wiki-style research notebook on small language model adoption.",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "content": "velite",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "next": "16.2.10",
+    "react": "19.2.7",
+    "react-dom": "19.2.7",
+    "rehype-slug": "6.0.0",
+    "unist-util-visit": "5.1.0",
+    "velite": "0.4.0"
+  },
+  "devDependencies": {
+    "@types/mdast": "^4.0.4",
+    "@types/node": "^22.10.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "typescript": "^5.7.0"
+  },
+  "engines": {
+    "node": ">=20.9.0"
+  }
+}
