@@ -1,0 +1,387 @@
+---
+title: "Serving an open-weight SLM from the desktop under my desk (12 GB GPU)"
+status: draft
+tags: [deployment, inference, hands-on]
+created: 2026-07-14
+updated: 2026-07-14
+summary: Lab notes on turning a spare Linux desktop with a 12 GB GPU into an always-on, OpenAI-compatible HTTP endpoint for open-weight small models — VRAM budgeting, a dated model shortlist, llama.cpp vs. Ollama vs. vLLM, systemd, and not exposing the thing naked to the internet.
+related: [private-deployment, small-language-models, slm-evaluation-harness]
+author: Wolfgang Gross
+---
+
+There is a desktop under my desk that mostly collects dust: Linux, one GPU with 12 GB of
+VRAM. This note documents turning it into a permanent lab bench for this notebook's
+questions about [[private-deployment]] — a machine that boots, loads an open-weight
+model, and answers HTTP requests on the local network without anyone touching it.
+
+Target state, concretely:
+
+```bash
+curl http://slmbox:8080/v1/chat/completions -H "Authorization: Bearer $KEY" ...
+```
+
+from any machine I own, against a model whose weights sit on my own disk.
+
+One framing thought before the how-to: the **OpenAI-compatible API is the seam that
+matters**. Every serving stack worth using — llama.cpp, Ollama, vLLM, and the commercial
+endpoints — speaks the same `/v1/chat/completions` protocol. Build clients against that
+seam and the desktop under my desk is interchangeable with a rented A100 or a datacenter
+deployment later. That portability is half the enterprise argument in
+[[private-deployment]], demonstrated at homelab scale.
+
+## What fits in 12 GB
+
+Three things compete for VRAM: model weights, the KV cache (grows with context length),
+and runtime overhead. Rules of thumb that have held up:
+
+- **Weights**: at `Q4_K_M` quantization (the widely used default — roughly half the
+  memory of FP16 for a small quality loss), budget **≈ 0.6 GB per billion parameters**.
+  An 8B model is ≈ 5 GB, a 14B model ≈ 9 GB. `Q8_0` doubles that; below Q4 quality
+  degrades noticeably faster.
+- **KV cache**: order of **0.1–0.2 MB per token of context** at FP16 for current
+  8B–14B models with grouped-query attention. 16k tokens on a 14B is ≈ 2.5 GB.
+  Quantizing the cache to `q8_0` halves it with little practical loss.
+- **Overhead**: ≈ 1 GB for CUDA context and compute buffers — plus whatever a running
+  desktop environment eats. Run the box headless.
+
+Two worked budgets for a 12 GB card:
+
+1. **14B at moderate context** — Qwen3-14B `Q4_K_M` (9.0 GB) + 16k context with `q8_0`
+   KV cache (≈ 1.3 GB) + overhead ≈ 11.5 GB. Fits, tightly.
+2. **8B at long context** — an 8B `Q4_K_M` (≈ 5 GB) + 32k context at FP16 (≈ 4 GB) +
+   overhead ≈ 10 GB. Comfortable, with headroom for parallel requests.
+
+That is the real trade on this hardware: **model size vs. context length vs.
+concurrency**, all drawing from the same 12 GB.
+
+### Model shortlist (as of 2026-07 — this section rots fast)
+
+- **Qwen3-14B** (Apache-2.0) — the strong generalist default for this VRAM class;
+  hybrid reasoning mode you can toggle per request. `Q4_K_M` ≈ 9.0 GB.
+- **[Gemma 4 12B](https://blog.google/innovation-and-ai/technology/developers-tools/introducing-gemma-4-12b/)**
+  (released 2026-06) — multimodal (image and audio in), 256k context window, reportedly
+  Apache-2.0 — a first for Gemma, verify on the model card. Quantized GGUF ≈ 7.5 GB.
+- **Phi-4 14B** (MIT) — strong on reasoning and code for its size. ≈ 9 GB at `Q4_K_M`.
+  (Phi-5 was rumored mid-2026 but I could not confirm an actual open-weights release —
+  check before citing it.)
+- **Llama 3.1 8B** (Llama license) — the boring baseline with the largest ecosystem of
+  fine-tunes and tooling. ≈ 4.9 GB at `Q4_K_M`.
+- **gpt-oss-20b** (Apache-2.0) — OpenAI's open-weights MoE; 21B total but only ≈ 3.6B
+  active per token. Native MXFP4 weights are ≈ 12 GB, right at the edge — offload a few
+  expert layers to CPU (`--n-cpu-moe` in llama.cpp) and it still runs at usable speed
+  because the active parameter count is small.
+
+Where to check current picks when this list is stale: Hugging Face trending GGUF
+models, and r/LocalLLaMA, which is effectively the community benchmark venue for
+consumer-VRAM inference. Ignore claims that large MoE models "fit" in 12 GB — that
+usually means most of the model sits in system RAM and streams over PCIe.
+
+## Choosing the server
+
+Three serious options, one decision:
+
+- **[llama.cpp](https://github.com/ggml-org/llama.cpp)** (`llama-server`) — a single
+  binary, runs GGUF quantizations, OpenAI-compatible endpoint plus a built-in web UI,
+  every knob exposed. The best fit when one machine serves one model to a handful of
+  clients. *This is the main path below.*
+- **[Ollama](https://ollama.com)** — llama.cpp underneath, wrapped in model management
+  (`ollama pull`, automatic load/unload) and a one-line install. Fastest to running;
+  the cost is a layer of abstraction and conservative defaults you must override
+  (context length, network binding).
+- **[vLLM](https://docs.vllm.ai)** — the datacenter answer: continuous batching,
+  PagedAttention, serious throughput under concurrent load. It assumes it owns the GPU
+  and is memory-hungry on a 12 GB card; worth running here mainly to *study* the
+  enterprise serving stack, not because the desk box needs it.
+
+Rule of thumb: single user or small team → llama.cpp (control) or Ollama (convenience);
+measuring concurrency behavior for the research → vLLM with an 8B model.
+
+## Step 0 — prepare the box
+
+Assuming Ubuntu Server (or similar) on the machine, with an NVIDIA card:
+
+```bash
+# NVIDIA driver (Ubuntu; reboot afterwards)
+sudo ubuntu-drivers install
+sudo reboot
+
+# verify — should print the GPU with ~12288 MiB total memory
+nvidia-smi
+```
+
+If a desktop environment is installed, boot to console instead — the compositor
+permanently holds VRAM you want back:
+
+```bash
+sudo systemctl set-default multi-user.target
+```
+
+**AMD aside:** if the 12 GB card is a Radeon (RX 6700 XT / 7700 XT class), llama.cpp's
+Vulkan backend and Ollama's ROCm support both work well these days; vLLM on consumer
+RDNA remains rough. The rest of this note is written for CUDA but translates.
+
+## Path A: llama.cpp `llama-server` (the control path)
+
+Build from source (there are prebuilt CUDA archives on the GitHub releases page if you
+prefer, but the build is quick and always matches your driver):
+
+```bash
+sudo apt install -y build-essential cmake git nvidia-cuda-toolkit
+git clone https://github.com/ggml-org/llama.cpp
+cd llama.cpp
+cmake -B build -DGGML_CUDA=ON
+cmake --build build --config Release -j
+# binaries land in build/bin/
+```
+
+Fetch a model — GGUF files are plain downloads from Hugging Face:
+
+```bash
+mkdir -p ~/models
+curl -L -o ~/models/Qwen3-14B-Q4_K_M.gguf \
+  https://huggingface.co/ggml-org/Qwen3-14B-GGUF/resolve/main/Qwen3-14B-Q4_K_M.gguf
+```
+
+Run the server:
+
+```bash
+build/bin/llama-server \
+  -m ~/models/Qwen3-14B-Q4_K_M.gguf \
+  -ngl 99 \
+  -c 16384 \
+  -ctk q8_0 -ctv q8_0 \
+  --host 0.0.0.0 --port 8080 \
+  --api-key "change-me-long-random-string"
+```
+
+What the flags do:
+
+- `-ngl 99` — offload all layers to the GPU (99 = "more than the model has").
+  If VRAM runs out, lower it and the remainder runs on CPU — slower but functional.
+- `-c 16384` — total context window; the KV cache for this is allocated up front, so
+  this flag is your main VRAM dial after model choice.
+- `-ctk/-ctv q8_0` — quantize the KV cache to 8-bit; halves context memory.
+- `--api-key` — bearer-token auth on every endpoint. Non-negotiable the moment the
+  server binds to anything but localhost.
+- Useful extras: `--parallel 2` serves two requests concurrently (the context is
+  *split* between slots — 16k becomes 2×8k); `--jinja` enables the model's full chat
+  template, needed for tool/function calling; `--metrics` exposes Prometheus metrics
+  at `/metrics`.
+
+Two freebies: `http://slmbox:8080/` serves a perfectly usable chat web UI, and
+`http://slmbox:8080/v1/models` tells clients what's loaded.
+
+### Make it survive reboots (systemd)
+
+```ini
+# /etc/systemd/system/llama-server.service
+[Unit]
+Description=llama.cpp OpenAI-compatible SLM server
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+User=youruser
+ExecStart=/home/youruser/llama.cpp/build/bin/llama-server \
+  -m /home/youruser/models/Qwen3-14B-Q4_K_M.gguf \
+  -ngl 99 -c 16384 -ctk q8_0 -ctv q8_0 \
+  --host 0.0.0.0 --port 8080 \
+  --api-key-file /home/youruser/.config/llama-api-key
+Restart=on-failure
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target
+```
+
+```bash
+echo "change-me-long-random-string" > ~/.config/llama-api-key && chmod 600 ~/.config/llama-api-key
+sudo systemctl daemon-reload
+sudo systemctl enable --now llama-server
+journalctl -u llama-server -f   # watch it load
+```
+
+Swapping models is now: download a new GGUF, edit one line, `systemctl restart`.
+
+## Path B: Ollama (the convenience path)
+
+```bash
+# read install scripts before piping them into sh, obviously
+curl -fsSL https://ollama.com/install.sh | sh
+ollama pull qwen3:14b
+```
+
+Ollama installs its own systemd service bound to localhost with a small default context.
+Fix both:
+
+```bash
+sudo systemctl edit ollama
+```
+
+```ini
+[Service]
+Environment="OLLAMA_HOST=0.0.0.0"
+Environment="OLLAMA_CONTEXT_LENGTH=16384"
+Environment="OLLAMA_KEEP_ALIVE=-1"
+```
+
+```bash
+sudo systemctl restart ollama
+```
+
+`OLLAMA_KEEP_ALIVE=-1` stops Ollama from unloading the model after a few idle minutes —
+without it, the first request after a pause pays 10–30 s of model-loading latency, which
+ruins the "always-on endpoint" property. The OpenAI-compatible endpoint lives at
+`http://slmbox:11434/v1`. Note that Ollama has **no built-in API key** — access control
+must come from the network layer (next section), which is the main reason I lean
+llama.cpp for this box.
+
+## Path C: vLLM (the study-the-enterprise-stack path)
+
+Run it in Docker so the CUDA userland stays contained. One-time setup for GPU-in-Docker:
+
+```bash
+sudo apt install -y docker.io nvidia-container-toolkit
+sudo nvidia-ctk runtime configure --runtime=docker && sudo systemctl restart docker
+```
+
+```bash
+docker run --gpus all --ipc=host -p 8000:8000 \
+  -v ~/.cache/huggingface:/root/.cache/huggingface \
+  vllm/vllm-openai:latest \
+  --model Qwen/Qwen3-8B-AWQ \
+  --max-model-len 16384 \
+  --gpu-memory-utilization 0.90 \
+  --api-key change-me-long-random-string
+```
+
+Notes for the 12 GB reality: vLLM pre-allocates nearly all VRAM by design (that is what
+`--gpu-memory-utilization` controls), so stick to 8B-class models in 4-bit AWQ/GPTQ and
+cap `--max-model-len`. In exchange you get continuous batching — throughput under many
+simultaneous requests that llama.cpp does not attempt — which is exactly the property
+worth measuring for the [[private-deployment]] cost model.
+
+## Pointing clients at it
+
+Anything that speaks the OpenAI API works unchanged — SDKs, agent frameworks, editor
+integrations — by overriding the base URL:
+
+```bash
+curl http://slmbox:8080/v1/chat/completions \
+  -H "Authorization: Bearer $LLAMA_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "qwen3-14b",
+    "messages": [{"role": "user", "content": "Summarize: ..."}],
+    "stream": false
+  }'
+```
+
+```python
+from openai import OpenAI
+
+client = OpenAI(base_url="http://slmbox:8080/v1", api_key="change-me-long-random-string")
+resp = client.chat.completions.create(
+    model="qwen3-14b",  # llama-server serves one model; the name is cosmetic
+    messages=[{"role": "user", "content": "Summarize: ..."}],
+)
+print(resp.choices[0].message.content)
+```
+
+Set `"stream": true` and tokens arrive as server-sent events, same as the commercial
+APIs. This is the seam from the introduction doing its job: swap `base_url` and the same
+client code runs against Ollama, vLLM, or a hosted frontier model.
+
+## Do not put it naked on the internet
+
+Internet scans routinely turn up thousands of unauthenticated local-LLM endpoints
+(exposed Ollama ports are a Shodan staple) — free compute for strangers, plus whatever
+is in your prompts. Three sane tiers, in order of preference for a home box:
+
+1. **LAN only** — bind to `0.0.0.0` but firewall the port to the local subnet:
+
+   ```bash
+   sudo ufw allow from 192.168.1.0/24 to any port 8080 proto tcp
+   sudo ufw enable
+   ```
+
+2. **Tailscale (what I'd actually do)** — the endpoint becomes reachable from every
+   device on your tailnet, wherever you are, with zero ports opened to the internet:
+
+   ```bash
+   curl -fsSL https://tailscale.com/install.sh | sh
+   sudo tailscale up
+   sudo tailscale serve --bg 8080
+   # → https://slmbox.<tailnet>.ts.net, TLS included
+   ```
+
+3. **Public via reverse proxy** — only if genuinely needed: Caddy or nginx in front for
+   TLS, the server's own API key still enforced, ideally an allowlist on top. A
+   two-line Caddyfile (`llm.example.com { reverse_proxy localhost:8080 }`) does the TLS
+   part; the exposure is still yours to babysit.
+
+## What to expect from 12 GB
+
+The mental model: **token generation is memory-bandwidth-bound**. Every generated token
+reads (roughly) all active weights once, so tokens/second ≈ memory bandwidth divided by
+weight bytes. A 360 GB/s card (RTX 3060 class) over a 9 GB `Q4_K_M` 14B tops out around
+40 tok/s theoretical — expect 20–35 in practice. Ballparks, to be replaced by real
+measurements:
+
+- 8B at `Q4_K_M`: ≈ 40–60 tok/s generation; prompt ingestion is compute-bound and
+  runs an order of magnitude faster.
+- 14B at `Q4_K_M`: ≈ 20–35 tok/s — fine for chat and background pipelines, sluggish
+  for "read this 50-page document and answer instantly" expectations.
+- Reasoning modes (Qwen3 thinking, R1-style distills) spend hundreds to thousands of
+  tokens thinking before answering. At 25 tok/s that is real wall-clock time; on this
+  class of hardware, turn thinking on selectively, not by default.
+
+Watch it run with `nvidia-smi` / `nvtop`; if you enabled `--metrics`, llama-server's
+Prometheus endpoint gives per-request token counts and timings for free.
+
+On power: the always-on cost is dominated by idle draw, not inference bursts — this
+class of box idles at ≈ 30–60 W (≈ €10/month at European electricity prices, order of
+magnitude), while generation briefly pulls 150–200 W. If the endpoint is only needed
+occasionally, suspend the machine and wake it with Wake-on-LAN; if it becomes the
+runner for nightly evaluation jobs, always-on is simpler.
+
+## Serving your own fine-tuned weights
+
+The point of this notebook's interest in the box: it closes the loop from
+[[llm-customization-and-fine-tuning-notes|the fine-tuning reading]] and
+[[model-distillation]]. Once a LoRA adapter or distilled student exists:
+
+- **llama.cpp**: either merge the adapter into the base weights and convert once
+  (`convert_hf_to_gguf.py`, then `llama-quantize`), or convert the adapter itself to
+  GGUF and serve it hot with `--lora adapter.gguf` on top of the stock base model.
+- **vLLM**: `--enable-lora --lora-modules mytask=/path/to/adapter` serves base and
+  adapter variants side by side, selectable per request via the `model` field — the
+  multi-tenant pattern an enterprise deployment would actually use.
+
+Same endpoint, same client code, custom behavior — which is the whole SLM pitch in one
+sentence.
+
+## What this does and doesn't tell the research
+
+Honest scoping: a single desk box says nothing about the economics of batched
+enterprise inference — no continuous load, no multi-tenancy, no SLA, and consumer
+hardware pricing besides. The per-token cost numbers that matter for
+[[private-deployment]] need sustained-throughput measurements on server-class gear.
+
+What it *does* provide: a permanent, zero-marginal-cost target for the
+[[slm-evaluation-harness]] (golden sets can run nightly against whatever model is
+loaded), a first-hand feel for the operational story — the "who babysits this" question
+from [[small-language-models]] — and proof that the OpenAI-compatible seam makes the
+serving substrate swappable. The homelab is the smallest end of the same continuum.
+
+## Next steps
+
+- [ ] Set the box up along Path A; record actual tok/s for the shortlist models and
+      replace the ballparks above ([[slm-serving-benchmarks|benchmark note]] once
+      numbers exist).
+- [ ] Point a first automated job at it: nightly [[slm-evaluation-harness]] run against
+      the loaded model.
+- [ ] Try the vLLM path with concurrent synthetic load — first datapoint for the
+      batching-economics question in [[private-deployment]].
+- [ ] Revisit the model shortlist ~quarterly; this page's "as of 2026-07" section is
+      deliberately dated.

@@ -1,0 +1,175 @@
+---
+title: "Reading notes: LLM Customization and Fine-Tuning (Bahree & Tok)"
+status: draft
+tags: [reading-notes, fine-tuning]
+created: 2026-07-14
+updated: 2026-07-15
+summary: Running notes on Manning's "LLM Customization and Fine-Tuning" (MEAP, Bahree & Tok) — chapter takeaways, questions, and links back to this notebook's SLM research threads.
+related: [model-distillation, private-deployment, small-language-models]
+author: Wolfgang Gross
+---
+
+Tracking notes as I read [*LLM Customization and Fine-Tuning*](https://www.manning.com/books/llm-customization-and-fine-tuning)
+by Amit Bahree and Weehyong Tok (Manning, MEAP — 5 of 9 chapters available as of
+2026-07-14, expected Fall 2026). The book's framing — choosing between prompting, RAG,
+LoRA/QLoRA, SFT, distillation, and DPO — overlaps directly with this notebook's questions
+about [[small-language-models|when a small model is the right call]] and how to get one
+there ([[model-distillation]], [[private-deployment]]).
+
+## Why this book, for this project
+
+- Gives a decision framework for prompting vs. RAG vs. LoRA/QLoRA vs. full SFT vs.
+  distillation vs. DPO — useful to cross-check against this notebook's own emerging
+  taxonomy in [[model-distillation]].
+- Covers end-to-end LoRA/QLoRA fine-tuning on single-GPU setups, which bears on the
+  cost-predictability argument in [[private-deployment]].
+- Has a production-operations angle (drift detection, canary prompts, safety
+  monitoring) that this notebook hasn't covered yet — candidate for a new note once
+  I've read that material.
+
+
+## Chapter notes
+
+### Ch. 1 — Why model adaptation?
+
+**Key claims:**
+Author claims specific ROI numbers which I found overly optimistic. No evidence provided. Key points are cost, privacy & data
+souvereinity, latency, competitative adavatage. -> This is where I need to look deeper and provide evidence. Also note that
+performacne gains where mentioned but not discussed yet in detail or in charateristic. No evidence provided again.
+Worth noting that as so often the reasons to customize a LLM are manyfold and / or complex. Which makes things harder to
+convey, argue for. or make a case.
+
+My hunch here as well is that, LLM domain adption, SLMs are not well understood in practical applications. How to create yes (still active research)
+but the business case is tricky.
+
+And to be fair the book also discusses prompting and RAG also in the context of LLM customization which are very trusted
+concepts and are the backbone of many quite useful LLM applications today.
+
+As evidence for the performance gains the cite 2024 study, which is good but I think this study doesn't hold up in 2026 with
+so much development in between.
+
+The chapter's decision framework for picking a first adaptation technique, for reference:
+
+<AdaptationDecisionTree />
+
+This is quite useful.
+
+GitHub repository (https://github.com/bahree/ModelAdaptationBook)
+
+### Ch. 2 — How to do model adaptation
+
+**Technical summary:**
+
+- **The continuum (table 2.1).** Six rungs, roughly log-stepped in cost/effort: prompting
+  & ICL (hours–days, tokens only) → RAG ($50–500/mo, days–weeks) → LoRA/QLoRA
+  (60–500 examples, 12–24GB GPU, $300–2K, weeks) → full SFT (500–5K examples, 24–80GB,
+  $2K–20K, 4–8wk) → distillation (1K–10K examples + teacher API, $2K–10K, 6–12wk) →
+  preference optimization (500–5K pairs, $3K–15K, 4–8wk). Claimed step-size is roughly
+  even: prompting→LoRA ≈ LoRA→full SFT. Half the rungs need fewer than 1,000 examples.
+- **Diagnostic order.** Reuses ch.1's four questions (specialized task? measured
+  prompting baseline? few hundred examples on hand? hard constraint?) as the walk order
+  through the table — the load-bearing point is "you don't know you have a training
+  problem until you have a measured prompting baseline," including an 8-to-20-shot ICL
+  pass before escalating.
+- **Hybrid stacks are the norm, not the exception (2.2).** Production stack, bottom to
+  top: base model → LoRA/SFT adapter (org vocab, format, voice) → RAG (fresh facts) →
+  system prompt/guardrails (citations, refusal) → app layer with telemetry. Claim: most
+  enterprise systems use 4 of these 5 layers. Directly relevant to how I've been framing
+  [[model-distillation]] as one layer among several rather than a replacement for RAG.
+- **Use-case → technique matrix (table 2.2).** RAG is the starting technique in 3 of 8
+  rows and a layer in most of the rest — most enterprise problems start as
+  knowledge-access problems before they're behavior problems. Heaviest techniques
+  (full SFT+DPO, distillation) only get justified by a hard constraint (safety
+  guarantee, latency budget, cost-per-call ceiling) that lighter rungs can't hit.
+- **Buy vs. build (2.4, table 2.3).** Three axes: data privacy/residency, traffic volume
+  & cost profile, how far a managed API gets you before fine-tuning is even on the
+  table. Managed-API cost is linear in request volume; self-hosted cost is ~fixed once
+  GPUs are sized — the two curves cross at a volume set by prompt size and ops overhead
+  (book's example: ~500K req/month on a single A30). Caveat worth keeping: this is a
+  *compute*-only crossover — eval-set curation and output review cost more than the GPU
+  line on most real projects, regardless of which side of the line you're on. Ties into
+  the cost-predictability argument in [[private-deployment]].
+- **Self-hosting infra (2.5).** Three paths: cloud GPU rental (vLLM/TGI/TensorRT-LLM,
+  on-demand A100 ≈ $1.50/GPU-hr, spot 60–70% cheaper), on-prem clusters (highest
+  upfront + ops burden, lowest steady-state per-request cost, only path under strict
+  data-residency rules), cloud-managed inference (Bedrock/Vertex/Together/Anyscale/Modal
+  — you supply a checkpoint, they serve it).
+- **Training tools (2.6, table 2.4).** TRL+PEFT (reference stack, max flexibility, used
+  throughout the book), Unsloth (custom CUDA kernels, 2–3x faster / 40–60% less VRAM,
+  narrower architecture support), Axolotl (YAML-driven, good for reproducing published
+  recipes), LLaMA-Factory (YAML + web UI, friendlier entry point), DeepSpeed (ZeRO
+  sharding, a layer the others plug into for multi-GPU/70B+ runs).
+- **Base model selection (2.7).** Four axes: task headroom, latency budget, hardware
+  budget, ecosystem maturity (published fine-tuning recipes + first-class support in
+  vLLM/TGI/llama.cpp). Book's pick is Qwen3-4B-Instruct-2507 — LoRA fits in 12GB, full
+  SFT in 24GB. Open-weight shortlist: Qwen, DeepSeek V3 (MoE, MIT, reasoning/coding),
+  Llama (widest ecosystem), Mistral 7B (Apache-2.0, the "if you can't beat this, don't
+  bother" baseline). Frontier models (OpenAI/Anthropic/Google, NVIDIA Nemotron for
+  self-hosted reasoning) are positioned as few-shot backstops or distillation teachers,
+  not fine-tuning targets — relevant to the teacher/student framing I want to check
+  against [[model-distillation]].
+- **LoRA quickstart (2.8), the mechanically interesting part.** 40 IT-support examples,
+  Qwen3-4B, r=16 / alpha=32 / dropout=0.05 on 7 projection modules
+  (q/k/v/o_proj + up/gate/down_proj), 20 steps (≈4 passes over 40 examples), 56s on an
+  A30. Train loss 2.28→1.41; eval loss barely moves (2.33→2.29) — read as expected at
+  this scale, evidence the pipeline works, not that anything was learned. Before/after
+  generations back this up: the adapter picks up the *house response format*
+  (summary + numbered steps) and a terser voice within 20 steps, but adds no new
+  domain knowledge — format/voice learn fast, knowledge learns slow. Adapter checkpoint
+  is 127MB on top of an unchanged base. Useful as a sanity check for how little signal
+  a 20-step/40-example run should be expected to produce before concluding a recipe
+  "doesn't work."
+- **Security across the continuum (2.9, table 2.5/2.6).** Each technique moves the
+  attack surface differently: prompting only exposes system-prompt/input injection; RAG
+  adds the retrieval corpus and context assembly as a new ingress (indirect prompt
+  injection via poisoned sources — cites Greshake et al. 2023); LoRA/full SFT make
+  training data itself a security-relevant artifact (cites Qi et al. 2023: ~10
+  adversarial examples undo refusal behavior, and even 100 *benign* examples measurably
+  degrade safety scores — "data provenance is a security control" is the one-line
+  takeaway); distillation transfers common-case behavior more reliably than refusal
+  behavior, since refusals are rare in the teacher's output distribution and
+  underrepresented in what the student actually trains on. Mitigations (table 2.6) are
+  mostly operational, not algorithmic: provenance/signing, pre/post safety benchmarks,
+  explicit refusal-rate comparisons, held-out preference data.
+- **Operational floor (2.10).** Promotion lanes (dev/staging/prod), artifact manifests
+  (base model, dataset, seed, hyperparams, eval + safety numbers, git SHA), canary
+  rollout (1–5% traffic, 24–72h hold before wider promotion), rollback triggers decided
+  *before* deployment (refusal-rate drop, accuracy drop, latency, abuse-rate spikes),
+  and treating production logs as the highest-value eval set the team has.
+
+### Ch. 3 — What data do I need for model adaptation?
+**"Most organizations have data, few have AI ready data."**
+
+That sounds great and convincing, something the knot along with. But is it true. What is the gradient in between AI ready data and just data.
+And is it true?
+
+
+The chapter frames data readiness as a spectrum rather than a binary — how much
+labelled data you have on hand determines which adaptation technique is even on the
+table yet, tying back to the ch.2 diagnostic order (§2, above):
+
+<DataReadinessSpectrum />
+
+
+Most teams start at level 0–1 (no labelled data, or a handful of human seed examples)
+and the chapter's advice is to replicate/vary those seeds synthetically before jumping
+to fine-tuning — worth cross-checking against the synthetic-data question already open
+for [[model-distillation]].
+
+### Ch. 4 —
+
+### Ch. 5 —
+
+## Open questions
+
+- Where does the book's decision framework diverge from this notebook's take on
+  [[model-distillation]] vs. fine-tuning?
+- Does the training-data pipeline guidance say anything about task-specific synthetic
+  data generation (the point raised as an open question in [[model-distillation]])?
+- Anything on evaluation harnesses I should fold into [[slm-evaluation-harness]]?
+
+## Candidate notes to spin out
+
+- [ ] Production monitoring for fine-tuned models (drift detection, canary prompts) —
+      not yet covered anywhere in this notebook.
+- [ ] LoRA/QLoRA mechanics, once I've read the relevant chapter in depth.

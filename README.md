@@ -51,6 +51,7 @@ tags: [fundamentals]     # lowercase-kebab-case only; free-form otherwise
 created: 2026-07-13      # ISO date, set once
 updated: 2026-07-13      # ISO date — BUMP THIS ON EVERY MEANINGFUL EDIT
 summary: One or two sentences; used for OG description, index listings, link previews.
+author: Wolfgang Gross   # optional byline; OMITTED ⇒ falls back to site.author (lib/site.ts)
 related: [private-deployment]   # optional, note slugs; manual "Related" section
 slug: custom-slug        # optional override — by convention OMIT IT (slug = filename)
 ---
@@ -166,5 +167,7 @@ title card without any manual asset work.
   [Pagefind](https://pagefind.app) post-build; no external service.
 - **RSS/Atom feed** — trivial to add as `app/feed.xml/route.ts` over `allNotes()`.
 - **Graph visualization** — the data already exists (`links` on every doc).
-- **Custom web fonts** — currently system font stacks; swap via `next/font` if wanted.
+- **Self-hosted web fonts** — the design system's three families (Cormorant Garamond,
+  Inter, JetBrains Mono) currently load from the Google Fonts CDN via an `@import` at the
+  top of `app/globals.css`; swap to `next/font` or local `.woff2` if wanted.
 - **Redirect layer** for renamed slugs (`next.config.mjs` `redirects()`).

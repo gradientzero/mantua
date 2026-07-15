@@ -21,6 +21,8 @@ const baseFields = {
   created: s.isodate(),
   updated: s.isodate(),
   summary: s.string().min(1).max(400),
+  /** Byline author. Omitted ⇒ falls back to the site author (lib/site.ts). */
+  author: s.string().min(1).max(120).optional(),
   path: s.path(), // e.g. "notes/model-distillation" — provided by Velite
   body: s.mdx(),
 }
