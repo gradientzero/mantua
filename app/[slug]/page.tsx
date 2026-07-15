@@ -45,10 +45,16 @@ export default async function HubPage({ params }: { params: Promise<{ slug: stri
 
   return (
     <article>
-      <h1>{hub.title}</h1>
-      <div className="article-meta">
-        <DraftBadge status={hub.status} />
-        <span>updated <time dateTime={hub.updated}>{formatDate(hub.updated)}</time></span>
+      {hub.status === 'draft' && (
+        <div className="article-tags">
+          <DraftBadge status={hub.status} />
+        </div>
+      )}
+      <h1 className="article-title">{hub.title}</h1>
+      <div className="article-byline">
+        <span className="section-label">
+          updated <time dateTime={hub.updated}>{formatDate(hub.updated)}</time>
+        </span>
       </div>
       <MDXContent code={hub.body} />
       {backlinks.length > 0 && (

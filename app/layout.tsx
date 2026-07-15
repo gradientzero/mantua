@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import type { Metadata } from 'next'
+import { SiteNav } from '@/components/site-nav'
 import { site } from '@/lib/site'
 import './globals.css'
 
@@ -17,15 +18,15 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en">
       <body>
         <header className="site-header">
-          <nav>
-            <Link href="/" className="site-title">
-              {site.name}
-            </Link>
-            <span className="site-nav">
-              <Link href="/notes">All notes</Link>
-              <Link href="/tags">Tags</Link>
-            </span>
-          </nav>
+          <div className="site-header-inner">
+            <div>
+              <Link href="/" className="wordmark">
+                {site.name}
+              </Link>
+              <div className="wordmark-tagline">{site.tagline}</div>
+            </div>
+          </div>
+          <SiteNav />
         </header>
         <main>{children}</main>
         <footer className="site-footer">

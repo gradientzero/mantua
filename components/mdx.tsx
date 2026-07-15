@@ -14,6 +14,8 @@ import * as runtime from 'react/jsx-runtime'
 import type { AnchorHTMLAttributes, ReactNode } from 'react'
 import { resolveWikilink } from '@/lib/content'
 import { WIKILINK_PROTOCOL } from '@/lib/wikilinks'
+import AdaptationDecisionTree from '@/components/figures/adaptation-decision-tree'
+import DataReadinessSpectrum from '@/components/figures/data-readiness-spectrum'
 
 type AnchorProps = AnchorHTMLAttributes<HTMLAnchorElement> & { children?: ReactNode }
 
@@ -53,6 +55,8 @@ function MdxAnchor({ href = '', children, ...rest }: AnchorProps) {
 
 const sharedComponents = {
   a: MdxAnchor,
+  AdaptationDecisionTree,
+  DataReadinessSpectrum,
   // Register future interactive components here, e.g.:
   // CostCurve: dynamic(() => import('@/components/figures/cost-curve')),
 }

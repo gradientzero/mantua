@@ -48,15 +48,26 @@ export default async function NotePage({ params }: { params: Promise<{ slug: str
 
   return (
     <article>
-      <h1>{note.title}</h1>
-      <div className="article-meta">
-        <DraftBadge status={note.status} />
-        <time dateTime={note.created}>{formatDate(note.created)}</time>
-        {note.updated !== note.created && (
-          <span>· updated <time dateTime={note.updated}>{formatDate(note.updated)}</time></span>
-        )}
-        <TagList tags={note.tags} />
+      {(note.tags.length > 0 || note.status === 'draft') && (
+        <div className="article-tags">
+          <DraftBadge status={note.status} />
+          <TagList tags={note.tags} />
+        </div>
+      )}
+
+      <h1 className="article-title">{note.title}</h1>
+
+      <div className="article-byline">
+        <span className="section-label section-label-secondary">{note.author ?? site.author}</span>
+        <span className="section-label">
+          <time dateTime={note.created}>{formatDate(note.created)}</time>
+          {note.updated !== note.created && (
+            <> · updated <time dateTime={note.updated}>{formatDate(note.updated)}</time></>
+          )}
+        </span>
       </div>
+
+      {note.summary && <p className="article-lead">{note.summary}</p>}
 
       <MDXContent code={note.body} />
 
