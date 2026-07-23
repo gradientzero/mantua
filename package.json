@@ -16,7 +16,8 @@
     "react-dom": "19.2.7",
     "rehype-slug": "6.0.0",
     "unist-util-visit": "5.1.0",
-    "velite": "0.4.0"
+    "velite": "0.4.0",
+    "vercel": "^56.2.1"
   },
   "devDependencies": {
     "@types/mdast": "^4.0.4",

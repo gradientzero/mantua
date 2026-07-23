@@ -1,0 +1,166 @@
+---
+title: "Reading notes: Tabular Foundation Models (Molnar)"
+status: draft
+tags: [reading-notes, tabular-foundation-models]
+created: 2026-07-17
+updated: 2026-07-17
+summary: Running notes on Christoph Molnar's "Tabular Foundation Models" — chapter takeaways, questions, and how tabular FMs fit into this notebook's map of SOTA ML-engineering technology.
+related: [small-language-models]
+author: Wolfgang Gross
+---
+
+Tracking notes as I read [*Tabular Foundation Models*](https://tabularfoundationmodels.com/)
+by Christoph Molnar. This book is **not** about SLMs or language models — it is about
+foundation models for *tabular* data (the pre-trained, in-context-learning line of work
+around TabPFN and its successors).
+
+It still belongs in this notebook because the broader goal here is to **map the landscape
+of SOTA AI technology with a machine-learning-engineering focus**. Tabular data is where
+most enterprise ML actually lives, and "can the foundation-model paradigm work outside of
+text/images?" is a first-order question for that map. It's a useful counterpoint to the
+[[small-language-models|SLM]] thread: same pretraining-then-adapt intuition, very
+different modality and constraints.
+
+## Why this book, for this project
+
+- Tests whether the foundation-model recipe (pretrain once, adapt cheaply / zero-shot)
+  generalizes to tabular data — the modality that dominates real enterprise workloads.
+- TabPFN-style models do inference by **in-context learning** rather than per-dataset
+  training, which is a genuinely different ML-engineering cost/latency profile worth
+  cataloguing next to fine-tuning and distillation.
+- Molnar writes accessible, well-structured ML books (Interpretable ML, etc.), so this is
+  a good on-ramp to a subfield I want represented in the landscape map.
+
+## The core idea (my one-line version)
+
+**A prior-data fitted network (PFN) moves the ML training idea up one level of
+abstraction.** In traditional ML the atomic unit is a *row* — you train on one dataset,
+each row is a data point, and the model learns that dataset. A PFN's atomic unit is an
+*entire dataset*: you *pre-train* across millions of datasets, and each whole dataset
+(train features + targets + test features + targets) plays the role that a single row
+plays in ordinary training. The model doesn't learn *a* task; it learns *how to solve
+tabular tasks in general*, then solves a new one at inference by in-context learning — no
+gradient step, no hyperparameter tuning per dataset.
+
+This is the meta-level shift worth remembering: `dataset → training example`.
+
+## Open questions to answer while reading
+
+- ~~How large can a dataset (rows × features) be before the in-context approach breaks
+  down?~~ — book's examples are small (hundreds of rows); explicit scaling limits not
+  given yet. **Still open — this is the key ML-engineering question.**
+- ~~Where does it beat gradient-boosted trees (XGBoost/LightGBM), and where does it
+  lose?~~ — book shows TabICL beating tuned XGBoost/CatBoost on its example datasets, but
+  repeatedly cautions "don't expect this on every dataset." Partial answer; needs real
+  benchmarks.
+- What's the actual deployment story — model size, hardware, latency at inference?
+  **Still open.** The cost profile is *inverted*: `.fit()` is cheap, `.predict()` is
+  expensive (in-context learning happens at predict time).
+- ~~How does it handle categorical features, missing values, and distribution shift?~~ —
+  handles missing-at-random and categoricals automatically; explicitly flags
+  **missing-not-at-random** as "a different beast." Distribution shift still open.
+
+## Chapter notes
+
+Book structure: **Part I — Understanding** (1 First look · 2 Prior-data fitted networks ·
+3 In-context learning · 4 Pretraining); **Part II — Applying** (5 Classification ·
+6 Regression · 7 Quantile regression).
+
+### Ch. 1 — First look
+
+- TFMs (e.g. TabPFN, TabICL) ship pretrained weights from millions of synthetic datasets
+  behind a familiar scikit-learn `.fit()` / `.predict()` API — but the workflow is
+  *inverted*: heavy compute is at **predict** time, not fit time. `.fit()` just loads
+  weights and preprocesses; `.predict()` does the in-context learning.
+- No per-task training, **no hyperparameter tuning**. Selling points: automatic
+  missing-data handling, built-in uncertainty (quantiles), multiple modalities
+  (classification / regression / time series), strong extrapolation.
+- Limitation flagged early: missing-**not**-at-random is a known weak spot.
+
+### Ch. 2 — Prior-data fitted networks
+
+_(see "The core idea" above — this is the chapter that gave me the level-up framing.)_
+
+Three ingredients of a PFN:
+
+1. **Flexible architecture** — a transformer with row- and column-attention that ingests
+   a whole dataset and does in-context learning without weight updates.
+2. **Task prior** — a generative procedure (structural causal models) that produces
+   millions of synthetic tasks. This prior is fundamentally **Bayesian**.
+3. **Pretraining** — gradient descent trains the model to predict the predictive
+   distribution of test targets across the task distribution (NLL loss).
+
+Bayesian reading: the PFN approximates the posterior predictive
+`p(y | x_new, X_train, y_train)` by integrating task-conditional predictions weighted by
+data likelihood and the task prior — i.e. averaging over plausible tasks consistent with
+the training data it's shown in-context.
+
+Why tabular needed this: tables are messy in ways images/text aren't (varying column
+counts, naming, dtypes, arbitrary row/column order), which made cross-dataset
+generalization hard until this framing.
+
+### Ch. 3 — In-context learning (prediction)
+
+- To predict, you feed the **entire table** with test targets masked as missing — the
+  model uses the training rows as *context* (like an LLM prompt).
+- Pipeline: **Embed** cells → vectors (~128-dim) → **Transform** via transformer blocks
+  → **Decode** back to predictions.
+- Two attentions: **row attention** (a cell attends to other features in its own row) and
+  **column attention** (a cell attends to training cells in the same column; test cells
+  excluded).
+- Book is an intentional simplification — real TabPFN v2 is more complex. Context-length /
+  dataset-size limits **not** quantified here (my open question survives).
+
+### Ch. 4 — Pretraining
+
+- Synthetic data via **structural causal models (SCMs)**: sample an SCM (random #vars,
+  connectivity, dependency functions) → forward-propagate through a DAG to generate a
+  dataset → randomly assign variables as features/targets/unobserved and split
+  train/test.
+- Objective: minimize NLL / cross-entropy `−log q_θ(y_test | X_test, X_train, y_train)`
+  summed over test rows and tasks, backprop via SGD.
+- Scale: **TabPFN v2 ≈ 2M batches × ~64 tables ≈ 130M tables.**
+- A good prior needs volume **and** diversity (varying feature counts, non-linearities,
+  noise features, latent variables). The prior is a "catalogue of task characteristics" —
+  a lever for injecting inductive biases (tree-like functions, oscillations,
+  extrapolation).
+
+### Ch. 5 — Classification
+
+- `pip install tabicl`; sklearn-style `.fit()` then `.predict_proba()`; no tuning.
+- Example (Land Mines, 338 rows, 5 classes): TabICL >> tuned XGBoost — acc 0.812 vs
+  0.541, ROC AUC 0.959 vs 0.833, F1 0.801 vs 0.524. Authors caution this margin is **not
+  universal**.
+- Cost inversion in numbers: fit 0.186s vs predict 0.525s on a *small* test set.
+
+### Ch. 6 — Regression
+
+- TabICL regresses too; by default averages an **ensemble of 8** predictions per row;
+  can return median / access the predictive distribution.
+- Beat tuned CatBoost on UCI Wine Quality (MAE 0.388 vs 0.434, RMSE 0.577 vs 0.598,
+  R² 0.546 vs 0.513) — again "often, not always."
+- Ensemble diversity from randomizing feature order, preprocessing (Yeo-Johnson or none),
+  and feature grouping — so **shuffling feature order helps** rather than hurts.
+- Latency lever: `n_estimators` 8 → 1 cuts inference ~87.5% with minimal accuracy loss.
+
+### Ch. 7 — Quantile regression
+
+_(to read)_
+
+-
+
+## Reactions / open threads
+
+- The strongest ML-engineering hook is the **inverted cost curve** (cheap fit, expensive
+  predict) — it changes deployment economics vs XGBoost and is exactly where the SLM-style
+  serving questions in this notebook re-appear. Candidate for its own note.
+- The "beats GBDTs, but not always" framing needs an *independent* benchmark before I'd
+  repeat it — the book only shows a couple of favorable small datasets.
+
+## Cross-links to build later
+
+- A dedicated note on **in-context learning as an inference paradigm** (contrast with
+  fine-tuning), shared between this and the [[small-language-models|SLM]] thread.
+- A note on **PFNs / the "dataset-as-datapoint" abstraction** — this level-up idea is the
+  most transferable concept in the book.
+- Possibly a hub entry positioning tabular FMs against the SLM work in this notebook.
