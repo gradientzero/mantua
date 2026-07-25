@@ -21,7 +21,15 @@ const baseFields = {
   created: s.isodate(),
   updated: s.isodate(),
   summary: s.string().min(1).max(400),
-  /** Byline author. Omitted ⇒ falls back to the site author (lib/site.ts). */
+  /**
+   * Provenance — who wrote this page. Drives the byline (lib/site.ts bylineFor):
+   *   human  → hand-written by the owner; agents must not rewrite the prose
+   *   agent  → written and maintained by agents (the default)
+   *   mixed  → owner's writing, substantially extended/reworked by agents
+   * Never label agent-written text as `human`.
+   */
+  origin: s.enum(['human', 'agent', 'mixed']).default('agent'),
+  /** Byline name for human/mixed pages. Omitted ⇒ falls back to site.owner (lib/site.ts). */
   author: s.string().min(1).max(120).optional(),
   path: s.path(), // e.g. "notes/model-distillation" — provided by Velite
   body: s.mdx(),
