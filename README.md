@@ -1,8 +1,12 @@
-# SLM Research Notebook
+# mantua.io
 
-A deployable, wiki-style research notebook on **small language model (SLM) adoption for
-industry-specific enterprise tasks**. Multi-month project; content grows incrementally
-and is published continuously.
+An **agent-first commonplace notebook**: one inbox for everything worth keeping, a
+wiki that agents build and maintain, an owner who does the reading and the thinking.
+Continuously deployed; open in topic — subjects emerge from what accumulates.
+
+The pattern is Andrej Karpathy's LLM-wiki idea, kept verbatim in [`LLM_Wiki.md`](LLM_Wiki.md):
+the LLM incrementally builds and maintains a persistent, compounding wiki between the
+owner and the raw sources. This repo is one concrete instantiation of it.
 
 **This README is the source of truth.** If you are a coding agent (or a human) opening
 this repo with no other context: read this file top to bottom before touching anything.
@@ -10,25 +14,68 @@ It tells you everything the repo assumes.
 
 ## The one-paragraph mental model
 
-Content is plain markdown/MDX files under `/content`, versioned in git — there is no
-database and no CMS. [Velite](https://velite.js.org) validates frontmatter against a Zod
-schema and compiles MDX at build time; Next.js (App Router) renders it. Notes link to
-each other with `[[wikilinks]]`; every page shows a "Linked from" (backlinks) section
-computed by inverting those links. `git push` to `main` deploys to Vercel. That's the
-whole system.
+Three layers, per `LLM_Wiki.md`. **Raw sources**: material enters through `/inbox` and,
+once processed, is archived immutably under `/sources`. **The wiki**: markdown/MDX under
+`/content`, versioned in git — no database, no CMS. [Velite](https://velite.js.org)
+validates frontmatter against a Zod schema and compiles MDX at build time; Next.js (App
+Router) renders it; notes interlink with `[[wikilinks]]`, with backlinks ("Linked from")
+computed at build time. **The schema**: this README plus `CLAUDE.md` plus the commands in
+`.claude/commands/` — the conventions that make agents disciplined wiki maintainers.
+`git push` to `main` deploys to Vercel. That's the whole system.
+
+## The loop (operations)
+
+| Operation | Who | How |
+|---|---|---|
+| **Capture** | owner | drop markdown/images into `/inbox` (own writing → `inbox/mine/`) |
+| **Ingest** | scheduled agent | `/ingest` — file inbox items into the wiki, archive to `/sources`, log, build, push |
+| **Converse** | owner + agent | `/oracle <question>` — answer from the wiki with citations; durable answers get filed back as notes; also the channel for refinements ("merge these", "publish X") |
+| **Lint** | agent, slower cadence | `/lint` — contradictions, orphans, stale claims, missing pages |
+
+The scheduled ingest is not wired up yet — see
+`tasks/2026-07-25-schedule-ingest-agent.md` for how to set it up (owner action).
+
+Two bookkeeping files support this: **`log.md`** (append-only, grep-able record of every
+ingest/query/lint — the notebook's timeline) and the wiki's own link structure + hub
+pages, which serve as the index.
+
+## Provenance and voice — the rules that matter most
+
+The owner, **Wolfgang Gross**, does his own reading and writes his own notes. Agents do
+the bookkeeping. Every content page declares who wrote it via the `origin` frontmatter
+field, and note and hub pages render the byline accordingly (`lib/site.ts` →
+`bylineFor`; the home cover shows none):
+
+- `origin: human` — hand-written by the owner. **Agents never rewrite this prose.**
+  Fixing frontmatter, adding wikilinks, choosing tags: fine. Changing his wording: never.
+- `origin: agent` (default) — written and maintained by agents. Byline: *mantua agents*.
+- `origin: mixed` — the owner's writing substantially extended by agents. Byline says so.
+
+Never label agent-written text `origin: human`. This is the one unforgivable schema
+violation — the labeling is the contract that makes the notebook trustworthy.
+
+**Voice**: agent-written prose should match the owner's register — plain, concrete,
+first person where natural, no hype, no filler. The `origin: human` notes are the
+reference corpus for tone; study them before writing.
 
 ## Repo map
 
 ```
+inbox/                # CAPTURE — drop zone; emptied by /ingest (inbox/README.md = contract)
+  mine/               #   owner's own writing → becomes origin: human notes
+sources/              # ARCHIVE — immutable raw sources, one folder per ingested item
 content/
-  notes/              # atomic articles, one topic each → /notes/<slug>
-  index/              # curated hub pages (wiki entry points)
+  notes/              # THE WIKI — atomic pages, one topic each → /notes/<slug>
+  index/              # curated hub pages (entry points)
                       #   home.mdx → /   ·   anything-else.mdx → /<slug>
+log.md                # append-only agent activity log (## [YYYY-MM-DD] kind | title)
+tasks/                # plain-markdown backlog (tasks/README.md = format)
+.claude/commands/     # the agent operations: /ingest, /oracle, /lint
 velite.config.ts      # content schema (Zod) + wikilink extraction + build validation
 lib/
-  wikilinks.ts        # [[wikilink]] remark plugin + outgoing-link extraction (one regex, two uses)
-  content.ts          # THE content access layer: draft filtering, backlinks, tags, wikilink resolution
-  site.ts             # site name / URL constants
+  wikilinks.ts        # [[wikilink]] remark plugin + outgoing-link extraction
+  content.ts          # THE content access layer: draft filtering, backlinks, tags
+  site.ts             # site constants + provenance→byline mapping
 components/
   mdx.tsx             # MDX renderer; resolves wikilinks; REGISTER CUSTOM MDX COMPONENTS HERE
   note-list.tsx       # shared list/badge/tag UI
@@ -36,6 +83,9 @@ app/                  # Next.js routes (article template, tags, hubs, OG images,
 next.config.mjs       # runs Velite as part of next dev/build — no separate content build step
 .velite/              # GENERATED, git-ignored — never edit, never commit
 ```
+
+`inbox/`, `sources/`, `tasks/` and `log.md` are outside `/content`: Velite never builds
+them, nothing in them is published.
 
 ## Content schema (frontmatter)
 
@@ -45,32 +95,39 @@ a schema violation fails the build with a file + field error message.
 
 ```yaml
 ---
-title: What counts as a small language model?   # required, ≤160 chars
+title: Serving an SLM from the desktop under my desk   # required, ≤160 chars
 status: published        # 'draft' | 'published' — OMITTED ⇒ DEFAULTS TO DRAFT
-tags: [fundamentals]     # lowercase-kebab-case only; free-form otherwise
-created: 2026-07-13      # ISO date, set once
-updated: 2026-07-13      # ISO date — BUMP THIS ON EVERY MEANINGFUL EDIT
+origin: human            # 'human' | 'agent' | 'mixed' — OMITTED ⇒ DEFAULTS TO AGENT
+tags: [hands-on]         # lowercase-kebab-case only; free-form otherwise
+created: 2026-07-14      # ISO date, set once
+updated: 2026-07-14      # ISO date — BUMP THIS ON EVERY MEANINGFUL EDIT
 summary: One or two sentences; used for OG description, index listings, link previews.
-author: Wolfgang Gross   # optional byline; OMITTED ⇒ falls back to site.author (lib/site.ts)
-related: [private-deployment]   # optional, note slugs; manual "Related" section
+author: Wolfgang Gross   # byline name for human/mixed pages; OMITTED ⇒ site.owner
+related: [some-slug]     # optional, note slugs; manual "Related" section
 slug: custom-slug        # optional override — by convention OMIT IT (slug = filename)
 ---
 ```
 
 Conventions the schema can't enforce:
 
-- **Filename is the slug**: `content/notes/model-distillation.mdx` → `/notes/model-distillation`.
+- **Filename is the slug**: `content/notes/tabular-foundation-models-notes.mdx` → `/notes/tabular-foundation-models-notes`.
   Only set `slug:` in frontmatter if you must decouple them; don't rename published files
   (it breaks inbound deep links — there is no redirect layer).
 - Slugs are globally unique across notes *and* hubs (build fails on collision).
 - Bump `updated` when you edit substance; leave it for typo fixes.
+- Static assets a note needs go to `public/images/<note-slug>/`, referenced with
+  absolute paths.
 
-## Drafts
+## Drafts and publishing
 
 `status: draft` documents are **fully visible in `npm run dev`** (with an amber "draft"
 badge) and **completely absent from production builds**: no page, no listings, no
 backlinks, no sitemap entry, and wikilinks pointing at them render as inert "missing"
 spans. Keep half-formed thinking in the repo freely — it never leaks.
+
+**Publishing is an owner decision.** Ingested notes start as drafts; they go live when
+the owner says so (in conversation, or by marking the inbox item `status: published`
+up front).
 
 ## Wikilinks and backlinks — how they resolve
 
@@ -81,16 +138,20 @@ spans. Keep half-formed thinking in the repo freely — it never leaks.
 - Targets may be notes or hubs (one namespace).
 - A wikilink to a slug that doesn't exist (or is a draft, in production) renders as a
   muted dashed-underline span — the build **warns** but does not fail. Linking to notes
-  you haven't written yet is normal; the warning list at build time is your to-do list.
+  that don't exist yet is normal; the warning list at build time is the to-do list.
 - Backlinks: at build time each document's outgoing wikilink targets are extracted into a
   `links` field (`lib/wikilinks.ts`, called from `velite.config.ts`). The "Linked from"
   section on every page is computed by inverting those lists (`backlinksFor` in
   `lib/content.ts`). Wikilinks inside code blocks/inline code are ignored on both the
   rendering and extraction side.
 
-## How to add a note (the whole workflow)
+## How to add a note by hand
 
-1. Create `content/notes/<slug>.mdx` with the frontmatter above (start as `draft`).
+The normal path for new material is the inbox (see `inbox/README.md`). Editing the wiki
+directly is always possible too:
+
+1. Create `content/notes/<slug>.mdx` with the frontmatter above (start as `draft`;
+   set `origin` honestly).
 2. Write markdown/MDX. Link generously: `[[other-note-slug]]`.
 3. `npm run dev` → check it at `http://localhost:3000/notes/<slug>`.
 4. Set `status: published` when ready.
@@ -100,13 +161,11 @@ spans. Keep half-formed thinking in the repo freely — it never leaks.
 wikilinks are listed as warnings. Run it before pushing if you changed anything
 non-trivial. There are no unit tests — the build is the test.
 
-### How to add a hub page
+Hub pages work the same, but live in `content/index/<slug>.mdx` (no `tags`/`related`)
+and render at `/<slug>` (`home.mdx` is special — it renders at `/`). Hubs are curated
+maps: mostly prose + wikilinks pointing into the notes.
 
-Same as a note, but in `content/index/<slug>.mdx` (no `tags`/`related`). It renders at
-`/<slug>`. `home.mdx` is special — it renders at `/`. Hubs are curated maps: mostly
-prose + wikilinks pointing into the notes.
-
-## Embedding interactive components (Distill-style, for later)
+## Embedding interactive components (Distill-style)
 
 MDX is fully wired for it. Register a component in `sharedComponents` in
 `components/mdx.tsx`, then use it in any `.mdx` file with no import:
@@ -142,32 +201,39 @@ no custom build settings are needed.
 2. [vercel.com/new](https://vercel.com/new) → import the repo → framework auto-detects
    as Next.js → Deploy. No settings to change.
 3. In Vercel → Project → Settings → Environment Variables, set
-   `NEXT_PUBLIC_SITE_URL` to the canonical URL (e.g. `https://notebook.example.com`),
+   `NEXT_PUBLIC_SITE_URL` to the canonical URL (e.g. `https://mantua.io`),
    then redeploy. This feeds canonical URLs, OG tags, and the sitemap.
 4. Done: every push to `main` deploys. PR branches get preview URLs automatically.
 
 Per-note Open Graph images are generated automatically
-(`app/notes/[slug]/opengraph-image.tsx`) — shares on LinkedIn/Twitter render with a
-title card without any manual asset work.
+(`app/notes/[slug]/opengraph-image.tsx`) — shares render with a title card without any
+manual asset work.
 
-## Rules for future agent sessions
+## Rules for agent sessions
 
 1. **Content work happens in `/content` only.** Adding/editing notes must not require
    touching TypeScript.
-2. Respect the schema; when in doubt run `npm run build` and read the errors.
-3. New notes start as `status: draft` unless the user explicitly says publish.
-4. Never edit `.velite/` (generated) and never commit it.
-5. If you change the schema in `velite.config.ts`, update this README in the same commit.
-6. Don't rename published note files; don't reuse slugs for different topics.
-7. Keep this README accurate — it is the contract between sessions.
+2. **Respect provenance.** Never rewrite `origin: human` prose; never label agent text
+   `origin: human`. Match the owner's voice when writing agent prose.
+3. Respect the schema; when in doubt run `npm run build` and read the errors.
+4. New notes start as `status: draft`; publishing is the owner's call.
+5. Sources under `/sources` are immutable; the inbox contract is `inbox/README.md`.
+6. **Log everything** that changes the notebook: one `log.md` entry per ingest/query/lint.
+7. Never edit `.velite/` (generated) and never commit it.
+8. If you change the schema in `velite.config.ts`, update this README in the same commit.
+9. Don't rename published note files; don't reuse slugs for different topics.
+10. Keep this README accurate — it is the contract between sessions.
 
-## Deliberately out of scope in v1 (roadmap)
+## Deliberately out of scope for now (roadmap)
 
+- **Scheduling the ingest agent** — the one missing piece of the loop; owner action,
+  see `tasks/2026-07-25-schedule-ingest-agent.md`.
 - **Search** — planned: client-side index over the Velite JSON output (flexsearch) or
-  [Pagefind](https://pagefind.app) post-build; no external service.
+  [Pagefind](https://pagefind.app) post-build; no external service. Until then the wiki
+  is small enough for hubs + links to be the index.
 - **RSS/Atom feed** — trivial to add as `app/feed.xml/route.ts` over `allNotes()`.
 - **Graph visualization** — the data already exists (`links` on every doc).
-- **Self-hosted web fonts** — the design system's three families (Cormorant Garamond,
-  Inter, JetBrains Mono) currently load from the Google Fonts CDN via an `@import` at the
-  top of `app/globals.css`; swap to `next/font` or local `.woff2` if wanted.
+- **Self-hosted web fonts** — the three families (Cormorant Garamond, Inter, JetBrains
+  Mono) currently load from the Google Fonts CDN via an `@import` at the top of
+  `app/globals.css`; swap to `next/font` or local `.woff2` if wanted.
 - **Redirect layer** for renamed slugs (`next.config.mjs` `redirects()`).

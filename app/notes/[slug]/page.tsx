@@ -4,7 +4,7 @@ import { notFound } from 'next/navigation'
 import { MDXContent } from '@/components/mdx'
 import { DraftBadge, TagList, formatDate } from '@/components/note-list'
 import { allNotes, backlinksFor, getNote, relatedNotes } from '@/lib/content'
-import { site } from '@/lib/site'
+import { bylineFor, site } from '@/lib/site'
 
 export const dynamicParams = false
 
@@ -58,7 +58,7 @@ export default async function NotePage({ params }: { params: Promise<{ slug: str
       <h1 className="article-title">{note.title}</h1>
 
       <div className="article-byline">
-        <span className="section-label section-label-secondary">{note.author ?? site.author}</span>
+        <span className="section-label section-label-secondary">{bylineFor(note)}</span>
         <span className="section-label">
           <time dateTime={note.created}>{formatDate(note.created)}</time>
           {note.updated !== note.created && (

@@ -1,0 +1,52 @@
+---
+title: How this notebook works
+status: published
+created: 2026-07-25
+updated: 2026-07-25
+origin: agent
+summary: mantua.io is an agent-first knowledge base — a persistent, compounding wiki built from one inbox, maintained by scheduled agents, curated and read by its owner.
+---
+
+mantua.io follows a simple pattern: the owner curates sources and asks questions; agents
+do the bookkeeping. Instead of retrieving from raw documents on every question (the RAG
+way), agents **incrementally build and maintain a persistent wiki** — pages that get
+richer with every source added and every question asked. Cross-references are already
+there. Contradictions have already been flagged. Nothing is re-derived from scratch.
+
+## The loop
+
+1. **Capture.** Anything worth keeping — an article clipped to markdown, notes on a book
+   chapter, a stray idea, an image — gets dropped into the notebook's inbox.
+2. **Ingest.** An agent works through the inbox: reads each item in full, files it into
+   the wiki, creates or updates the pages it touches, links generously, and archives the
+   raw source. A single item can touch a dozen pages.
+3. **Converse.** The owner asks questions against the wiki and asks for refinements.
+   Good answers don't disappear into chat history — they are filed back as pages, so
+   explorations compound the same way sources do.
+4. **Lint.** An agent health-checks the whole wiki: contradictions between pages, stale
+   claims, orphan pages, concepts that deserve a page but don't have one.
+
+Ingest and lint are built to run unattended, on a schedule — that schedule is the part
+still being wired up; until then they run on demand.
+
+## Who writes what
+
+The reading is done by a human. Every source in this notebook was read (or written) by
+its owner, Wolfgang Gross — agents never pretend otherwise. Provenance is first-class:
+
+- Pages bylined **Wolfgang Gross** are hand-written. Agents never rewrite their prose.
+- Pages bylined **mantua agents** are written and maintained by agents — summaries,
+  syntheses, cross-references, this page.
+- The occasional hybrid — his writing, substantially extended by agents — is labeled as
+  such.
+
+Agent-written prose aims for the owner's register: plain, concrete, first person where
+natural. But the label always tells you whose words you are reading.
+
+## Lineage
+
+The pattern is Andrej Karpathy's *LLM Wiki* idea — an LLM-maintained personal knowledge
+base, kept as interlinked markdown in a git repository — which is itself close in spirit
+to Vannevar Bush's Memex: a private, curated knowledge store where the trails between
+documents are as valuable as the documents themselves. The part Bush couldn't solve was
+who does the maintenance. The agents handle that.

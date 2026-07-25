@@ -1,8 +1,8 @@
 {
-  "name": "slm-research-notebook",
+  "name": "mantua",
   "version": "0.1.0",
   "private": true,
-  "description": "Deployable, agent-native, wiki-style research notebook on small language model adoption.",
+  "description": "mantua.io — an agent-maintained commonplace notebook: inbox in, wiki out, continuously deployed.",
   "scripts": {
     "dev": "next dev",
     "build": "next build",

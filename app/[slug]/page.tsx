@@ -3,7 +3,7 @@ import { notFound } from 'next/navigation'
 import { MDXContent } from '@/components/mdx'
 import { DraftBadge, formatDate } from '@/components/note-list'
 import { allHubs, backlinksFor, getHub } from '@/lib/content'
-import { site } from '@/lib/site'
+import { bylineFor, site } from '@/lib/site'
 
 // Hub pages (curated entry points) from content/index/*.mdx.
 // `home.mdx` is rendered by app/page.tsx at `/`; every other hub lands here
@@ -52,6 +52,7 @@ export default async function HubPage({ params }: { params: Promise<{ slug: stri
       )}
       <h1 className="article-title">{hub.title}</h1>
       <div className="article-byline">
+        <span className="section-label section-label-secondary">{bylineFor(hub)}</span>
         <span className="section-label">
           updated <time dateTime={hub.updated}>{formatDate(hub.updated)}</time>
         </span>
