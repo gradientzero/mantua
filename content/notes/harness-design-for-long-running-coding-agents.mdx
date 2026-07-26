@@ -1,0 +1,156 @@
+---
+title: "Harness design for long-running application development (Anthropic, 2026-03)"
+status: draft
+tags: [agentic-engineering, harness-design, evaluation, frontend-design]
+created: 2026-07-26
+updated: 2026-07-26
+summary: Notes on Prithvi Rajasekaran's Anthropic Labs post — a GAN-inspired generator/evaluator loop applied first to frontend design, then extended to a planner/generator/evaluator harness that builds full-stack apps over multi-hour autonomous runs, with the costs and the walk-back to a simpler harness.
+origin: agent
+---
+
+Source: [Harness design for long-running application development](https://www.anthropic.com/engineering/harness-design-for-long-running-application-development),
+Prithvi Rajasekaran (Anthropic Labs), 24 March 2026. Archived under
+`sources/2026-07/harness-design-for-long-running-application-development/`.
+
+The through-line: two problems the author had hit ceilings on — Claude producing bland
+frontend designs, and Claude building whole applications unattended — turn out to have the
+same fix. Borrow the [GAN](https://en.wikipedia.org/wiki/Generative_adversarial_network)
+shape: one agent generates, a separate agent grades, and the grade feeds the next
+iteration. See [[generator-evaluator-loops]] for the pattern on its own.
+
+## The two failure modes it's built against
+
+1. **Coherence decays as context fills.** Some models additionally show "context
+   anxiety" — they start wrapping up prematurely as they think they're approaching the
+   limit. Compaction summarizes in place and keeps the anxiety; a *context reset* (fresh
+   agent, structured handoff artifact) gives a clean slate. Sonnet 4.5 needed resets;
+   Opus 4.5 largely didn't, so this harness dropped them and ran one continuous session
+   with the Agent SDK's automatic compaction.
+2. **Self-evaluation is generous.** Asked to grade their own work, agents praise it. Worst
+   on subjective tasks like design, where no test can settle it. Splitting the evaluator
+   out doesn't make it strict on its own — it's still an LLM inclined to like LLM output —
+   but a standalone evaluator is far more tractable to *tune* toward skepticism than a
+   generator is to make self-critical.
+
+## Frontend: making taste gradable
+
+Four criteria given to both agents: **design quality** (does it cohere into one identity),
+**originality** (custom decisions vs. template layouts, library defaults and telltale AI
+patterns), **craft** (typography, spacing, contrast — a competence check), and
+**functionality** (usability independent of aesthetics). Design and originality were
+weighted heaviest, on the reasoning that Claude already clears craft and functionality by
+default and fails on blandness.
+
+Mechanics worth keeping:
+
+- The evaluator got the Playwright MCP and *navigated the live page* — screenshotting,
+  clicking around — before scoring. Slower than grading a static screenshot; each cycle
+  costs real wall-clock time, with full runs up to four hours.
+- Calibrated with few-shot examples carrying detailed score breakdowns, to align the
+  evaluator with the author's taste and stop score drift across iterations.
+- 5–15 iterations per generation. The generator was told to make an explicit strategic
+  call after each grade: refine if scores trend well, pivot to a different aesthetic if
+  not.
+- The wording of the criteria steered output more than expected — a phrase like "the best
+  designs are museum quality" pulled generations toward one particular look.
+
+Honest results: scores improved then plateaued with headroom left; the trend wasn't clean,
+and the author sometimes preferred a middle iteration to the last one. The first iteration
+already beat an unprompted baseline, so the rubric language alone does work before any
+feedback arrives. The striking case: a Dutch-museum site that was a polished dark landing
+page by iteration nine, then got scrapped at ten and rebuilt as a 3D room in CSS
+perspective with doorway navigation instead of scrolling.
+
+## Full-stack: three agents
+
+- **Planner** — expands a 1–4 sentence prompt into a full product spec. Told to be
+  ambitious about scope and to stay at product/high-level-design altitude, deliberately
+  *not* specifying granular technical detail, because a wrong detail in the spec cascades
+  into the implementation. Also told to find places to weave AI features into the product.
+- **Generator** — works in sprints, one feature at a time from the spec, on
+  React/Vite/FastAPI/SQLite (later Postgres), with git. Self-evaluates before handing to
+  QA.
+- **Evaluator** — drives the running app through Playwright like a user would, checking UI,
+  API endpoints and database state, then grades the sprint on product depth,
+  functionality, visual design and code quality. Each criterion has a hard threshold; one
+  miss fails the sprint and returns detailed feedback.
+
+Two structural details do a lot of work. **Sprint contracts**: before any code, generator
+and evaluator negotiate what "done" means for that chunk — the generator proposes what it
+will build and how success gets verified, the evaluator checks it's the right thing, and
+they iterate until they agree. This is the bridge from a deliberately vague spec to
+testable behaviour. **Communication is files**: one agent writes a file, the other reads
+and responds in it or in a new one.
+
+## What it cost
+
+Retro game maker, from one sentence (level editor, sprite editor, entity behaviours,
+playable test mode):
+
+| Harness | Duration | Cost |
+|---|---|---|
+| Solo | 20 min | $9 |
+| Full harness | 6 hr | $200 |
+
+Over 20× the cost. The solo run looked plausible and was broken where it mattered —
+entities rendered, nothing responded to input, the wiring between entity definitions and
+the runtime was severed with no surface indication. The harness run planned 16 features
+across ten sprints (animation system, behaviour templates, sound, AI-assisted sprite and
+level generation, export with shareable links), used the frontend-design skill at the
+*planner* stage to derive a visual language, and produced an app whose play mode actually
+worked. Sprint 3's contract alone had 27 test criteria.
+
+The evaluator's findings read like a competent QA engineer's: a fill tool that only
+painted the drag endpoints because `fillRectangle` never fired on mouseUp; a delete
+handler requiring two selection states when clicking only sets one; a FastAPI route
+ordering bug where `/frames/reorder` sat behind `/{frame_id}` and returned a 422 trying to
+parse "reorder" as an integer. Specific enough to act on without re-investigating.
+
+Getting there took work: out of the box the model is a poor QA agent — it found real
+issues and then rationalised approving them, and it tested shallowly. The tuning loop was
+to read the evaluator's logs, find where its judgment diverged from the author's, and
+patch the prompt. Several rounds.
+
+## The walk-back
+
+The v1 harness worked and was bulky, slow and expensive. The stated principle for cutting
+it down is the one I'd keep from this whole post:
+
+> every component in a harness encodes an assumption about what the model can't do on its
+> own, and those assumptions are worth stress testing
+
+— both because they may be wrong and because they go stale on the next model. A radical
+one-shot simplification failed and made it impossible to tell which pieces were
+load-bearing, so the author switched to removing one component at a time. Opus 4.6's
+release (better planning, longer agentic runs, better self-review, better long-context
+retrieval — all things the harness was compensating for) supplied the motive.
+
+Sprints came out entirely; the evaluator moved to a single pass at the end. The planner
+stayed, because without it the generator under-scopes: handed the raw prompt it starts
+building instead of speccing, and ships a thinner app. The evaluator's value turned out to
+be *conditional* — as raw capability grows, the boundary of "what the generator handles
+alone" moves outward, and inside that boundary the evaluator is pure overhead. Outside it,
+it still pays.
+
+DAW built in the browser on Web Audio, v2 harness: 3 hr 50 min, $124.70 total, of which
+the first build round alone was 2 hr 7 min and $71. The builder ran coherently for over
+two hours without sprint decomposition. QA still earned its keep, catching display-only
+features across two rounds — clips that couldn't be dragged, no instrument panels, no
+graphical effect editors, recording that was a stub that toggled a button without
+capturing a mic.
+
+Two honest limits noted: Claude can't hear, so the QA loop was weak on musical taste; and
+the residual clunkiness (the app never signals that you must build sprites before
+populating a level) read as a gap in the base model's product intuition rather than
+something this harness was built to fix.
+
+## What I take from it
+
+- The evaluator is a *dial*, not a component you either have or don't. Its worth depends
+  on how far the task sits past what the model does reliably alone.
+- Rubric wording is prompt engineering with unusually long reach — it shapes output before
+  a single grade is returned.
+- File-based inter-agent communication and a negotiated definition of done are cheap, and
+  they're the parts most obviously portable to a smaller setup.
+- Cost is real and the numbers are published, which is rarer than it should be: $200 for a
+  toy game maker, $125 for a toy DAW.

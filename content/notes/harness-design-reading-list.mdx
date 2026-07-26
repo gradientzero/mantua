@@ -1,0 +1,62 @@
+---
+title: "Harness design: prior work still to read"
+status: draft
+tags: [agentic-engineering, harness-design, reading-list]
+created: 2026-07-26
+updated: 2026-07-26
+summary: The pieces the 2026 harness-design posts build on — Anthropic's earlier long-running-agent harness, context engineering, building effective agents, the frontend design skill — captured as references because the article bodies could not be fetched from this session.
+origin: agent
+---
+
+The owner asked for the prior work linked from
+[[harness-design-for-long-running-coding-agents|the Anthropic harness-design post]] to go
+into the inbox too. **The bodies could not be retrieved**: this environment's network
+policy does not allow `www.anthropic.com` (`403 Host not in allowlist`), and the skill file
+lives in a GitHub repository outside this session's scope. So this page is the reference
+list, described from what the harness-design post says about each — the texts themselves
+still need clipping. Tracked as `tasks/2026-07-26-clip-harness-design-prior-work.md`.
+
+## The four
+
+[**Effective harnesses for long-running agents**](https://www.anthropic.com/engineering/effective-harnesses-for-long-running-agents) — Anthropic Engineering.
+The direct predecessor and the one I most want in full. An *initializer* agent decomposes
+a product spec into a task list; a *coding* agent implements one feature at a time and
+hands off structured artifacts to carry state across sessions, with full context resets in
+between. Built on Sonnet 4.5, whose context anxiety is what made resets load-bearing. Two
+lessons carried forward into the newer work: decompose the build into tractable chunks,
+and use structured artifacts for handoff.
+
+[**Effective context engineering for AI agents**](https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents) — Anthropic Engineering.
+Cited for the underlying failure mode: coherence decays as the context window fills. The
+distinction between compaction (summarize in place, keep going) and a reset (clean slate
+plus a handoff artifact) is the practical consequence.
+
+[**Building effective agents**](https://www.anthropic.com/research/building-effective-agents) — Anthropic Research.
+Cited for the principle the harness simplification was justified against: find the simplest
+solution possible, and only increase complexity when needed. Older than the rest and the
+most likely to be worth reading in full for its own sake.
+
+[**The frontend design skill**](https://github.com/anthropics/claude-code/blob/main/plugins/frontend-design/skills/frontend-design/SKILL.md) — `anthropics/claude-code`, plugin skill.
+The prompt-engineering starting point that preceded the generator/evaluator work. In the
+full-harness run it was given to the *planner*, which read it and derived a visual design
+language for the app as part of the spec — which is a more interesting use of a skill file
+than handing it to the agent that writes the CSS.
+
+## Secondary
+
+- [**Claude Opus 4.6 launch post**](https://www.anthropic.com/news/claude-opus-4-6) — the
+  capability claims the harness simplification leaned on: plans more carefully, sustains
+  agentic tasks longer, more reliable in large codebases, better self-review and debugging,
+  better long-context retrieval.
+- [**Claude Agent SDK**](https://platform.claude.com/docs/en/agent-sdk/overview) — what
+  both harnesses were built on, and the source of the automatic compaction that replaced
+  context resets.
+- **The "Ralph Wiggum" loop**, Geoffrey Huntley — [ralph](https://ghuntley.com/ralph/) and
+  [loop](https://ghuntley.com/loop/) — the community pattern both companies point at: hooks or
+  scripts that keep an agent in a continuous iteration cycle. OpenAI describes their
+  review-until-all-reviewers-are-satisfied loop as exactly this. Worth reading before
+  building anything similar here.
+- [**Execution plans as checked-in artifacts**](https://cookbook.openai.com/articles/codex_exec_plans) — referenced from
+  [[harness-engineering-agent-first-repositories|the OpenAI harness-engineering post]] as
+  how they handle plans for complex work. Directly relevant to the cross-session memory
+  question in [[agentic-engineering]].
