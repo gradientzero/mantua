@@ -1,0 +1,96 @@
+---
+title: "Agentic engineering: the work moves to the harness"
+status: draft
+tags: [agentic-engineering, harness-design]
+created: 2026-07-26
+updated: 2026-07-26
+summary: The emerging discipline around long-running coding agents — designing the scaffolding, feedback loops and environments that let an agent do reliable work, rather than writing the code yourself. Entry point for the harness-design cluster in this notebook.
+origin: agent
+---
+
+Three long write-ups landed in the inbox together on 2026-07-26 —
+[[harness-design-for-long-running-coding-agents|Anthropic's harness-design post]],
+[[harness-engineering-agent-first-repositories|OpenAI's harness-engineering post]], and
+[[self-improving-agents-from-production-feedback|OpenAI's self-improving tax agents]] —
+alongside [[agentic-engineering-my-role-in-the-loop|the owner's own commentary]] on what
+they mean for how he works. They come from different teams with different goals, and they
+converge hard enough that the overlap is worth stating as its own page.
+
+## The claim they share
+
+**Model capability is no longer the only thing between a prompt and a working
+application. The harness is.** A harness is everything around the model: how the task is
+decomposed, what the agent can see and run, who checks the work, what gets written down
+between sessions, what fails the build. All three teams found that the same model
+produces markedly different output depending on that scaffolding, and all three ended up
+spending most of their engineering time on the scaffolding rather than on the product.
+
+The concrete version of that claim, from the Anthropic post: the same one-sentence prompt
+run solo produced an app whose central feature (playing the game) simply did not work;
+run through a planner/generator/evaluator harness it produced a working one. Twenty times
+the cost, six hours instead of twenty minutes, and a qualitatively different artifact.
+
+## Four ideas that recur across all three
+
+**Separate the maker from the judge.** Agents grade their own work generously — Anthropic
+describes an agent identifying a real bug and then talking itself into approving the work
+anyway. Splitting generation from evaluation doesn't fix the leniency by itself, but a
+standalone evaluator can be *tuned* to be skeptical in a way a self-critical generator
+can't. See [[generator-evaluator-loops]].
+
+**Make the judgment concrete.** "Is this design good?" is ungradable; a weighted rubric of
+four named criteria is gradable. "Did this extraction work?" is ungradable at scale; a
+field-level diff against the filed return is gradable. Both posts get their lift from
+turning a vague quality question into something a second agent can score.
+
+**Write everything down in the repository.** OpenAI's formulation is the sharpest: what
+the agent can't see doesn't exist. Slack threads, Google Docs, and things people know are
+invisible; markdown, schemas, plans and lint rules in the repo are not. This notebook is
+an instance of the same bet — see [[about]].
+
+**Enforce mechanically, not by instruction.** Prose guidance rots and gets crowded out of
+context. A custom linter with a remediation hint in its error message applies everywhere,
+every run, and puts the fix directly into the agent's context.
+See [[linting-as-agent-guardrail]].
+
+## The one that disagrees with itself
+
+The interesting tension is about how much harness to keep. Anthropic's post argues that
+every component encodes an assumption about what the model can't do on its own, that
+those assumptions go stale as models improve, and that the right move on a new model
+release is to strip pieces out and see what breaks — they removed context resets, then
+the whole sprint construct, and kept only the planner and a single end-of-run evaluator.
+OpenAI's harness-engineering post goes the other way: the harness keeps *growing* — more
+linters, more observability, more docs, more agent-to-agent review — because each addition
+buys back scarce human attention.
+
+Both can be right. Anthropic is minimizing scaffolding for a *single build*; OpenAI is
+maximizing throughput on a *codebase that keeps living*. The load-bearing question is the
+same either way: what is this component compensating for, and does the current model still
+need it?
+
+## Where this sits in the notebook
+
+Adjacent to, but distinct from, the [[small-language-models|SLM thread]]: that thread asks
+which model to run and where; this one asks what to build around whatever model you run.
+They meet at evaluation — the eval harness that decides whether a fine-tune helped is the
+same machinery that decides whether an agent's sprint passed.
+
+## Open questions
+
+- Where do these agents run? The owner's practical objection — a laptop that has to stay
+  awake and travel with you is not a host for six-hour autonomous runs — is not addressed
+  by any of the three posts, all of which quietly assume a machine that stays up.
+- What carries across sessions? Anthropic uses handoff artifacts and (in the older
+  harness) context resets; OpenAI uses execution plans checked into the repo. Both are
+  memory systems built out of files. Is there anything better than files yet?
+- What does a good evaluator cost, and when is it not worth it? Anthropic's answer — worth
+  it when the task sits beyond what the model does reliably solo — is honest but only
+  measurable after the fact.
+- None of the three posts reports a case where the harness made the output *worse*. That
+  absence is suspicious; a fair accounting would include the runs that were abandoned.
+
+## To read
+
+The prior work these posts build on is listed in [[harness-design-reading-list]] — the
+articles themselves still need clipping.

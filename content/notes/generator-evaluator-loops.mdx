@@ -1,0 +1,95 @@
+---
+title: Generator–evaluator loops
+status: draft
+tags: [agentic-engineering, evaluation, harness-design]
+created: 2026-07-26
+updated: 2026-07-26
+summary: Splitting the agent that does the work from the agent that judges it — why self-evaluation fails, what makes an evaluator worth its cost, and how three independent teams arrived at the same shape from taste, from QA, and from production corrections.
+origin: agent
+---
+
+The recurring structure across every harness in
+[[agentic-engineering|the harness-design cluster]]: one agent produces, a *different* agent
+judges, and the judgment feeds the next attempt. Anthropic reaches for the
+[GAN](https://en.wikipedia.org/wiki/Generative_adversarial_network) analogy; OpenAI's
+version is a review loop that runs until every agent reviewer is satisfied; the tax-agent
+work builds the same shape out of graders and eval suites. Same skeleton, three routes to
+it.
+
+## Why self-evaluation doesn't work
+
+Asked to grade their own output, agents praise it. The failure is sharper than generic
+optimism: Anthropic's post describes an evaluator finding a legitimate bug and then
+*talking itself into* deciding it didn't matter — the reasoning is intact, the verdict is
+motivated. It's worst where nothing can settle the question externally, which is why
+design was the domain that exposed it.
+
+The important caveat, stated plainly in that post: **separation doesn't fix leniency by
+itself.** A standalone evaluator is still an LLM inclined to like LLM output. What
+separation buys is *tractability* — you can tune a dedicated evaluator toward skepticism
+with prompts and calibration examples, and you cannot easily make a generator critical of
+work it just committed to. Once external feedback exists at all, the generator has
+something concrete to iterate against.
+
+## What makes an evaluator actually work
+
+**Concrete criteria beat a quality question.** "Is this good?" is ungradable; a named
+rubric is. Anthropic's four (design quality, originality, craft, functionality) are worth
+studying less for the categories than for the weighting decision behind them: grade
+hardest where the model is weakest by default, because the criteria are also a prompt and
+they steer the generator before any score comes back.
+
+**Calibrate with worked examples.** Few-shot examples carrying full score breakdowns
+aligned the evaluator with its author's taste and, notably, reduced *score drift* across
+iterations — otherwise the scale itself moves and the trend is meaningless.
+
+**Make it use the thing.** The evaluators that found real problems drove the running
+artifact: Playwright navigating the live page and screenshotting before scoring; Playwright
+clicking through the app and checking API and database state; Chrome DevTools driving the
+app per worktree. An evaluator grading a static screenshot or reading a diff is a different
+and much weaker instrument. This costs wall-clock time — it's most of why a full run takes
+hours.
+
+**Define done before the work starts.** Anthropic's sprint contracts (generator proposes
+scope and verification, evaluator checks it's the right thing, iterate until agreed) and
+the tax-agent bounded task environment (targeted eval + regression suite fixed before the
+agent begins) are the same move: the definition of done is external to the agent that will
+be judged against it, and it exists before there's any work to rationalise.
+
+**Hard thresholds, not a vibe.** One criterion below its floor fails the whole sprint and
+returns specifics. The published examples are precise enough to act on without
+re-investigation — a named function that never fires on mouseUp, a route-ordering bug with
+the resulting 422.
+
+**Expect to tune it for a while.** Out of the box, the model is a poor QA agent: it tests
+shallowly, misses nested cases, and rationalises passes. The loop that fixed it was to read
+the evaluator's own logs, find where its judgment diverged from the author's, and patch the
+prompt — several rounds before it graded reasonably. Tuning the judge is itself an
+engineering task with no test to tell you when you're done.
+
+## When it isn't worth it
+
+The most useful finding is that the evaluator's value is conditional, not fixed. As the
+generator gets stronger, the boundary of "handles this reliably alone" moves outward, and
+inside that boundary the evaluator is pure cost and latency. Outside it, it still pays.
+On Opus 4.5 the boundary sat right at the builds being attempted and the evaluator caught
+things throughout; on 4.6 much of the same work fell inside it.
+
+So the question to ask before adding one: *does this task sit past what the model does
+reliably solo?* If you can't say, the cheap experiment is to run both and compare — which
+is exactly the solo-vs-harness comparison Anthropic published.
+
+## Limits
+
+- **The judge can't perceive everything.** Claude can't hear, so the DAW's QA loop was
+  blind to musical taste. Whatever the evaluator can't observe is unjudged, and the gap is
+  invisible in the scores.
+- **The grader itself can be wrong.** The tax-agent post lists "the grader is
+  miscounting expected noise as failure" as a legitimate root cause for a failing eval.
+  Anything that grades needs its own maintenance.
+- **Scores plateau, and aren't monotonic.** Later iterations were better on average, but a
+  middle iteration was sometimes preferable to the last. A rising score is not the same as
+  a better artifact.
+- **Both agents share a prior.** Two instances of the same model are not independent
+  reviewers; they fail in correlated ways. None of the three posts tests a
+  cross-model evaluator, which seems like the obvious next experiment.

@@ -1,0 +1,113 @@
+---
+title: "Harness engineering: an agent-first repository (OpenAI, 2026-02)"
+status: draft
+tags: [agentic-engineering, harness-design, code-review, linting]
+created: 2026-07-26
+updated: 2026-07-26
+summary: "Notes on Ryan Lopopolo's OpenAI post — five months shipping a product with no hand-written code, and what a repository has to look like for that to work: docs as the system of record, a bootable app per worktree, custom linters as taste enforcement, and continuous cleanup of agent drift."
+origin: agent
+---
+
+Source: [Harness engineering: leveraging Codex in an agent-first world](https://openai.com/index/harness-engineering/),
+Ryan Lopopolo (OpenAI), 11 February 2026. Archived under
+`sources/2026-07/harness-engineering-leveraging-codex-in-an-agent-first-world/`.
+
+The constraint the team set themselves: **zero lines of manually-written code**. Not zero
+human involvement — humans steer, prioritise, translate feedback into acceptance criteria,
+and validate outcomes — but no human ever types application code, tests, CI config, docs
+or tooling. Five months from an empty repository to roughly a million lines and ~1,500
+merged PRs, three engineers at the start and seven by the end, averaging 3.5 PRs per
+engineer per day. Their estimate is ~1/10th the wall-clock of writing it by hand.
+
+The constraint is the interesting part. Because the only way to make progress was to get
+the agent to do it, every failure became a question about the environment — what
+capability is missing, and how do we make it both legible and enforceable? — rather than a
+prompt to retry harder.
+
+## What they actually built
+
+**Docs as the system of record; `AGENTS.md` as a table of contents.** The one-big-file
+approach failed for four reasons they name precisely: context is scarce and a giant
+instruction file crowds out the task; when everything is important nothing is; a
+monolithic manual rots and agents can't tell what's still true; and a single blob can't be
+mechanically checked for freshness or coverage. What replaced it is a ~100-line map
+pointing into a structured `docs/` tree — design docs with verification status, product
+specs, execution plans (active, completed, and a tech-debt tracker), generated schema
+docs, and vendored `llms.txt` references. Progressive disclosure: small stable entry point,
+plus directions for where to look next. CI linters check the knowledge base is current and
+cross-linked, and a recurring "doc-gardening" agent opens PRs against docs that no longer
+match the code.
+
+**The app made legible to the agent.** Bootable per git worktree, so the agent can launch
+and drive its own instance of the change it just made. Chrome DevTools Protocol wired into
+the agent runtime with skills for DOM snapshots, screenshots and navigation, so it can
+reproduce a bug, fix it, and verify the fix by using the app. An ephemeral observability
+stack per worktree — logs, metrics and traces the agent can query with LogQL/PromQL/TraceQL
+— which is what makes a prompt like "no span in these four critical user journeys exceeds
+two seconds" a tractable instruction rather than a wish. Single runs go six hours,
+often overnight.
+
+**Architecture enforced by lint, not by review.** Each business domain is split into fixed
+layers with validated dependency directions (types → config → repo → service → runtime →
+UI), cross-cutting concerns entering only through an explicit providers interface. Custom,
+agent-written linters and structural tests enforce it, alongside "taste invariants" —
+structured logging, naming conventions, file-size limits. The detail I keep coming back
+to: because the lints are custom, the *error messages are written to inject remediation
+instructions into the agent's context*. See [[linting-as-agent-guardrail]].
+
+**Review handed to agents.** A PR is driven to completion by having the agent review its
+own diff locally, request further agent reviews locally and in the cloud, respond to
+feedback, and loop until every reviewer is satisfied — the "Ralph Wiggum" loop. Humans may
+review; they aren't required to.
+
+**Garbage collection.** Agents replicate whatever patterns exist in the repo, including
+the bad ones, so drift is structural rather than occasional. The team used to spend every
+Friday — 20% of the week — cleaning up AI slop, which didn't scale. It was replaced by
+"golden principles" written into the repo plus background agent tasks on a cadence that
+scan for deviations, update quality grades, and open small refactor PRs that review in
+under a minute and automerge. Their framing: technical debt is a high-interest loan, pay
+it down continuously.
+
+## The claim I find most transferable
+
+> From the agent's point of view, anything it can't access in-context while running
+> effectively doesn't exist.
+
+Slack threads, Google Docs and tacit knowledge are invisible; repository-local versioned
+artifacts are the whole world. That reframes "write it down" from good hygiene into a
+capability question, and it justifies otherwise odd trade-offs they made: preferring
+"boring" dependencies because they're well-represented in training data and stable, and
+occasionally reimplementing a small utility rather than depending on an opaque one, so the
+agent can inspect and modify all of it.
+
+This notebook is a small instance of the same bet — see [[about]] — and the doc-gardening
+agent is recognisably the same job as `/lint` here.
+
+## Where I'd push back
+
+**Minimal merge gates.** Short-lived PRs, few blocking checks, test flakes handled by
+re-running rather than blocking. They're explicit that this would be irresponsible at low
+throughput and is a deliberate trade at high throughput: corrections are cheap, waiting is
+expensive. It still assumes the agent reviewers catch what the gates would have. The post
+gives no data on escaped defects, and "hundreds of internal users" is a forgiving
+audience — I'd want that number before copying the policy.
+
+**The counting.** 3.5 PRs per engineer per day and a million lines are throughput metrics,
+and a million agent-written lines is as easily a symptom as an achievement — they
+reimplement utilities on purpose. The honest measures in the post are the qualitative ones
+(it ships, it has daily users, coherence held for five months), plus their own admission
+that they don't know how architectural coherence holds up over *years*.
+
+**It doesn't generalise yet.** They say so directly: the end-to-end autonomy — reproduce
+bug, record a video of the failure, fix, verify by driving the app, record a second video,
+open PR, handle feedback, remediate CI, merge — depends on this repository's specific
+scaffolding, and shouldn't be assumed to transfer without comparable investment.
+
+## Contrast with the Anthropic post
+
+[[harness-design-for-long-running-coding-agents|Anthropic's harness post]] spends its
+second half *removing* scaffolding as the model improves; this one keeps adding it. The
+difference is the object: a one-shot build of a new app versus a codebase that has to stay
+coherent while dozens of agent sessions modify it. Scaffolding that's pure overhead for
+the first is what keeps the second from decaying. Both agree on the underlying test —
+what is this piece compensating for? See [[agentic-engineering]].

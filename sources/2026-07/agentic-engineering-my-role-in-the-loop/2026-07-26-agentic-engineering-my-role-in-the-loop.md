@@ -1,0 +1,14 @@
+---
+origin: human
+captured: 2026-07-26
+tags: [agentic-engineering]
+note: >
+  Dictated commentary, captured alongside the three harness-design articles dropped in
+  the inbox on the same day (Anthropic "Harness design for long-running application
+  development", OpenAI "Building self-improving tax agents with Codex", OpenAI "Harness
+  engineering"). Transcribed as spoken — transcription artifacts left in.
+---
+
+# My commentary
+
+because you am looking into this topic of a s... a psychopathy called agentic engineering. And this is something I'm very interested in because, like, one, we are using AI coding for... yeah. I think six months now, more or less at the beginning of the year. And that that has been great, but also we feelings, or many of us feeling that we as humans are the bottleneck and simultaneously waiting for the model, um, all all the time. So finding a new role is very important. And I think all signs are, uh, pointing towards me being... definitely part of the loop, but not just QAs, but more like manager of a small team. And this is something that has been discussed before. You know? You manage your sort of agents with how exactly is this working. So there's some practical considerations like, where are these models running because they can't... or if they run on your local machine, then, you know, you're relying that this machine is up and running and with a laptop, uh, that's, yeah, that's sometimes annoying and you can actually down. You have to bring it along. Um, so that's that's a problem. then you want the agents to have some cross session communication possibilities. So some memory system or or whatnot. And, also, you want them to be long running and taking some decisions off of you. Um, and, also, Quebec have a good quality control and, uh, PR review process, and this is also what this blood process targeting here with the domain of front end design. It's more on taste than specific verifiability. Linting is another topic that's more new to me. Uh, so this repository has a linting convention. So some some linting that that works effectively beyond tests. So that's that's another thing that's... that would be interesting to investigate. Um, also, that's kind of, like, more like instruction now. Um, the links in, um, that are linked here in the beginning, so also put them in the inbox because I think there's relevant as well. So the prior work by anthropic, uh, by, yeah, by anthropic. And also there's one, uh, blog post by OpenAI and a post Post it here as well. Put this one also in the inbox.

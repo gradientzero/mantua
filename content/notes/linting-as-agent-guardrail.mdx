@@ -1,0 +1,95 @@
+---
+title: Linting as an agent guardrail
+status: draft
+tags: [agentic-engineering, linting, harness-design]
+created: 2026-07-26
+updated: 2026-07-26
+summary: Custom lint rules as the enforcement layer for conventions an agent would otherwise drift away from — architecture boundaries, taste invariants, documentation freshness. Why a linter beats an instruction, and what to put in the error message.
+origin: agent
+---
+
+Tests check that code does the right thing. Lint checks that it is *built* the right way —
+and that turns out to be the more useful category when the code is written by an agent,
+because the failure mode isn't usually a wrong answer, it's a plausible one built the wrong
+way. This note collects what
+[[harness-engineering-agent-first-repositories|the OpenAI harness-engineering post]] does
+with it, since that's the only one of the three sources with a real implementation.
+
+## Why a rule beats an instruction
+
+Written guidance about how to build things has three problems in an agent setting, all
+named in that post: it consumes scarce context and crowds out the actual task; when
+everything in a long document is marked important, nothing is; and it rots silently,
+because nobody can mechanically check whether prose is still true.
+
+A lint rule has none of those. It costs no context until it fires, it fires on every run
+without being remembered, and it either passes or it doesn't. The framing worth keeping:
+**enforce invariants, don't micromanage implementations.** Their example — require that
+data shapes are parsed at the boundary, don't prescribe which library does it. The model
+picked Zod on its own.
+
+The second-order effect is that this is how human taste gets into an agent-written
+codebase at all. Review comments and refactor PRs are one-time corrections; a rule is the
+same taste applied to every future line. When documentation isn't holding a convention in
+place, promote the convention into code.
+
+## Write the error message for the agent
+
+The detail I hadn't considered before reading this: because the lints are custom, the
+error messages are written to **inject remediation instructions into the agent's
+context**. A lint failure isn't just a rejection, it's a targeted prompt delivered exactly
+when it's relevant, to an agent that is already looking at the offending code. That is
+about the highest-signal, lowest-cost channel into a running agent there is — and it
+inverts the usual advice about terse error messages.
+
+## What they enforce
+
+- **Architecture boundaries.** Fixed layers per business domain with validated dependency
+  direction (types → config → repo → service → runtime → UI), cross-cutting concerns
+  entering only through one explicit providers interface. Custom linters plus structural
+  tests; anything else is disallowed mechanically rather than caught in review. Their
+  point: this is the kind of rigidity you'd normally postpone until you have hundreds of
+  engineers, and with agents it's an early prerequisite — constraints are what buy speed
+  without decay.
+- **Taste invariants.** Structured logging, naming conventions for schemas and types, file
+  size limits, platform-specific reliability requirements.
+- **Documentation freshness.** CI jobs validate that the knowledge base is current,
+  cross-linked and correctly structured — docs treated as a checkable artifact, not prose.
+- **Drift, on a cadence.** Beyond blocking lint, background agent tasks scan for
+  deviations from written "golden principles", update per-domain quality grades, and open
+  small refactor PRs. A doc-gardening agent does the same for documentation that no longer
+  matches the code. This replaced a standing Friday cleanup that consumed 20% of the
+  team's week and didn't scale.
+
+That last category is the one that generalises furthest: agents replicate whatever
+patterns already exist in a repository, including the mediocre ones, so drift compounds by
+default. Continuous small corrections are cheaper than periodic large ones — their debt-as-
+high-interest-loan framing.
+
+## The version already in this notebook
+
+`/lint` here (`.claude/commands/lint.md`) is the same idea applied to prose rather than
+code: broken wikilinks, orphan pages, contradictions between notes, stale claims, concepts
+mentioned often enough to deserve a page, tags that mean the same thing, summaries that no
+longer match their page. Some of it is mechanical and gets fixed in place; anything
+judgment-heavy becomes a file in `tasks/` instead. The build does the schema half —
+frontmatter validation fails it, broken wikilinks warn.
+
+Which suggests two things worth trying here:
+
+- Move more of `/lint` into the build, where it can actually block. Frontmatter is checked
+  today; orphan detection and `updated`-date staleness are equally mechanical and are
+  currently left to an agent's attention.
+- Write the failure messages the way that post does — say what to do about it, not just
+  what's wrong, since the reader is usually an agent mid-task.
+
+## Open question
+
+Everything above enforces *structure*. The interesting unsolved case is the one that
+motivated the frontend work in
+[[harness-design-for-long-running-coding-agents|the Anthropic post]]: rules for things
+that are matters of taste. A linter can require structured logging; it can't require that a
+layout isn't bland. That's what pushed that team toward a graded rubric and a separate
+evaluator instead — see [[generator-evaluator-loops]]. The dividing line between "encode it
+as a rule" and "hand it to a judge" is roughly whether the property is decidable by
+inspection, and it's worth being deliberate about which side a given convention falls on.

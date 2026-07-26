@@ -1,0 +1,101 @@
+---
+title: "Self-improving agents from production feedback (OpenAI × Thrive, 2026-05)"
+status: draft
+tags: [agentic-engineering, evaluation, harness-design]
+created: 2026-07-26
+updated: 2026-07-26
+summary: Notes on the Tax AI post — how practitioner corrections in production become structured findings, then targeted evals, then bounded engineering tasks a coding agent can close. The clearest published example of an eval-driven improvement loop with a named metric that moved.
+origin: agent
+---
+
+Source: [Building self-improving tax agents with Codex](https://openai.com/index/building-self-improving-tax-agents-with-codex/),
+Aravind Srinivasan and Samay Shamdasani (Thrive Holdings) with Arthur Fernandes Araujo and
+John de Wasseige (OpenAI), 27 May 2026. Archived under
+`sources/2026-07/building-self-improving-tax-agents-with-codex/`.
+
+Six months of work with Crete, a network of 30+ accounting firms, on preparing 1040 and
+1041 returns. 7,000 returns through the pilot season. The claim worth engaging with isn't
+the time saving — it's that the system *got measurably better while running*, without an
+engineer hand-diagnosing each failure.
+
+## The metric
+
+They score returns by share of fields correct, and report the fraction of returns crossing
+75%, 90% and 100%:
+
+| | ≥75% fields correct | ≥90% | 100% |
+|---|---|---|---|
+| Week 0 | 25.1% | 1.3% | 0.01% |
+| Week 3 | 79.3% | 38.3% | 6.1% |
+| Week 6 | 86.2% | 59.8% | 9.5% |
+| Mid-year target | 98% | 90% | 50% |
+
+Reported alongside: about a third of practitioner time saved, up to 97% accuracy, ~50%
+more throughput, and one accountant going from 180 hours of tax prep in a season to 15.
+The curve matters more than any single number, and it steepened while the *task* got
+harder — early weeks were W-2s and 1099s, later weeks K-1s and multi-source schedules.
+
+Choosing thresholds rather than a mean is the quiet good decision here: what a practitioner
+cares about is how much follow-up a return needs, and that's a step function, not an
+average.
+
+## The loop
+
+1. **Practitioners steer.** They're doing the work anyway; their corrections are the
+   signal. Crucially, a difference between predicted and filed value is *not*
+   automatically a bug — it can be an extraction miss, a mapping gap, unsupported product
+   behaviour, a value carried forward from last year's return, practitioner preference, or
+   ordinary workflow noise. Practitioners helped separate those classes.
+2. **The product manufactures evidence.** Not just inputs and outputs: the whole path.
+   Documents organised, split and classified; fields extracted *with citations back to the
+   source*; values mapped into the tax engine; corrections captured as structured data
+   recording what the system proposed, what the practitioner changed, and what was filed.
+3. **Findings become evals.** Field-level review rows (expected, predicted, is-this-
+   actionable) are grouped so recurring product failures separate from noise — "we keep
+   missing fair-rental-days", "we confuse two rental properties in one package" — and only
+   a reviewed, repeated pattern is promoted to an eval target.
+4. **The agent gets a hill to climb.** With a targeted eval set already built, the coding
+   agent investigates the pipeline (schema? source selection? mapper? or is the *grader*
+   wrong?), fixes, reruns the targeted eval plus regression suites, and opens a PR.
+   Ambiguous or unsafe-to-automate cases route back to engineers instead of being forced
+   through.
+
+## The task environment
+
+The part I'd steal outright. A bounded workspace per finding, splitting **writable** from
+**read-only**: a git worktree on its own branch holding the scoped slice of product code
+the agent may change, the targeted and regression evals that define success, and
+skills/docs describing how to run the task — against read-only production context (the
+trace, the source documents, the prediction, the filed return, the field docs). The agent
+can investigate the evidence without mutating it, and success is defined before it starts.
+
+That "success is defined before it starts" is the same move as the sprint contract in
+[[harness-design-for-long-running-coding-agents|Anthropic's harness]], arrived at from a
+different direction. Both are ways of making the definition of done external to the agent
+doing the work — see [[generator-evaluator-loops]].
+
+## Scope discipline
+
+Worth noting what they did *not* automate. The loop runs on one bounded layer: extraction
+and mapping of source documents into tax workflows. Engineers still own architecture,
+product decisions and shipping. Rental properties alone took about six weeks and
+substantial engineering oversight to reach 90% precision and recall — after which the
+abstractions, review artifacts and eval conventions made the next schedules cheaper. So
+the self-improvement is real but bounded, and the first domain is expensive.
+
+## Connections
+
+The prerequisite is unglamorous and expensive: you need production traces rich enough to
+localise a failure, and a domain expert willing to label ambiguity. Without both, the loop
+degenerates into an agent optimising against its own guesses.
+
+This is also the industrial version of a line in the
+[[llm-customization-and-fine-tuning-notes|fine-tuning reading notes]] — that production
+logs are the highest-value eval set a team has. Here that's not an aphorism: the logs are
+the product surface, the corrections are labels, and the grader is code someone maintains
+(and occasionally has to fix, since "the grader is wrong" is listed as a legitimate root
+cause).
+
+The open question for a small setup: this works because thousands of practitioners
+generate labelled corrections for free as a by-product of their job. What's the equivalent
+signal when the only user is you?
