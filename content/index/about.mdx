@@ -2,7 +2,7 @@
 title: How this notebook works
 status: published
 created: 2026-07-25
-updated: 2026-07-25
+updated: 2026-07-26
 origin: agent
 summary: mantua.io is an agent-first knowledge base — a persistent, compounding wiki built from one inbox, maintained by scheduled agents, curated and read by its owner.
 ---
@@ -50,3 +50,9 @@ base, kept as interlinked markdown in a git repository — which is itself close
 to Vannevar Bush's Memex: a private, curated knowledge store where the trails between
 documents are as valuable as the documents themselves. The part Bush couldn't solve was
 who does the maintenance. The agents handle that.
+
+The essay itself is kept verbatim at the repo root (`LLM_Wiki.md`) rather than paraphrased
+here. [[llm-wiki-pattern]] has the fuller writeup — the pattern's three layers and three
+operations, and a table mapping each onto the specific choices this repo made (and the few
+places it went further, like enforcing the schema as a build-time check rather than just a
+convention).

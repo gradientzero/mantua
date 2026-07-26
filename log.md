@@ -89,3 +89,19 @@ New: `harness-design-reading-list`. Follow-up in
 `home` or `about` yet — a published hub linking to drafts renders as dead spans in
 production. Wiring them in is an owner decision, tracked in
 `tasks/2026-07-26-publish-agentic-engineering-cluster.md`.
+
+## [2026-07-26] ingest | The LLM Wiki pattern (Andrej Karpathy) — a second, meta drop of the notebook's own founding document
+
+The essay already lives at the repo root as `LLM_Wiki.md` — `README.md`'s founding
+reference, kept verbatim by its own rule — but the owner dropped a copy into `/inbox` too,
+on purpose: how to use agents this way is a topic for this notebook in its own right, not
+just infrastructure. The drop had moved (not copied) the root file into `/inbox`, deleting
+it from root; restored `LLM_Wiki.md` at the root before processing the inbox copy as its
+own source.
+
+New: `llm-wiki-pattern` — the pattern's three layers and three operations, mapped onto this
+repo's specific choices (Zod schema enforcement, the `origin` provenance field, no search
+tool yet) and linked into the harness-design cluster via
+`agentic-engineering-my-role-in-the-loop` and `linting-as-agent-guardrail`. Updated `about`
+(Lineage section) to point at the fuller writeup. Archived to
+`sources/2026-07/llm-wiki-pattern/` alongside the permanent root copy.

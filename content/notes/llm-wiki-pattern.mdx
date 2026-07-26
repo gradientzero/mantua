@@ -1,0 +1,69 @@
+---
+title: "The LLM-wiki pattern: the idea this notebook runs on"
+status: draft
+tags: [agentic-engineering, knowledge-management]
+created: 2026-07-26
+updated: 2026-07-26
+origin: agent
+summary: Andrej Karpathy's pattern for an LLM-maintained personal wiki — kept verbatim at the repo root as LLM_Wiki.md — is the founding idea mantua.io itself instantiates. What the pattern claims, and where this repo's implementation matches or departs from it.
+related: [about, agentic-engineering, linting-as-agent-guardrail]
+---
+
+Karpathy's argument starts from a complaint about RAG: upload a collection of documents,
+retrieve relevant chunks at query time, generate an answer — and the LLM re-derives the
+same synthesis from scratch on every question. Nothing accumulates. His fix is to have
+the LLM **incrementally build and maintain a persistent wiki** that sits between the owner
+and the raw sources: read a new source once, extract what matters, fold it into the
+existing pages — updating summaries, flagging contradictions, adding cross-references —
+so the wiki compounds instead of being re-computed every time.
+
+The pattern has three layers: raw sources (immutable, the source of truth), the wiki
+itself (markdown, entirely agent-owned), and a schema document — a `CLAUDE.md` or
+`AGENTS.md` — that tells the LLM the conventions well enough to act as a disciplined wiki
+maintainer rather than a generic chatbot. Three operations run on top: **ingest** (file a
+new source, however many pages it touches), **query** (answer a question, and file good
+answers back as pages so explorations compound too), and **lint** (a slower-cadence health
+check for contradictions, stale claims, and orphan pages).
+
+This isn't an adjacent idea for mantua.io — it's the blueprint. The essay is kept verbatim
+at the repo root (`LLM_Wiki.md`) rather than paraphrased away, and the mapping onto this
+repo is close to literal:
+
+| Pattern | This repo |
+|---|---|
+| Raw sources | `/sources`, one immutable folder per ingested item |
+| The wiki | `/content` — notes and hubs, rendered by Next.js |
+| The schema | `README.md` + `CLAUDE.md` + `.claude/commands/` |
+| Ingest | `/ingest` |
+| Query | `/oracle` |
+| Lint | `/lint` |
+| `index.md` | hub pages (`content/index/`) + backlinks computed at build time |
+| `log.md` | `log.md` — same append-only chronological record |
+
+A few places this repo's implementation goes further than the essay describes, or departs
+from it:
+
+- **Schema enforcement is mechanical, not just documented.** The essay's schema layer is
+  prose the LLM reads and follows; here it's also a Zod schema (`velite.config.ts`) that
+  fails the build on a violation. Convention became a compiler check.
+- **Provenance is a first-class field.** The essay doesn't dwell on who wrote what — it
+  assumes the LLM writes the wiki and the owner reads it. mantua.io adds
+  `origin: human | agent | mixed` to every page, precisely so the owner's own writing
+  (like [[agentic-engineering-my-role-in-the-loop]]) stays legible as his rather than
+  folding into agent prose. See [[about]] for why that rule exists.
+- **No search tool yet.** The essay's optional layer — a local search engine such as
+  [qmd](https://github.com/tobi/qmd) once an index file stops being enough — is on this
+  repo's roadmap, not yet built.
+- **"Lint" means two different things in this notebook.** The essay's lint operation —
+  contradictions, stale claims, orphan pages — maps directly onto this repo's `/lint`.
+  [[linting-as-agent-guardrail]], from the harness-design cluster, is a different concept
+  that happens to share the name: code linters as guardrails on what an *agent writes*,
+  not wiki health. Worth keeping straight — they don't contradict each other, they're just
+  namesakes.
+
+Where the essay is most directly relevant to the rest of this notebook: its framing of the
+owner's job — curate sources, direct the analysis, ask good questions, while the LLM does
+the grunt work of summarizing, cross-referencing and filing — is the same shift
+[[agentic-engineering-my-role-in-the-loop|the owner describes]] wrestling with in the
+harness-design cluster, just one level up: there it's managing a team of coding agents
+instead of a wiki-maintaining one. Same bottleneck, same fix.
