@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
+import { EditInEditorButton } from '@/components/edit-in-editor-button'
 import { MDXContent } from '@/components/mdx'
 import { DraftBadge, formatDate } from '@/components/note-list'
 import { allHubs, backlinksFor, getHub } from '@/lib/content'
@@ -56,6 +57,7 @@ export default async function HubPage({ params }: { params: Promise<{ slug: stri
         <span className="section-label">
           updated <time dateTime={hub.updated}>{formatDate(hub.updated)}</time>
         </span>
+        <EditInEditorButton path={hub.path} />
       </div>
       <MDXContent code={hub.body} />
       {backlinks.length > 0 && (

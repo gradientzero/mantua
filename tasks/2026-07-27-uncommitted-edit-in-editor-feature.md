@@ -1,37 +1,33 @@
 ---
-title: Decide what to do with the uncommitted "edit in editor" feature
+title: Fix the Turbopack whole-project trace warning from the open-in-editor route
 date: 2026-07-27
-priority: medium
+priority: low
 status: open
 area: infra
 ---
 
-## What this is
+## Correction to this task's first version
 
-The 2026-07-27 ingest found an unfinished feature in the working tree and **deliberately
-left it out of its commit**. Files involved:
+Filed during the 2026-07-27 ingest, which found the "edit in editor" feature uncommitted in
+the working tree and left it out of its commit. The original version of this file claimed
+the feature "becomes a live production endpoint if pushed" and framed that as a security
+question. **That was wrong, and it was written without reading the route.**
 
-- `app/api/open-in-editor/route.ts` (untracked)
-- `components/edit-in-editor-button.tsx` (untracked)
-- `app/globals.css` (the `.edit-in-editor-button` block, ~27 lines — the only change in
-  that file)
-- `app/[slug]/page.tsx` and `app/notes/[slug]/page.tsx` (one import + one `<EditInEditorButton />`
-  each)
+The feature is already gated, in both halves:
 
-Everything else in the tree at that point — the harness-design cluster edits, `log.md`, the
-task files, the `SimplifiedHarness` figure and its registration in `components/mdx.tsx` —
-was committed. The five files above are a clean, separable set, so nothing else depends on
-them.
+- `app/api/open-in-editor/route.ts` returns 404 unless `process.env.NODE_ENV === 'development'`.
+- `components/edit-in-editor-button.tsx` returns `null` under the same check, and `NODE_ENV`
+  is inlined at build time, so the button isn't in the production bundle at all.
+- The path is validated against the same per-segment slug regex as `velite.config.ts`, and
+  the resolved file must still sit under `content/`.
 
-## Why it was held back
+Vercel builds with `NODE_ENV=production` for preview deployments as well as production, so
+the gate holds on every deployed target. The route appears in build output as
+`ƒ /api/open-in-editor` because it is dynamic, not because it does anything there.
 
-It's a **local-authoring convenience that becomes a live production endpoint** if pushed.
-`/api/open-in-editor` shows up in the build output as a dynamic route (`ƒ /api/open-in-editor`),
-so it deploys to mantua.io along with everything else. An endpoint whose job is to open a
-path on the host, reachable from the public internet, wants a deliberate decision rather
-than being swept into an ingest commit by an agent that didn't write it.
+## What is actually left
 
-It also produces the only warning in `npm run build`:
+One build warning, and it is the only warning `npm run build` emits:
 
 ```
 Turbopack build encountered 1 warnings:
@@ -40,21 +36,17 @@ Encountered unexpected file in NFT list — the whole project was traced uninten
 Import trace: App Route: ./next.config.mjs → ./app/api/open-in-editor/route.ts
 ```
 
-The route imports something that pulls `next.config.mjs` into the server bundle and drags
-the whole project into the trace. Worth fixing before it ships regardless of the security
-question.
+The cause looks like the module-scope `path.join(process.cwd(), 'content')` on line 13 —
+the warning text names `path.join`/`path.resolve` on a non-static base as the trigger, and
+tracing then can't bound the file set. Two candidate fixes:
 
-## Options
+1. Move the `CONTENT_ROOT` computation inside the `POST` handler, so it isn't evaluated
+   during tracing.
+2. Keep it at module scope and mark it: `path.join(/*turbopackIgnore: true*/ process.cwd(), 'content')`.
 
-1. **Gate it to development** — render the button and register the route only when
-   `process.env.NODE_ENV === 'development'`, so nothing exists in production. Probably the
-   right answer for a tool whose whole purpose is editing files on the machine running the
-   dev server.
-2. **Keep it out of the repo** — leave it as a local working-tree patch.
-3. **Ship it deliberately** — only with a path allowlist confined to `content/`, and a
-   reason why a deployed static notebook needs it.
+Worth doing because the unbounded trace inflates the deployed function bundle, and because
+one persistent warning trains you to skim past build output.
 
 ## Definition of done
 
-Either the feature is committed in a form that is inert in production and the build warning
-is gone, or the files are removed and this task is closed.
+`npm run build` is warning-free and the button still works in `npm run dev`.
