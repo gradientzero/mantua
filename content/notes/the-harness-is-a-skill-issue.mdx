@@ -1,0 +1,127 @@
+---
+title: "The harness is a skill issue"
+status: draft
+tags: [agentic-engineering, harness-design, evaluation]
+created: 2026-07-27
+updated: 2026-07-27
+summary: A piece by Anton Leicht on sovereign AI sent me looking for how the frontier labs actually run their internal coding agents. The answer is that they are still experimenting — nobody has Auto Research — which means the harness is mine to build, and building it well is a skill worth training.
+origin: mixed
+author: Wolfgang Gross
+---
+
+Recently I read [[sovereign-ai-for-middle-powers|a piece by Anton Leicht]] that surprised
+me. It is about how middle powers have not really tried sovereign AI — a sharp analysis of what the EU, Australia, Canada and
+the rest would have to do to actually compete with the frontier labs in the US, and with the
+ones now emerging in China, rather than staying close followers.
+
+The argument itself was not the surprise. What caught my eye was one point inside it: these
+initiatives should also be trying to get access to **the agents the labs run internally** —
+the coding agents and the auto-science agents, the ones that automate writing code and doing
+science. Andrej Karpathy has a name for that shape, [[auto-research|Auto Research]], and a
+description of how he operates models and coding agents to get there. It is a clever idea.
+
+Which raised the obvious question: what is the current state of it? The labs state plainly
+that automating this loop, and ultimately accelerating it, is the goal. But is this, as
+Leicht describes it, a race that is nearly over and whose direction everyone already knows?
+Paradigms that looked obvious last year were toppled at the beginning of this one, and
+things are still moving fast.
+
+So I went looking for implementations — for publicly available information on how the
+frontier labs actually use agents to do what Karpathy would call the
+[[agentic-engineering|agentic engineering]] task. We are moving away from vibe coding, and
+maybe from vibe engineering too, whatever those terms mean, towards something that is
+genuinely an engineering topic. There is a podcast where Karpathy talks about this as a
+**skill issue**: operating these agents inefficiently, not maximising your token throughput,
+is on the user's side, and it is something worth studying for and improving at.
+
+## What is actually published
+
+Two pieces carry most of the weight, and both are already in this notebook.
+
+**Anthropic**, in
+[[harness-design-for-long-running-coding-agents|harness design for long-running application development]],
+works with a loop inspired by GANs: a generator and a separate critic, adversarial to each
+other. That generalises to the [[generator-evaluator-loops|generator–evaluator loop]]. The
+key insight is that coding agents generate code against a specification and are bad critics
+of their own work. Which is understandable — you could argue it is hard to pursue a goal
+while remaining critical of your own work, but that is not really the point here. It is
+separation of tasks, and it is simply easier to judge from a clean slate. The post also
+mentions their earlier experiments on long-running agents, including one that tried to code
+a C compiler on its own.
+
+**OpenAI**, in
+[[harness-engineering-agent-first-repositories|Harness Engineering: Leveraging Codex in an Agent-First World]],
+is doing something different. The Anthropic case is closer to a lab experiment: one-shot an
+application — a web app with a simple interface — and share the result. OpenAI is working on
+production software, with the rule that nobody is allowed to write code by hand. It was
+released in February, which in this world is already a little old — that everybody is
+prompting and not coding is by now the new paradigm. But they still want to run loops, and
+this is software they keep and that people use. That difference shows up in the harness.
+
+Anthropic's is a planner, a generator and an evaluator: the planner blows an initial prompt
+or spec up into a full-fledged plan, and then the generator–evaluator loop runs
+autonomously. OpenAI puts far more effort into the scaffolding — Chrome DevTools for
+observability, Grafana with LogQL and PromQL so the agents can read the signals and test
+more thoroughly, and [[linting-as-agent-guardrail|custom linters]] run regularly.
+
+And Anthropic argues in the other direction — for *reducing* the harness. Their previous
+work needed a lot of scaffolding, context compression and custom memory, essentially to
+handle the limitations of the models. With the generation they used for this post it is
+clear you do not need that anymore. You can simplify: rely on the file system for the
+agent's notes, write the critique to a file, and drop the elaborate plumbing.
+
+## Where that leaves it
+
+They are still experimenting. They do not have a clear solution. Auto Research, the Karpathy
+method, is not implemented. What I see is a lot of change and a lot of active development,
+shared as it happens, and I think that is a good reflection of what they are doing
+internally — many different approaches being tested, some shared, some not, some presumably
+confidential. And of course we are looking back two, three, four months. At this speed,
+Leicht was probably up to something: they likely have things we would want for our own
+approach.
+
+That is not a reason to wait for them. As Karpathy says, it is a skill issue. Use the agents,
+build your own harness, invest in your own tool set. The encouraging part is that the
+software engineering principles carry over — linting, observability, all of it applies in
+this paradigm too.
+
+## Who turns out to be good at this
+
+A related piece from June, *Agentic Coding and Persistent Returns to Expertise*
+(2026-06-16), looks at usage data and concludes that people without formal coding experience
+can successfully direct agents through complex technical work. What predicts success is not
+how much they know about coding but how well they know the domain. Their line for it:
+
+> Success is determined by how well a person understands the problem they're trying to
+> solve, not whether they are trained in coding.
+
+Which fits: you are moving away from the actual technical implementation. If the problem is
+a technical one, technical expertise still matters — but what matters most is understanding
+the problem well enough to specify it, and knowing how to verify the answer. That is the
+same place every harness post ends up, and the same thing
+[[loop-engineering|loop engineering relocates rather than removes]].
+
+## What I would actually do
+
+Being cutting edge here takes work — looking at what other people are automating right now,
+and then deciding deliberately what I *don't* want to do.
+
+**Don't watch the agent code.** Let it run and come back on your own terms. Watching it work
+breaks the deep work cycle and turns the session into a dopamine trigger.
+
+**Run a couple of loops by hand first**, if you want to learn. Run the generator and do the
+evaluation yourself, take the lessons from that, and only then write the evaluator.
+
+**Make the criteria practical and measurable.** "Does it look visually pleasing" is not
+concrete and models struggle with it. "Is the colour scheme one of these", "is the spacing
+appropriate — things not too narrow or too wide", "does it scale across window sizes", "are
+all the buttons clickable" — those can actually be verified.
+
+**Then read what the evaluator produces.** One lesson from the Anthropic post is that out of
+the box the model is a poor QA agent. If it isn't working towards finding issues, and isn't
+finding anything you wouldn't have found easily yourself, it is probably not worth running.
+
+**Then put it on a schedule.** Once the generator and the quality-assurance agent both work,
+you can run them unattended — [[keeping-an-agent-running|scheduling, linting, the recurring
+cleanup]]. That is where `/loop`, `/goal` and managed agents come in: they are these lessons
+turned into features you can just use.

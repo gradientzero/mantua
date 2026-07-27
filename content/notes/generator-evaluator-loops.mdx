@@ -37,7 +37,11 @@ something concrete to iterate against.
 rubric is. Anthropic's four (design quality, originality, craft, functionality) are worth
 studying less for the categories than for the weighting decision behind them: grade
 hardest where the model is weakest by default, because the criteria are also a prompt and
-they steer the generator before any score comes back.
+they steer the generator before any score comes back. The owner's version of the same rule,
+from [[the-harness-is-a-skill-issue]], is worth keeping beside it because it is operational:
+replace "does it look visually pleasing" with the colour scheme being one of a named set,
+the spacing not being too narrow or too wide, the layout scaling across window sizes, every
+button being clickable. Each of those can be checked; the original can only be felt.
 
 **Calibrate with worked examples.** Few-shot examples carrying full score breakdowns
 aligned the evaluator with its author's taste and, notably, reduced *score drift* across
@@ -73,6 +77,14 @@ shallowly, misses nested cases, and rationalises passes. The loop that fixed it 
 the evaluator's own logs, find where its judgment diverged from the author's, and patch the
 prompt — several rounds before it graded reasonably. Tuning the judge is itself an
 engineering task with no test to tell you when you're done.
+
+Two practical corollaries the owner draws in [[the-harness-is-a-skill-issue]]. **Be the
+evaluator yourself for the first few loops** — run the generator, grade the output by hand,
+and write the rubric out of what you actually found yourself objecting to. And **read what
+the evaluator produces, not just its verdict**: if it isn't working towards finding issues,
+and isn't surfacing anything you wouldn't have caught easily yourself, it isn't worth the
+cost of running. That is a cheaper stop condition than the solo-vs-harness comparison below,
+and it applies before you've built anything.
 
 ## When it isn't worth it
 
