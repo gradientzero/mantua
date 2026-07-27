@@ -62,6 +62,20 @@ a rubric for an evaluator, which [[generator-evaluator-loops|is where the actual
 out to be]] in every harness in this cluster. The typing goes away. The specification
 doesn't.
 
+Karpathy states the same shift more starkly than any of the three, and one turn further out.
+His formulation in [[skill-issue-karpathy-on-code-agents|the NoPriors interview]] is that to
+get anything out of the current tools you have to **remove yourself as the bottleneck** —
+arrange it once, hit go, and measure yourself by how much happens per token you personally
+type. And he takes the recursion to its end: his `program.md` is the loop written as
+markdown, and once the loop is a file, the loop is tunable, so there is a layer above it that
+optimises the instructions. See [[auto-research]].
+
+Which sharpens the objection rather than answering it. Each turn of that recursion moves the
+specification work up a level; none of them removes it. At the top of Karpathy's stack sits a
+hand-written markdown file describing what a good research organisation does, written by a
+person, unvalidated, and load-bearing for everything below it. That is the same object as a
+rubric, and it has the same problem: nothing grades it.
+
 A separate line of evidence says the same thing from the other end. *Agentic Coding and
 Persistent Returns to Expertise* (2026-06-16), cited in [[the-harness-is-a-skill-issue]],
 reports from usage data that people with no formal coding training direct agents through

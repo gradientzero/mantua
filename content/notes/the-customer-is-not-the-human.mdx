@@ -1,0 +1,84 @@
+---
+title: "The customer is not the human anymore"
+status: draft
+tags: [agentic-engineering, harness-design]
+created: 2026-07-27
+updated: 2026-07-27
+summary: Karpathy makes the same argument twice in one interview — smart-home apps should be APIs, and documentation should be markdown for agents rather than HTML for people — because in both cases the thing consuming the interface is an agent that then routes to a human. Where that lands for this notebook, and where it thins out.
+origin: agent
+---
+
+From [[skill-issue-karpathy-on-code-agents|the NoPriors interview]]. The line is his:
+the industry has to reconfigure because the customer is no longer the human, it is agents
+acting on behalf of humans. He arrives at it twice, from two unrelated directions, which is
+what makes it worth a page.
+
+## First pass: apps should be APIs
+
+Having replaced six smart-home apps with one text thread (see [[the-claw-layer]]), his
+conclusion is that those apps should not exist. Expose endpoints; let the agent be the glue.
+His argument for it is not tidiness but capability: an agent calling several systems can do
+automations that no individual vendor's app will ever offer, because no vendor's app knows
+about the other five. His other example is a treadmill whose app he has to log into through
+a web flow to find out how often he did cardio.
+
+The objection he anticipates is that this requires ordinary people to vibe-code their own
+tooling. His answer is that today it does, and that this is a statement about the current
+moment rather than the shape — the barrier drops, and what is left is ephemeral software the
+claw assembles and presents without you being involved in how.
+
+## Second pass: docs should be for agents
+
+Much later, talking about micro-GPT, he gets to the same place from teaching. If you
+maintain a library, the instinct is to write documentation for the humans who use it. His
+version: write markdown for the agents instead, because if the agent understands the
+library, it will explain any part of it to any person, in their language, at their level,
+three different ways, with unlimited patience. The human-facing explanation is downstream
+and can be generated on demand.
+
+He is describing this as something already happening to him. He started making a walkthrough
+video for micro-GPT and abandoned it, on the grounds that 200 readable lines plus an agent
+that can explain them is better than his video. What he thinks survives is *curriculum*: a
+skill file that scripts the order in which the agent should walk someone through the code —
+start here, then this — because the sequence is a judgment the agent will not make as well.
+
+The sharper version of the same point is what he says about writing micro-GPT itself. He
+tried to get an agent to produce it — boil a neural network down to its essence — and it
+could not. It gets the result completely once it exists, and can explain why every line is
+the way it is, but it did not arrive at it. His conclusion is a rule for where to spend
+time: the things agents cannot do are your job now; the things they can do, they will
+shortly do better than you.
+
+## What this notebook already agrees with
+
+This is [[harness-engineering-agent-first-repositories|"what the agent can't see doesn't
+exist"]] arrived at independently, and it is worth noting that the two statements come from
+opposite motivations. OpenAI's is defensive — put it in the repo or the agent cannot use it.
+Karpathy's is a claim about *audience* — write for the agent because it is the better
+distribution channel to the human. Same instruction, different reason.
+
+It is also, fairly directly, the bet [[llm-wiki-pattern|this notebook runs on]]: markdown in
+a git repository, maintained by agents, with the operations themselves written as markdown
+files in `.claude/commands/`. See [[about]].
+
+## Where it thins out
+
+**Somebody has to pay for the API.** The apps he wants deleted are, for most vendors, the
+surface where the business model lives — subscriptions, upsells, data. "It should just be
+endpoints" is an argument about what is technically better, and it does not engage with why
+the apps exist. The Sonos anecdote is not a counter-example; it is a device that shipped
+without authentication.
+
+**The claim is made by someone who can build the replacement.** He can vibe-code a
+home-automation dashboard in an evening, so for him the UX layer genuinely is disposable. It
+is worth being careful about generalising from an operator at the extreme end of skill to
+what the barrier will look like when it drops — that is the same inference the interview
+makes about coding generally, and this notebook has already logged a
+[[loop-engineering|reason to be suspicious of it]].
+
+**And the docs argument has a dependency it does not name.** "Write for the agent, it will
+explain it to people" is only true while the agent's explanation is faithful. There is no
+check in the loop: a wrong explanation of your library reads exactly like a right one to
+someone who came to the docs because they did not know. The version of this in the
+notebook — hub pages and human-readable notes that agents maintain but people read — keeps
+the artifact human-legible on purpose, which is a hedge against exactly that.

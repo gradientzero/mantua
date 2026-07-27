@@ -249,3 +249,47 @@ Expertise" (2026-06-16) — exist only as recollection in the dictation; none wa
 the direct quote in the note is unverified. Two dangling wikilinks (`sovereign-ai-for-middle-powers`,
 `auto-research`) mark the gap. Tracked as
 `tasks/2026-07-27-clip-sovereign-ai-and-expertise-sources.md`.
+
+## [2026-07-27] ingest | Skill Issue: Karpathy on code agents (NoPriors, 2026-03-20)
+
+The podcast the owner had been citing from memory, finally captured — an auto-generated
+YouTube transcript, one unbroken paragraph, proper nouns wrong throughout (Claude Code as
+"clot code", Qwen as "Quinn", Goodharting as "good harding"; the full correction table is in
+the source record). No timestamps, so nothing here is citable to a position in the recording.
+
+A previous commit (`33b9e95`) had dropped the file in the inbox and already written
+`auto-research` from it, but never archived, logged, or created the note that page links to.
+This ingest finishes that: `auto-research` kept as written, plus a source pointer and two
+cross-links.
+
+New: `skill-issue-karpathy-on-code-agents` (the interview note), `the-claw-layer`,
+`jaggedness-and-what-rl-optimises`, `the-customer-is-not-the-human`,
+`model-speciation-and-touching-the-weights`.
+
+**The correction it forced**: `agentic-engineering` said there was "no implementation of
+Karpathy's Auto Research". Too strong, and written before the source was in the notebook.
+The single loop is implemented and it worked — overnight, against a repo its author had
+hand-tuned for two decades. What is unimplemented is the parallel version over untrusted
+workers and the meta-layer over `program.md`. Amended in place; the split is on
+`auto-research`, which already carried the same correction against the owner's page.
+
+**What else touched other pages**: `generator-evaluator-loops` gained the evaluator as a
+*feasibility* gate rather than a quality measure ("if you can't evaluate it you can't
+automate it"), plus metric overfitting and the regress in Karpathy's proposed fix — the third
+independent arrival in this notebook at "what checks the check?", still unanswered.
+`keeping-an-agent-running` gained a fifth shape: the claw layer answers what stays *resident*
+between turns, where the other four answer what starts the next one. `loop-engineering`
+gained the recursion's next turn and the observation that a hand-written markdown file sits
+unvalidated at the top of it. `harness-engineering-agent-first-repositories` gained Karpathy
+arriving at "what the agent can't see doesn't exist" from audience rather than context
+budget. `harness-design-reading-list` records that this item is no longer missing.
+
+Four `origin: human`/`mixed` pages got `related:` entries only, prose untouched:
+`the-harness-is-a-skill-issue`, `agentic-engineering-my-role-in-the-loop`,
+`llm-customization-and-fine-tuning-notes`, `serving-slms-on-a-desktop-gpu`.
+
+The one hedge worth flagging for the owner: Karpathy himself says he cannot tell whether the
+remaining roughness is the models or the operator. Recorded on the interview note, because
+"everything is a skill issue" is unfalsifiable without it.
+
+Archived to `sources/2026-07/skill-issue-karpathy-on-code-agents/`.

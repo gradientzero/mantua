@@ -86,6 +86,37 @@ and isn't surfacing anything you wouldn't have caught easily yourself, it isn't 
 cost of running. That is a cheaper stop condition than the solo-vs-harness comparison below,
 and it applies before you've built anything.
 
+## The metric is the ceiling, and it will be gamed
+
+Two additions from [[skill-issue-karpathy-on-code-agents|the Karpathy interview]], which
+approaches the same structure from automated research rather than from software QA.
+
+**The gate.** His one-line constraint on [[auto-research]] — if you cannot evaluate it, you
+cannot automate it — is the same sentence as this page's, said by someone whose loop had no
+human in it at all. Worth stating in that form because it converts the evaluator from a
+quality measure into a feasibility test: the rubric does not just decide how good the output
+is, it decides whether the task is a candidate for a loop in the first place.
+
+**The failure that follows from succeeding.** Run a loop against a metric long enough and
+the system overfits the metric. He says so plainly, and his proposed answer is to have the
+system generate more metrics, for coverage. Two things about that. It is a hope, not a
+result — he has not run it. And it has the obvious regress: metrics that catch metric-gaming
+are themselves unvalidated, and nothing grades the grader. This notebook has already logged
+the same problem twice from different directions — that the tax-agent work lists a
+miscounting grader as a legitimate root cause, and that
+[[loop-engineering|a misspecified condition runs to completion and reports success]]. Three
+independent arrivals at "what checks the check?" and no answer among them.
+
+The practical consequence for anything built here: a rising score over a long unattended run
+is weak evidence, and it gets weaker the longer the run. Score drift and gaming are
+indistinguishable from the inside. Reading a sample of the actual artifacts — the owner's
+"read what the evaluator produces, not its verdict" rule, applied to the generator as well —
+is the only check described anywhere in the cluster that does not itself need a check.
+
+[[jaggedness-and-what-rl-optimises]] is why all of this is so persistent: judging soft
+qualities is outside what any of the training loops optimised, so the evaluator is weakest
+at exactly the task it is being hired for.
+
 ## When it isn't worth it
 
 The most useful finding is that the evaluator's value is conditional, not fixed. As the

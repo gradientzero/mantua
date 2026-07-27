@@ -11,6 +11,14 @@ owner's recollection in the dictation. Nothing was clipped and nothing is archiv
 note currently asserts them on his memory alone. Three wikilink targets are dangling as a
 result.
 
+**Update 2026-07-27: item 2 is done, two remain.** The Karpathy transcript came in and was
+ingested. One thing it changed about the rest of this task: his account, read in full,
+turned out to be *more* qualified than the recollection of it — he says the single Auto
+Research loop worked, and he says he cannot tell whether the remaining roughness is the
+models or the operator. Worth keeping in mind for the other two: the note's summaries of
+them are also unverified recollections, and the one that has now been checked needed
+correcting.
+
 ## To clip
 
 1. **Anton Leicht** — the piece arguing middle powers have not really tried sovereign AI,
@@ -18,10 +26,14 @@ result.
    No URL or publication date captured. This is the entry point for the whole note and the
    only genuinely new thread in it; it deserves its own page. Target slug:
    `sovereign-ai-for-middle-powers`.
-2. **Andrej Karpathy, "Auto Research"** — described as his account of how he operates
-   models and coding agents. Not linked. Also worth finding: the podcast where he uses
-   "skill issue" about operating agents, since that phrase is doing load-bearing work in
-   the note and in the title. Target slug: `auto-research`.
+2. ~~**Andrej Karpathy, "Auto Research"**~~ — **done, 2026-07-27.** The owner dropped the
+   transcript of the podcast in question: NoPriors, *Skill Issue: Andrej Karpathy on Code
+   Agents, AutoResearch, and the Loopy Era of AI*, 2026-03-20,
+   https://www.youtube.com/watch?v=kwSVtQ7dziU. It is both items at once — the "skill
+   issue" phrase and the Auto Research description come from the same conversation.
+   Archived at `sources/2026-07/skill-issue-karpathy-on-code-agents/`; notes at
+   `skill-issue-karpathy-on-code-agents` and `auto-research`, plus four more pages. It
+   also corrected a claim on `agentic-engineering` — see the log entry for that date.
 3. **"Agentic Coding and Persistent Returns to Expertise", 2026-06-16** — publisher not
    named in the dictation. It is a usage-data analysis concluding that domain
    understanding, not coding training, predicts who directs agents successfully.
