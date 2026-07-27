@@ -293,3 +293,14 @@ remaining roughness is the models or the operator. Recorded on the interview not
 "everything is a skill issue" is unfalsifiable without it.
 
 Archived to `sources/2026-07/skill-issue-karpathy-on-code-agents/`.
+
+**Corrected before merge**, after a review pass over the diff against the archived
+transcript. Three fixes, all provenance rather than prose: `the-claw-layer` asserted that
+Karpathy's claw runs on a machine at home that stays up and hung a cross-link to
+`serving-slms-on-a-desktop-gpu` on it — the transcript says no such thing, so the claim is
+now scoped to what it supports ("not a closed laptop") and the link is gone. The joke's age
+was given as five years in two places; five is the interviewer's number, Karpathy says three
+or four. And the source record's correction table was missing "the soul and D document",
+which was smoothed to "the personality file" without being listed — now recorded as an
+unresolved garble, alongside a note that the two speakers are easy to conflate in a
+transcript with no speaker labels.

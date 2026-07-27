@@ -37,9 +37,24 @@ corrections applied in the wiki notes, all of them unambiguous from context:
 | Noom, Nome | Noam |
 | no-briers.com | nopriors.com |
 
-Two that were **not** resolved and are flagged where they appear: "a good book … called
-demon" is almost certainly Daniel Suarez's *Daemon*, recorded with that hedge; and "Liam …
-CEO of periodic" is left as transcribed.
+Three that were **not** resolved:
+
+- **"the soul and D document"** — the OpenClaw file Karpathy credits with giving the agent
+  its personality. Almost certainly a `SOUL.md`-style filename, but the transcript does not
+  support naming it, so `the-claw-layer` calls it "the personality file". A smoothing, not a
+  correction: the actual filename is unknown and should not be guessed from this source.
+- **"a good book … called demon"** — almost certainly Daniel Suarez's *Daemon*, recorded
+  with that hedge.
+- **"Liam … CEO of periodic"** — left as transcribed.
+
+## Where the two speakers are easy to conflate
+
+There are no speaker labels beyond `>>` markers, and in a few places the interviewer
+supplies a number or a phrase that reads as Karpathy's. One that caught out the first draft
+of these notes: on how stale the joke is, **Karpathy says "three or four years ago"** and
+**the interviewer says "a crappy joke from 5 years ago"**. The notes use three-or-four.
+Anything attributed to him should be checked against the `>>` boundaries before it is
+quoted.
 
 This is the podcast the owner referred to from memory in his 2026-07-27 dictation ("there
 is a podcast where Karpathy talks about this as a skill issue") and one of the three
