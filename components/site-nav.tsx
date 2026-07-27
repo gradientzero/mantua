@@ -12,6 +12,7 @@ import { usePathname } from 'next/navigation'
 const tabs = [
   { label: 'Notes', href: '/notes' },
   { label: 'Tags', href: '/tags' },
+  { label: 'Graph', href: '/graph' },
 ]
 
 export function SiteNav() {

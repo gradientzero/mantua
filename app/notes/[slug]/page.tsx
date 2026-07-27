@@ -2,9 +2,11 @@ import Link from 'next/link'
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { EditInEditorButton } from '@/components/edit-in-editor-button'
+import { GraphView } from '@/components/graph/graph-view'
 import { MDXContent } from '@/components/mdx'
 import { DraftBadge, TagList, formatDate } from '@/components/note-list'
 import { allNotes, backlinksFor, getNote, relatedNotes } from '@/lib/content'
+import { localGraphFor } from '@/lib/graph'
 import { bylineFor, site } from '@/lib/site'
 
 export const dynamicParams = false
@@ -46,6 +48,7 @@ export default async function NotePage({ params }: { params: Promise<{ slug: str
 
   const backlinks = backlinksFor(note.slug)
   const related = relatedNotes(note)
+  const neighborhood = localGraphFor(note.slug)
 
   return (
     <article>
@@ -102,6 +105,16 @@ export default async function NotePage({ params }: { params: Promise<{ slug: str
           <p className="muted">No pages link here yet.</p>
         )}
       </section>
+
+      {neighborhood.nodes.length > 1 && (
+        <section className="link-section">
+          <h2>Graph</h2>
+          <GraphView data={neighborhood} focus={note.slug} height="320px" showControls={false} />
+          <p className="graph-more">
+            <Link href="/graph">The whole notebook as a map →</Link>
+          </p>
+        </section>
+      )}
     </article>
   )
 }

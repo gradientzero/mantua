@@ -649,6 +649,137 @@ th:not(:first-child) {
   margin: 0 0 var(--stack-block);
 }
 
+/* ------------------------------------------------------------ graph view */
+
+.graph-view {
+  margin: 0;
+}
+
+.graph-page-intro {
+  font-size: 15px;
+  line-height: 1.55;
+  color: var(--text-secondary);
+  margin: 0 0 20px;
+}
+
+.graph-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.graph-toolbar .section-label {
+  margin-right: auto;
+}
+
+.graph-chip {
+  font-family: var(--font-mono);
+  font-weight: var(--weight-mono);
+  font-size: 10px;
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+  color: var(--text-muted);
+  background: transparent;
+  border: var(--stroke-hairline) solid var(--border-subtle);
+  border-radius: var(--radius-xs);
+  padding: 3px 8px;
+  cursor: pointer;
+  transition: color var(--duration-fast) var(--ease-standard),
+    border-color var(--duration-fast) var(--ease-standard);
+}
+
+.graph-chip:hover {
+  color: var(--text-primary);
+  border-color: var(--border-strong);
+}
+
+/* Pressed toggle = solid ink frame, like the active nav tab. */
+.graph-chip[aria-pressed='true'] {
+  color: var(--text-primary);
+  border-color: var(--border-strong);
+}
+
+.graph-canvas-frame {
+  background: var(--surface);
+  border: var(--stroke-hairline) solid var(--border-subtle);
+  border-radius: var(--radius-xs);
+  overflow: hidden;
+}
+
+.graph-canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  touch-action: none;
+  cursor: grab;
+}
+
+.graph-legend {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 14px;
+  margin: 10px 0 0;
+  font-family: var(--font-mono);
+  font-weight: var(--weight-mono);
+  font-size: 10px;
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+  color: var(--text-muted);
+  line-height: var(--leading-label);
+}
+
+.graph-legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.graph-legend-hint {
+  margin-left: auto;
+}
+
+.graph-dot {
+  display: inline-block;
+  width: 9px;
+  height: 9px;
+  border-radius: var(--radius-circle);
+}
+
+.graph-dot-note {
+  background: var(--text-primary);
+}
+
+.graph-dot-hub {
+  width: 5px;
+  height: 5px;
+  margin: 2px;
+  background: var(--text-primary);
+  box-shadow: 0 0 0 1.5px var(--surface), 0 0 0 2.5px var(--text-primary);
+}
+
+.graph-dot-tag {
+  background: var(--surface);
+  border: 1px solid var(--text-secondary);
+}
+
+.graph-dot-missing {
+  background: var(--surface);
+  border: 1px dashed var(--text-muted);
+}
+
+.graph-dot-draft {
+  background: var(--attention-bg);
+  border: 1px solid var(--attention-text);
+}
+
+.graph-more {
+  margin: 12px 0 0;
+  font-size: 14px;
+}
+
 /* ------------------------------------------------------------ utility */
 
 .muted {

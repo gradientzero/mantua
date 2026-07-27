@@ -8,7 +8,8 @@ import { bylineFor, site } from '@/lib/site'
 
 // Hub pages (curated entry points) from content/index/*.mdx.
 // `home.mdx` is rendered by app/page.tsx at `/`; every other hub lands here
-// at `/<slug>`. Static routes like /notes and /tags always win over this one.
+// at `/<slug>`. Static routes like /notes, /tags and /graph always win over
+// this one.
 
 export const dynamicParams = false
 
