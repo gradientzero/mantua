@@ -1,0 +1,78 @@
+---
+title: "Loop engineering: from writing prompts to writing loops"
+status: draft
+tags: [agentic-engineering, harness-design]
+created: 2026-07-27
+updated: 2026-07-27
+summary: The claim that the unit of work is shifting from the prompt to the loop — Cherny, Osmani and Guzman all saying a version of it — and why the interesting question is not how to keep an agent running but who decides what "done" means.
+origin: agent
+---
+
+A framing note, sitting one level above the mechanics in [[keeping-an-agent-running]]. The
+claim: the thing a person writes is no longer the prompt, it's the loop that produces the
+prompts.
+
+Three versions of it, collected in a Department of Product piece from 2026-07-21. Boris
+Cherny, who built Claude Code, describes having stopped prompting Claude directly — loops
+prompt Claude and work out what to do, and "My job is to write loops." Addy Osmani calls
+loop engineering a matter of replacing yourself as the person who prompts the agent.
+Katia Guzman, at OpenAI, frames it as a shift from prompting to goal setting: describe the
+situation and let the model figure out the approach. Different words, one move — the human
+steps back from the per-turn instruction.
+
+## Source caveat
+
+The article is paywalled and the capture is a fragment: it stops partway into the `/goal`
+section, before any of the worked examples. What survived is the framing above and the
+taxonomy below. The promised inventory of 100+ commands and the practical playbook are not
+in the clip and are not represented here. Treat this page as the framing, not as the guide
+it was.
+
+## Slash commands as the surface
+
+The article's one durable piece of structure is a three-way split of what a `/command`
+actually is:
+
+1. **Built-in** — ships with the tool, handles session mechanics.
+2. **Custom** — a markdown file you write that expands into a prompt when invoked.
+3. **Connector-exposed** — surfaced by a connected MCP server or plugin rather than defined
+   locally.
+
+Worth noting because this notebook already runs entirely on category two: `/ingest`,
+`/oracle` and `/lint` in `.claude/commands/` are markdown files, and they are the operations
+of [[llm-wiki-pattern|the LLM-wiki pattern]] made typeable. The observation that a command
+is just a prompt in a file is unremarkable until you notice it is the same bet as
+[[harness-engineering-agent-first-repositories|"what the agent can't see doesn't exist"]] —
+put the procedure in the repository and it applies every run.
+
+## Where the framing is right, and where it thins out
+
+It is right that the mechanisms now exist and are cheap. `/goal`, `/loop`, Stop hooks and
+scheduled runs are all in the tool; none of them needs building. The
+["Ralph Wiggum" loop](https://ghuntley.com/ralph/) that both Anthropic and OpenAI point at
+(see [[harness-design-reading-list]]) was a community hack a year ago and is now a
+first-class feature. That part of the shift has genuinely happened.
+
+Where it thins out is the implied conclusion — that writing the loop replaces the judgment
+work. It doesn't; it relocates it. A loop that runs unattended still needs someone to have
+decided what "done" means, in advance, precisely enough that a model can check it. The
+`/goal` documentation's own advice makes this concrete: one measurable end state, a stated
+check, the constraints that must not be violated. Writing that is the same skill as writing
+a rubric for an evaluator, which [[generator-evaluator-loops|is where the actual work turned
+out to be]] in every harness in this cluster. The typing goes away. The specification
+doesn't.
+
+The article is honest about the boundary, at least: it says goals are for well-defined,
+verifiable tasks, and not for decisions needing human judgement or where the cost of being
+wrong is high. That is the right line, and it is also
+[[agentic-engineering-my-role-in-the-loop|exactly the owner's open question]] — delegating
+tasks is easy, delegating *decisions* is the part that buys time and the part nobody has
+scoped. "Write loops" is advice about the easy half.
+
+## Open
+
+- Cherny's claim is about his own workflow on a tool he wrote. Nobody in the piece reports
+  what fraction of loop runs are abandoned, or what a bad loop costs. Same absence as the
+  one [[agentic-engineering]] flags in the harness posts: no published failures.
+- If the loop writes the prompts, what reviews the loop? A misspecified condition runs to
+  completion and reports success. There is no equivalent of a failing test for a rubric.

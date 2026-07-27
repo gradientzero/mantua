@@ -1,0 +1,111 @@
+---
+title: "Keeping an agent running: goals, loops, hooks and schedules"
+status: draft
+tags: [agentic-engineering, harness-design, evaluation]
+created: 2026-07-27
+updated: 2026-07-27
+summary: "Four mechanisms decide what starts an agent's next turn and what stops the sequence — /goal, /loop, Stop hooks and scheduled runs. Notes on the /goal documentation, including the constraint that shapes everything else: its evaluator has no tools and can only judge what the transcript shows."
+origin: agent
+---
+
+Everything in [[agentic-engineering|the harness-design cluster]] is about what happens
+*inside* a turn: who plans, who builds, who grades. This page is the other axis — **what
+starts the next turn, and what ends the sequence.** It's the smallest part of a harness and
+the one that ships with the tool, so it's the cheapest place to start.
+
+Source: [Keep Claude working toward a goal](https://code.claude.com/docs/en/goal),
+Claude Code documentation, clipped 2026-07-27. Archived under
+`sources/2026-07/claude-code-goal-docs/`. The framing around it — why anyone wants this —
+is in [[loop-engineering]].
+
+## Four mechanisms
+
+| Mechanism | Next turn starts when | Sequence stops when |
+|---|---|---|
+| `/goal` | the previous turn finishes | a separate model confirms the condition holds |
+| `/loop` | a time interval elapses | you stop it, or Claude decides it's done |
+| Stop hook | the previous turn finishes | your own script or prompt decides |
+| scheduled runs | a clock or cron fires | per-run; no session is open in between |
+
+The first three keep *this* session alive. The fourth is the one that speaks to the
+owner's actual objection in [[agentic-engineering-my-role-in-the-loop]] — a laptop that has
+to stay awake is a bad host — because it doesn't need an open session at all.
+
+**Auto mode is orthogonal and worth keeping straight.** It removes the per-*tool* approval
+prompt inside a turn; it does not start a new turn. `/goal` removes the per-*turn* prompt
+but changes no permissions, so on default settings a goal turn still stops to ask before
+running the test command it's being graded on. Unattended operation needs both.
+
+`/goal` and a Stop hook are the same machinery at different scopes: a goal is session-scoped
+and typed at the prompt, a Stop hook lives in settings, applies to every session in scope,
+and can be a deterministic script rather than a model call. `/goal` is in fact implemented
+as a session-scoped prompt-based Stop hook — which is why it needs an accepted trust dialog
+and is unavailable when hooks are disabled.
+
+## How /goal actually evaluates
+
+Each time a turn finishes, the condition plus the conversation so far go to the configured
+small fast model (Haiku by default). It returns yes-or-no and a short reason. A *no* sends
+the reason back as guidance for the next turn; a *yes* clears the goal. Evaluation is billed
+on the small model and is negligible next to the main turns.
+
+So this is a real generator/evaluator split — a fresh model, not the one that did the work,
+decides done — which is the whole idea of [[generator-evaluator-loops]] handed to you for
+nothing. But it is the *weakest* form of it, for one reason:
+
+**The evaluator does not call tools.** It reads the transcript. It cannot run the tests,
+open the file, or look at the page. The documentation is explicit about the consequence:
+write the condition as something Claude's own output can demonstrate. "All tests in
+`test/auth` pass" works because the generator runs the tests and the output lands in the
+transcript for the evaluator to read.
+
+That inverts where the evidence comes from. In the Anthropic harness the evaluator went and
+got its own evidence — [[harness-design-for-long-running-coding-agents|Playwright driving the
+live page]] — precisely so the generator couldn't decide what the grader saw. Under `/goal`
+the generator *is* the instrument, and the grader marks its homework. It closes the
+rationalising-a-pass hole only halfway: the verdict is independent, the evidence is not.
+Which is the exact gap the default-FAIL contract with an evidence-gate hook is built to
+close (see [[building-a-generator-evaluator-harness-plan]]).
+
+## Writing a condition that survives many turns
+
+The documentation's three ingredients, which read like a compressed rubric:
+
+- **One measurable end state** — a test result, a build exit code, a file count, an empty
+  queue.
+- **A stated check** — how to prove it. `npm test` exits 0; `git status` is clean.
+- **Constraints that matter** — what must not change on the way. "No other test file is
+  modified."
+
+Two practical notes. The condition can run to 4,000 characters, so it is closer to a spec
+than a sentence. And there is no built-in turn cap — you bound the run by putting the bound
+*in the condition* ("or stop after 20 turns"), which means the same evaluator that judges
+completion also judges the budget, from the transcript. That is a soft stop, not a kill
+switch.
+
+## The rest of the surface, briefly
+
+- One goal per session; setting a new one replaces it. Setting a goal starts a turn
+  immediately with the condition as the directive.
+- `/goal` with no argument shows the condition, elapsed time, turns evaluated, token spend,
+  and the evaluator's most recent reason. That last one is the useful diagnostic — it is the
+  loop telling you what it thinks is still missing.
+- `/goal clear` (aliases `stop`, `off`, `reset`, `none`, `cancel`) ends it early.
+- Resuming a session restores an active condition but resets the turn count, timer and spend
+  baseline — so the "stop after 20 turns" clause silently starts over.
+- Headless: `claude -p "/goal …"` runs the whole loop in one invocation. With default text
+  output nothing prints until it finishes, so a long goal looks hung; `--output-format
+  stream-json --verbose` is how you watch it.
+
+## What this is good for here
+
+Modest and real. For work in this notebook with a mechanical end state —
+`npm run build` passes with no new wikilink warnings, every note in a cluster has a summary
+— a goal is a better fit than a hand-run checklist, and it costs nothing to try. For
+anything where the verdict is taste, the transcript-only evaluator is grading a description
+of the artifact rather than the artifact, and the honest move is the bash loop over
+`claude -p` with a real evaluator subagent instead.
+
+The tool-free evaluator is not a flaw so much as the price of it being free. Worth naming
+because it is easy to read "a separate model checks" and assume more independence than is
+there.

@@ -3,7 +3,7 @@ title: "Agentic engineering: the work moves to the harness"
 status: draft
 tags: [agentic-engineering, harness-design]
 created: 2026-07-26
-updated: 2026-07-26
+updated: 2026-07-27
 summary: The emerging discipline around long-running coding agents — designing the scaffolding, feedback loops and environments that let an agent do reliable work, rather than writing the code yourself. Entry point for the harness-design cluster in this notebook.
 origin: agent
 ---
@@ -80,7 +80,10 @@ same machinery that decides whether an agent's sprint passed.
 
 - Where do these agents run? The owner's practical objection — a laptop that has to stay
   awake and travel with you is not a host for six-hour autonomous runs — is not addressed
-  by any of the three posts, all of which quietly assume a machine that stays up.
+  by any of the three posts, all of which quietly assume a machine that stays up. Partly
+  overtaken since: Managed Agents and scheduled cloud runs are both hosts that aren't the
+  laptop (see [[keeping-an-agent-running]]), though nobody has published what a six-hour
+  run costs on either.
 - What carries across sessions? Anthropic uses handoff artifacts and (in the older
   harness) context resets; OpenAI uses execution plans checked into the repo. Both are
   memory systems built out of files. Is there anything better than files yet?
@@ -94,3 +97,18 @@ same machinery that decides whether an agent's sprint passed.
 
 The prior work these posts build on is listed in [[harness-design-reading-list]] — the
 articles themselves still need clipping.
+
+## The mechanics, one level down
+
+All three posts are about what happens inside a turn. The other axis — what starts the next
+turn and what ends the run — has since become tooling you don't build:
+[[keeping-an-agent-running]] covers `/goal`, `/loop`, Stop hooks and scheduled runs, and the
+constraint that limits the cheapest of them (`/goal`'s evaluator reads the transcript, it
+doesn't touch the artifact). [[loop-engineering]] is the framing that has grown up around
+it — the claim that the unit of work is now the loop rather than the prompt, and where that
+claim quietly skips the hard part.
+
+## To build
+
+[[building-a-generator-evaluator-harness-plan]] turns the Anthropic post into a staged plan:
+what to build first, what to leave out, and what has changed on the platform since March.

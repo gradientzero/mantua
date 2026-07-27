@@ -16,6 +16,7 @@ import { resolveWikilink } from '@/lib/content'
 import { WIKILINK_PROTOCOL } from '@/lib/wikilinks'
 import AdaptationDecisionTree from '@/components/figures/adaptation-decision-tree'
 import DataReadinessSpectrum from '@/components/figures/data-readiness-spectrum'
+import SimplifiedHarness from '@/components/figures/simplified-harness'
 
 type AnchorProps = AnchorHTMLAttributes<HTMLAnchorElement> & { children?: ReactNode }
 
@@ -57,6 +58,7 @@ const sharedComponents = {
   a: MdxAnchor,
   AdaptationDecisionTree,
   DataReadinessSpectrum,
+  SimplifiedHarness,
   // Register future interactive components here, e.g.:
   // CostCurve: dynamic(() => import('@/components/figures/cost-curve')),
 }

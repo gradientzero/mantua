@@ -20,7 +20,7 @@ topic cluster outside the SLM thread:
 | `generator-evaluator-loops` | agent — cross-cutting concept |
 | `linting-as-agent-guardrail` | agent — cross-cutting concept |
 | `harness-design-reading-list` | agent — what's still unread |
-| `agentic-engineering-my-role-in-the-loop` | **human** — the dictated commentary |
+| `agentic-engineering-my-role-in-the-loop` | **mixed** — the owner's commentary, agent-edited |
 
 Publishing is the owner's call. Nothing is wired into `home` or `about` yet, deliberately:
 both hubs are published, and a wikilink from a published page to a draft renders as an
@@ -32,8 +32,10 @@ together.
 1. **Which pages go live.** The three source-summary notes are the most self-contained.
    `agentic-engineering` is the natural public entry point but currently opens by
    referring to the inbox drop that produced it — worth a rewrite if it is published.
-   `agentic-engineering-my-role-in-the-loop` should stay draft until the transcript
-   question in `2026-07-26-review-dictated-commentary.md` is settled.
+   `agentic-engineering-my-role-in-the-loop` was rewritten from the raw dictation on
+   2026-07-26 (see `2026-07-26-review-dictated-commentary.md`), so it now reads as a note
+   and is a publishable candidate — it is the only page in the cluster that says what the
+   owner actually thinks.
 2. **Whether this deserves a hub.** `content/index/` holds `home` and `about`. If the
    cluster grows — and the reading list alone implies four more sources — a hub page at
    `/agentic-engineering` would be a better entry point than a note, and would put the

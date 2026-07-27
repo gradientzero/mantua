@@ -4,9 +4,56 @@ status: draft
 tags: [agentic-engineering, harness-design]
 created: 2026-07-26
 updated: 2026-07-26
-summary: Dictated commentary on the harness-design articles — six months of AI coding, the feeling of being the bottleneck, and the shift from doing the work to managing a small team of agents. Transcribed as spoken.
-origin: human
+summary: Six months of AI coding have made it obvious that the human is the bottleneck. Where that leaves my role — closer to managing a small team of agents than to doing QA on their output — and the practical questions that follow from it.
+origin: mixed
 author: Wolfgang Gross
 ---
 
-because you am looking into this topic of a s... a psychopathy called [[agentic-engineering|agentic engineering]]. And this is something I'm very interested in because, like, one, we are using AI coding for... yeah. I think six months now, more or less at the beginning of the year. And that that has been great, but also we feelings, or many of us feeling that we as humans are the bottleneck and simultaneously waiting for the model, um, all all the time. So finding a new role is very important. And I think all signs are, uh, pointing towards me being... definitely part of the loop, but not just QAs, but more like manager of a small team. And this is something that has been discussed before. You know? You manage your sort of agents with how exactly is this working. So there's some practical considerations like, where are these models running because they can't... or if they run on your local machine, then, you know, you're relying that this machine is up and running and with a laptop, uh, that's, yeah, that's sometimes annoying and you can actually down. You have to bring it along. Um, so that's that's a problem. then you want the agents to have some cross session communication possibilities. So some memory system or or whatnot. And, also, you want them to be long running and taking some decisions off of you. Um, and, also, Quebec have a good quality control and, uh, [[generator-evaluator-loops|PR review process]], and this is also what this blood process targeting here with the domain of [[harness-design-for-long-running-coding-agents|front end design]]. It's more on taste than specific verifiability. [[linting-as-agent-guardrail|Linting]] is another topic that's more new to me. Uh, so this repository has a linting convention. So some some linting that that works effectively beyond tests. So that's that's another thing that's... that would be interesting to investigate. Um, also, that's kind of, like, more like instruction now. Um, the links in, um, that are linked here in the beginning, so also put them in the inbox because I think there's relevant as well. So the prior work by anthropic, uh, by, yeah, by anthropic. And also there's one, uh, blog post by OpenAI and a post Post it here as well. Put this one also in the inbox.
+We have been coding with AI for about six months now, since roughly the start of the
+year. It has been good. It has also made something uncomfortable obvious: **we are the
+bottleneck.** I spend a lot of the day waiting for a model, and then I am the slow step
+once it comes back. That is not a complaint about the models. It means my role has to
+change, and figuring out what it changes into is the interesting part of
+[[agentic-engineering]].
+
+Every signal I see points the same way: I stay in the loop, but not as QA. The shape is
+closer to **managing a small team.** That framing has been around for a while — you
+manage your agents — but nobody has told me how it actually works day to day. This note
+is the list of things I want to work out.
+
+## Where the agents run
+
+If the agents run on my local machine, I am betting the work on one laptop staying awake,
+plugged in, and coming with me. That is a bad bet and a daily annoyance. A team I manage
+should keep working when I close the lid, which pushes toward agents running somewhere
+that isn't my desk.
+
+## Memory across sessions
+
+Agents need to carry something between sessions — a memory system, notes, a shared
+scratchpad, some form of cross-session communication. Without it every session restarts
+from zero and I become the memory, which is exactly the bottleneck I am trying to get out
+of.
+
+## Long-running, and taking decisions off me
+
+Related but separate: I want them running long enough to finish something, and I want
+them making some of the calls themselves. Delegating tasks is easy. Delegating decisions
+is the part that actually buys me time, and the part I don't yet know how to scope.
+
+## Quality control and review
+
+If I am not writing the code, review is where my judgment goes — so the
+[[generator-evaluator-loops|PR review process]] has to be good. The hard case is the one
+the Anthropic post starts from: [[harness-design-for-long-running-coding-agents|frontend
+design]], where quality is a matter of taste more than of anything you can verify. That is
+the case I care about, because it is the one where "the tests pass" tells you nothing.
+
+## Linting
+
+[[linting-as-agent-guardrail|Linting]] is newer to me as a lever, and it looks more
+promising than I expected. The OpenAI post describes a repository whose custom linters
+carry the architectural rules and the house style — checks that catch what tests
+structurally cannot. Encoding taste and structure as something an agent runs before it
+asks for review, rather than something I say in a comment afterwards, is worth
+investigating properly.

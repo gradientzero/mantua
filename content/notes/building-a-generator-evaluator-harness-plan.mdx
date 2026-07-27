@@ -1,0 +1,226 @@
+---
+title: "Building a generator–evaluator harness: A practical implementation recipe"
+status: draft
+tags: [agentic-engineering, harness-design, evaluation, frontend-design, hands-on]
+created: 2026-07-26
+updated: 2026-07-27
+summary: A staged plan for building the Anthropic generator/evaluator harness myself, cheapest step first — starting with the rubric alone and only adding orchestration where it earns its keep. Plus what's changed since the March post, and the third-party implementations worth reading.
+origin: agent
+---
+
+[[harness-design-for-long-running-coding-agents|The Anthropic post]] describes a harness
+but ships no code. This page is the missing half: what to actually do, in what order, and
+where to stop. It's written against the frontend-design case, because that's the one I said
+I cared about in [[agentic-engineering-my-role-in-the-loop]] — the case where the tests
+passing tells you nothing.
+
+## The thing to get right before starting
+
+The post's own arc is a warning. The v1 three-agent harness with sprints and negotiated
+contracts *worked*, and then the author spent the back half of the post dismantling it,
+because most of it turned out to be compensating for Sonnet 4.5 and Opus 4.5 limitations
+that Opus 4.6 no longer had. Sprints: gone. Per-sprint evaluation: collapsed to one pass at
+the end. Context resets: gone before the post even starts.
+
+**So don't build what the post describes. Build what the post ended up with, and start
+below even that.** Every stage below is a working system on its own, and each one tells you
+whether the next is worth it. The stopping rule is the post's own: *what is this component
+compensating for, and does the current model still need it?*
+
+Expect the cheap stages to be surprisingly good. The single most useful finding in the post
+for someone starting out is that **the first iteration already beat an unprompted baseline** —
+before any evaluator feedback existed. The rubric is doing work as a prompt, not just as a
+scorer. That's Stage 0, and it costs about a dollar.
+
+## Stage 0 — the rubric alone, no loop
+
+Write the four criteria as a markdown file and hand it to a generator. No evaluator, no
+iteration. Build one page. Look at it.
+
+The four criteria are in [[harness-design-for-long-running-coding-agents|my notes on the post]];
+copy them close to verbatim, including the weighting — design quality and originality over
+craft and functionality — because the reasoning behind that weighting is the interesting
+part: grade hardest where the model is weakest by default, since the criteria steer the
+generator before any score comes back.
+
+Two things to add that the post doesn't give you:
+
+**Steal the anti-slop list from the frontend-design skill.** The post mentions giving the
+planner [[harness-design-reading-list|the frontend design skill]]; it's worth knowing that
+the skill contains a concrete calibration list of the three looks AI design currently
+clusters around — a cream `#F4F1EA` background with a high-contrast serif and a terracotta
+accent; near-black with a single acid-green or vermilion accent; a broadsheet layout with
+hairline rules and zero border-radius. That list is far more gradable than "originality,"
+and it belongs in the rubric as a named fail condition. The skill is installed locally as a
+Claude Code plugin skill (`frontend-design`), so I can read it directly — it does not need
+clipping the way that reading-list page assumes.
+
+**Watch the rubric's wording, not just its content.** The post's most quietly alarming
+observation is that a phrase like "the best designs are museum quality" pulled generations
+toward one particular look. The rubric is not a neutral measuring instrument. Write a
+sentence, run it, see what it drags in.
+
+Do this once. If the output is already fine for what I need, the honest conclusion is that I
+don't need a harness, and I should stop here.
+
+## Stage 1 — two sessions, one folder, me as the orchestrator
+
+Before automating anything, run the loop by hand and find out whether a separate evaluator
+actually catches things I'd have missed.
+
+- Two Claude Code sessions on the same directory. One generates, one evaluates.
+- The evaluator gets the rubric, no write tools, and Playwright — **it must drive the
+  running page**, not read a screenshot or a diff. This is the detail most likely to be cut
+  for convenience and it's the one that makes the difference; the post's evaluator navigated
+  and clicked before scoring, and the equivalents in the full-stack run were what caught the
+  fill tool that never fired on mouseUp.
+- Communication is files, which is what the post did and costs nothing: evaluator writes
+  `critique-01.md`, generator reads it and writes the next version.
+- After each critique, make the generator state a strategic call explicitly — refine if
+  scores are trending, pivot the whole aesthetic if not. That instruction is what produced
+  the post's best result, the Dutch museum site that was a polished dark landing page at
+  iteration nine and a 3D room in CSS perspective at ten.
+
+Run five iterations by hand. Keep every critique file. Then read them and ask the only
+question that matters: **did the evaluator find things I wouldn't have?** If yes, automate.
+If it mostly wrote agreeable paragraphs, the problem is the evaluator prompt, not the
+absence of a loop — go to the tuning section below before building anything.
+
+## Stage 2 — automate the loop
+
+Four options, cheapest first. Pick the first one that's sufficient.
+
+**`/goal` in Claude Code.** Set a completion condition and Claude keeps working across turns
+until a *separate small model* judges the condition met. That separation is the whole
+generator/evaluator idea, already built in, for zero implementation cost. It's the right
+first try and it is not in the post, which predates it.
+[Docs](https://code.claude.com/docs/en/goal).
+
+But read [[keeping-an-agent-running]] before assuming it's enough here: **`/goal`'s
+evaluator has no tools.** It judges the transcript, not the artifact — it cannot open the
+page, click anything, or run the tests itself. For the frontend case that is disqualifying
+on its own terms, because "make it use the thing" is the property that makes an evaluator
+worth having. The generator becomes the instrument and the grader marks its homework. Fine
+for a mechanical condition (build exits 0, no new warnings); not a substitute for a
+Playwright-driving evaluator. That pushes the frontend loop to the bash option below, where
+the evaluator is a real subagent with its own tools.
+
+**A bash `while` loop over `claude -p`.** The pattern from Anthropic's
+`cwc-long-running-agents` repo (below): loop until a contract file has no failures, calling
+the builder headless and then a dedicated evaluator subagent, each in fresh context. Twelve
+lines of shell. This is the sweet spot for most of what I'd want.
+
+**Managed Agents `user.define_outcome`.** The platform now provisions the grader for you:
+you pass a description and a markdown rubric, and it evaluates the artifact in a *separate
+context window specifically to avoid the self-evaluation bias*, hands the explanation back,
+and iterates. `max_iterations` defaults to 3, caps at 20. This is the post's core mechanism
+turned into an API primitive, and it also answers the "where do the agents run" objection
+from [[agentic-engineering-my-role-in-the-loop]] — the sandbox isn't my laptop.
+[Docs](https://platform.claude.com/docs/en/managed-agents/define-outcomes).
+
+**The Agent SDK**, which is what the post itself used. Most control, most code. Only worth
+it if I need orchestration the others can't express.
+
+The generic version of this shape is the evaluator–optimizer pattern: generate, score
+against a rubric, refine, until threshold or max iterations. Nothing here is exotic; the
+value is in the rubric and the tuning, not the plumbing.
+
+## Stage 3 — a planner, if the scope is bigger than a page
+
+Only relevant when building a whole app rather than a page. Worth knowing that the planner
+is the one component that survived every round of simplification: without it the generator
+under-scopes, starts building instead of speccing, and ships something thinner. Two
+instructions carry most of its value — be ambitious about scope, and stay at product and
+high-level-design altitude, explicitly *not* granular technical detail, because a wrong
+detail in a spec cascades into the implementation.
+
+If I get here, the sprint construct and the negotiated sprint contracts are the parts to
+leave out on a first build. They were decomposition scaffolding for a model that couldn't
+hold a long build together; the DAW run's builder ran coherently for over two hours without
+them.
+
+## Tuning the evaluator is the actual work
+
+The post is blunt that out of the box Claude is a poor QA agent: it finds real issues and
+then talks itself into approving them, and it tests shallowly. The fix was unglamorous —
+read the evaluator's own logs, find where its judgment diverged from the author's, patch the
+prompt, repeat. Several rounds. Budget for this; it is the part with no test to tell you
+when you're done.
+
+Three levers, in order of how much they buy:
+
+1. **Calibrate with worked examples.** Few-shot examples carrying full score breakdowns.
+   This is what aligned the evaluator with the author's taste and — the underrated part —
+   stopped score drift across iterations, without which the trend is meaningless.
+2. **Make rationalising a pass structurally impossible.** The best idea I found outside the
+   post: a *default-FAIL contract*. Every criterion starts `"passes": false` in a JSON file,
+   and a `PreToolUse` hook blocks the agent from writing to that file unless it has first
+   read evidence — a screenshot, a log, a result file. "Done" stops being a claim and
+   becomes a gate. This is worth more than another paragraph of prompt telling the evaluator
+   to be strict.
+3. **Hard thresholds per criterion.** One criterion below its floor fails the whole run and
+   returns specifics. Not an average — an average lets a good design score launder a broken
+   interaction.
+
+## What to expect, in money and hours
+
+The published numbers are the most useful thing in the post for planning, because almost
+nobody publishes them. Retro game maker: 20 minutes and $9 solo, 6 hours and $200 through
+the full v1 harness — over 20× for an app whose central feature worked where the solo run's
+didn't. Browser DAW on the simplified v2 harness: 3 hr 50 min and $124.70, of which the
+first build round alone was 2 hr 7 min and $71, and all three QA rounds together came to
+about $10.
+
+That last split is the planning-relevant one: **QA was under 10% of the bill.** The
+expensive part is generation. So the instinct to skip the evaluator to save money is
+backwards — it's the cheapest component in the system.
+
+Frontend runs are shorter but not cheap in wall-clock, because the evaluator navigating a
+live page takes real time: 5–15 iterations, up to four hours.
+
+## Other people's implementations, and one disagreement
+
+Nobody has published a faithful reproduction of the post's harness. Three things are worth
+reading anyway:
+
+- [`anthropics/cwc-long-running-agents`](https://github.com/anthropics/cwc-long-running-agents) —
+  from the Code with Claude 2026 long-running-agents station, and explicitly "example
+  ingredients, not a turnkey harness," unmaintained. The most directly useful of the three:
+  it has the default-FAIL contract and evidence-gate hooks, a fresh-context evaluator
+  subagent with no write tools, a kill switch, a `STEER.md` for injecting direction
+  mid-run, and shell one-liners for watching a long run without a dashboard. Its
+  handoff mechanism — the agent maintains its own `PROGRESS.md` and re-reads it on restart —
+  is a direct, unglamorous answer to the cross-session memory question in
+  [[agentic-engineering-my-role-in-the-loop]]. Files again, which is also what this notebook
+  bets on.
+- [`FlineDev/TandemKit`](https://github.com/FlineDev/TandemKit) — planner/generator/evaluator
+  across three Claude Code sessions coordinated through files and a `State.json`, with
+  severity-based verdicts instead of numeric scores. Interesting because the planner and
+  evaluator each run **Codex in parallel and iterate until the two models agree**. That is
+  the cross-model evaluator that [[generator-evaluator-loops]] flags as the obvious missing
+  experiment — two instances of one model are not independent reviewers. Worth stealing
+  regardless of the rest.
+- [`affaan-m/ECC`'s `gan-style-harness` skill](https://github.com/affaan-m/ECC/blob/main/skills/gan-style-harness/SKILL.md) —
+  the closest thing to a packaged version: the four criteria with explicit weights, a
+  configurable pass threshold of 7.0, max 15 iterations, Playwright against a live dev
+  server.
+
+**But note where that last one disagrees with its source.** It weights craft at 0.3 —
+equal to design quality — and originality at 0.2. The post weights design quality *and
+originality* above craft and functionality, and gives the reason: Claude already clears
+craft by default, so grading it heavily spends the rubric's steering power on the thing that
+isn't broken. Copying those weights would quietly undo the post's central decision. Which is
+a fair illustration of the general problem with harness skills you didn't write: the numbers
+look authoritative and the reasoning is gone.
+
+## Open, after all this reading
+
+- **Where it runs** is still unresolved and still mine to solve. Managed Agents is the first
+  option here that isn't my laptop. Everything else in this plan assumes a machine that
+  stays awake.
+- **What a cross-model evaluator actually buys** — TandemKit asserts the benefit;
+  nobody has measured it.
+- **When the loop makes things worse.** Still no published case of a harness degrading
+  output, which [[agentic-engineering]] already flags as suspicious. My own Stage 1 run is
+  the cheapest place to find out, since I'll have every intermediate iteration on disk and
+  can check whether I prefer a middle one — the post's author regularly did.

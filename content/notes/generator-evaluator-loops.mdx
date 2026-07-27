@@ -3,7 +3,7 @@ title: Generator–evaluator loops
 status: draft
 tags: [agentic-engineering, evaluation, harness-design]
 created: 2026-07-26
-updated: 2026-07-26
+updated: 2026-07-27
 summary: Splitting the agent that does the work from the agent that judges it — why self-evaluation fails, what makes an evaluator worth its cost, and how three independent teams arrived at the same shape from taste, from QA, and from production corrections.
 origin: agent
 ---
@@ -50,6 +50,13 @@ app per worktree. An evaluator grading a static screenshot or reading a diff is 
 and much weaker instrument. This costs wall-clock time — it's most of why a full run takes
 hours.
 
+The cheap end of the spectrum makes the point by omission. Claude Code's `/goal` runs a
+genuine split — a separate small model decides whether the condition is met — but that model
+[[keeping-an-agent-running|does not call tools]] and can only judge what the generator has
+already put in the transcript. The verdict is independent; the evidence isn't. Which is the
+whole distinction: separating the judge is easy, and it is the *second* half — giving the
+judge its own access to the artifact — that costs money and does the work.
+
 **Define done before the work starts.** Anthropic's sprint contracts (generator proposes
 scope and verification, evaluator checks it's the right thing, iterate until agreed) and
 the tax-agent bounded task environment (targeted eval + regression suite fixed before the
@@ -92,4 +99,6 @@ is exactly the solo-vs-harness comparison Anthropic published.
   a better artifact.
 - **Both agents share a prior.** Two instances of the same model are not independent
   reviewers; they fail in correlated ways. None of the three posts tests a
-  cross-model evaluator, which seems like the obvious next experiment.
+  cross-model evaluator, which seems like the obvious next experiment. Someone has since
+  built one — TandemKit runs Claude and Codex against each other until they agree — though
+  without measuring what it buys. See [[building-a-generator-evaluator-harness-plan]].

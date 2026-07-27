@@ -3,18 +3,23 @@ title: "Harness design: prior work still to read"
 status: draft
 tags: [agentic-engineering, harness-design, reading-list]
 created: 2026-07-26
-updated: 2026-07-26
+updated: 2026-07-27
 summary: The pieces the 2026 harness-design posts build on — Anthropic's earlier long-running-agent harness, context engineering, building effective agents, the frontend design skill — captured as references because the article bodies could not be fetched from this session.
 origin: agent
 ---
 
 The owner asked for the prior work linked from
 [[harness-design-for-long-running-coding-agents|the Anthropic harness-design post]] to go
-into the inbox too. **The bodies could not be retrieved**: this environment's network
-policy does not allow `www.anthropic.com` (`403 Host not in allowlist`), and the skill file
-lives in a GitHub repository outside this session's scope. So this page is the reference
-list, described from what the harness-design post says about each — the texts themselves
-still need clipping. Tracked as `tasks/2026-07-26-clip-harness-design-prior-work.md`.
+into the inbox too. The bodies could not be retrieved *by the ingest session that wrote this
+page* — `www.anthropic.com` returned `403 Host not in allowlist` there — so this page is the
+reference list, described from what the harness-design post says about each.
+
+**That blocker turned out to be per-session, not environmental.** A later session (the
+2026-07-26 oracle query on implementing the harness) fetched `www.anthropic.com` without
+trouble, and the frontend-design skill is installed locally on the owner's machine. So all
+four are reachable and this page can be replaced with real notes whenever `/ingest` is run
+from a session that has network access. Tracked in
+`tasks/2026-07-26-clip-harness-design-prior-work.md`.
 
 ## The four
 
@@ -42,6 +47,14 @@ full-harness run it was given to the *planner*, which read it and derived a visu
 language for the app as part of the spec — which is a more interesting use of a skill file
 than handing it to the agent that writes the CSS.
 
+**This one is no longer missing.** It ships with the official Claude Code plugin
+marketplace and is installed locally, so an agent session can read it from disk without
+network access. Its most reusable part is a calibration list of the three looks AI design
+currently converges on — cream `#F4F1EA` plus high-contrast serif plus terracotta;
+near-black plus one acid accent; broadsheet hairline rules with zero border-radius — named
+as defaults to avoid rather than as principles. That list is a ready-made fail condition for
+an originality rubric; see [[building-a-generator-evaluator-harness-plan]].
+
 ## Secondary
 
 - [**Claude Opus 4.6 launch post**](https://www.anthropic.com/news/claude-opus-4-6) — the
@@ -55,7 +68,8 @@ than handing it to the agent that writes the CSS.
   [loop](https://ghuntley.com/loop/) — the community pattern both companies point at: hooks or
   scripts that keep an agent in a continuous iteration cycle. OpenAI describes their
   review-until-all-reviewers-are-satisfied loop as exactly this. Worth reading before
-  building anything similar here.
+  building anything similar here — though the pattern has since been absorbed into the tools
+  as `/goal`, `/loop` and Stop hooks; see [[keeping-an-agent-running]].
 - [**Execution plans as checked-in artifacts**](https://cookbook.openai.com/articles/codex_exec_plans) — referenced from
   [[harness-engineering-agent-first-repositories|the OpenAI harness-engineering post]] as
   how they handle plans for complex work. Directly relevant to the cross-session memory

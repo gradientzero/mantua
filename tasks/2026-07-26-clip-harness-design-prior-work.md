@@ -2,9 +2,21 @@
 title: Clip the four prior-work articles the harness-design post builds on
 date: 2026-07-26
 priority: medium
-status: blocked
+status: open
 area: content
 ---
+
+## Update 2026-07-26 — not blocked after all
+
+The block below was written from the ingest session and turned out to be *that session's*
+network policy, not the environment's. The oracle session later the same day fetched
+`https://www.anthropic.com/engineering/effective-harnesses-for-long-running-agents`
+successfully, and found the frontend-design skill installed locally at
+`~/.claude/plugins/marketplaces/claude-plugins-official/plugins/frontend-design/skills/frontend-design/SKILL.md`
+(also available in-session as the `frontend-design` skill).
+
+So: no owner-side clipping and no allowlist change needed. Re-run `/ingest` on the four URLs
+below from a session with web access. Item 4 can be read straight off disk.
 
 ## Goal
 

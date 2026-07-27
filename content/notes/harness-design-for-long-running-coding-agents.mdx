@@ -3,7 +3,7 @@ title: "Harness design for long-running application development (Anthropic, 2026
 status: draft
 tags: [agentic-engineering, harness-design, evaluation, frontend-design]
 created: 2026-07-26
-updated: 2026-07-26
+updated: 2026-07-27
 summary: Notes on Prithvi Rajasekaran's Anthropic Labs post — a GAN-inspired generator/evaluator loop applied first to frontend design, then extended to a planner/generator/evaluator harness that builds full-stack apps over multi-hour autonomous runs, with the costs and the walk-back to a simpler harness.
 origin: agent
 ---
@@ -132,6 +132,13 @@ be *conditional* — as raw capability grows, the boundary of "what the generato
 alone" moves outward, and inside that boundary the evaluator is pure overhead. Outside it,
 it still pays.
 
+<SimplifiedHarness />
+
+What survives is small enough to draw on one line: a planner that runs once, a builder that
+runs for hours without interruption, and a grader that shows up at the end. The interesting
+part is the bottom of the diagram — the four struck-out boxes are the assumptions the model
+outgrew between two releases.
+
 DAW built in the browser on Web Audio, v2 harness: 3 hr 50 min, $124.70 total, of which
 the first build round alone was 2 hr 7 min and $71. The builder ran coherently for over
 two hours without sprint decomposition. QA still earned its keep, catching display-only
@@ -154,3 +161,7 @@ something this harness was built to fix.
   they're the parts most obviously portable to a smaller setup.
 - Cost is real and the numbers are published, which is rarer than it should be: $200 for a
   toy game maker, $125 for a toy DAW.
+
+The post ships no code. [[building-a-generator-evaluator-harness-plan]] is the plan for
+building it here anyway, cheapest stage first — plus what has changed on the platform since
+March, which is more than the post implies.

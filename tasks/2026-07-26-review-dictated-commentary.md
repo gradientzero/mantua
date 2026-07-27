@@ -2,39 +2,36 @@
 title: Review the dictated agentic-engineering commentary
 date: 2026-07-26
 priority: medium
-status: open
+status: done
 area: content
 ---
 
-## Goal
+## Outcome
 
-`content/notes/agentic-engineering-my-role-in-the-loop.mdx` is a dictation carried into the
-wiki verbatim — `origin: human`, so no agent will touch the wording. It reads as speech,
-and the transcription has a few clear errors:
+Settled on 2026-07-26 by the owner: **rewrite it for clarity and drop the instructions.**
+`content/notes/agentic-engineering-my-role-in-the-loop.mdx` is now edited prose rather than
+a raw transcript. What changed:
 
-- "a s... a psychopathy called agentic engineering" — presumably "a topic called".
-- "Quebec have a good quality control" — presumably "you want to have good quality
-  control".
-- "this is also what this blood process targeting here" — presumably "this blog post is
-  targeting here".
-- "we feelings, or many of us feeling that we as humans are the bottleneck", "you can
-  actually down" — dictation slips.
+- The transcription errors are gone ("a psychopathy called" → the topic; "Quebec have a
+  good quality control" → quality control; "this blood process targeting" → the blog post;
+  the dictation slips around the bottleneck sentence).
+- The trailing paragraph — an instruction to the ingest agent to put the linked prior work
+  in the inbox — is deleted. It was acted on in the same ingest and is recorded in
+  `harness-design-reading-list` and `tasks/2026-07-26-clip-harness-design-prior-work.md`.
+- The five concerns are now sections rather than one spoken paragraph: where the agents
+  run, memory across sessions, long-running work and delegated decisions, quality control
+  and review, linting. Nothing was added to the argument.
+- The four wikilinks were re-placed in the new prose; targets unchanged.
+- **`origin: human` → `origin: mixed`.** An agent edited the wording, so the page can no
+  longer claim to be hand-written; the byline reads *Wolfgang Gross · with agents*. The
+  substance and the opinions are the owner's. Reverting to `origin: human` is only correct
+  if the owner reworks the prose himself.
 
-Only the owner can fix these; that is the point of the provenance rule.
+The verbatim dictation is preserved unedited in
+`sources/2026-07/agentic-engineering-my-role-in-the-loop/`.
 
-## Decisions to make
+## Still open
 
-1. **Edit or leave.** Clean it into prose, or leave it as a raw capture and write a
-   separate considered note when the thinking has settled. Both are legitimate; a raw
-   dictation is a fine thing for a commonplace notebook to hold.
-2. **Publish or not.** It is a draft, like everything from this ingest. As it stands it
-   should not be published — it reads as a transcript, not a note.
-3. **The trailing instruction.** The last few sentences are an instruction to the ingest
-   agent ("put them in the inbox"), not commentary. It was acted on in the same ingest and
-   left in the text. Worth deleting if the note gets edited.
-
-## Also worth knowing
-
-Four wikilinks were added inside the prose. Each one's visible label is exactly the words
-that were already there — no wording was changed — but if the text is rewritten, those
-links need re-placing.
+Whether to publish it — tracked with the rest of the cluster in
+`tasks/2026-07-26-publish-agentic-engineering-cluster.md`. It now reads as a note rather
+than a transcript, so the transcript objection to publishing is gone.
