@@ -215,3 +215,37 @@ The one durable piece of structure in the fragment, the built-in/custom/connecto
 taxonomy, is recorded because this notebook runs on the middle category: `/ingest`,
 `/oracle` and `/lint` are markdown files. Archived to
 `sources/2026-07/beyond-prompts-loops-goals-slash-commands/`.
+
+## [2026-07-27] ingest | Dictation — Auto Research, the published harnesses, and the skill issue
+
+Dictated by the owner and passed straight to `/ingest` with the instruction to edit out the
+clutter and restructure while keeping the tone. Done, which makes the page `origin: mixed`
+rather than `origin: human` — same call as the 2026-07-26 dictation. The verbatim transcript
+is archived at `sources/2026-07/the-harness-is-a-skill-issue/`.
+
+New: `the-harness-is-a-skill-issue` — the entry point is an Anton Leicht piece on middle
+powers and sovereign AI, whose one surprising line is that these initiatives should want
+access to the coding and auto-science agents the labs run internally. That sent him looking
+for what is actually published, and the answer is the two posts already in this notebook,
+plus the observation that nobody has implemented Karpathy's Auto Research. Conclusion: the
+labs are still experimenting, we see their work two to four months late, and the gap is a
+skill issue on the operator's side — build and train your own harness. The note ends with
+his own operating rules: don't watch the agent work, run the first loops by hand as your own
+evaluator, write measurable criteria, read what the evaluator produces before trusting it,
+then schedule it.
+
+**What touched other pages**: `agentic-engineering` gained a section stating plainly that
+the fully automated loop is unimplemented — the hub read more settled than the situation is.
+`generator-evaluator-loops` gained his operational version of "concrete criteria" (colour
+scheme from a named set, spacing, window-size scaling, buttons clickable) and two tuning
+corollaries: be the evaluator yourself for the first few loops, and judge the evaluator by
+what it finds, not by its verdict. `loop-engineering` gained the returns-to-expertise
+finding as a second line of evidence for its own argument that specification work doesn't
+disappear. `agentic-engineering-my-role-in-the-loop` got a `related:` entry only, prose
+untouched.
+
+Three cited sources — Leicht, Auto Research, and "Agentic Coding and Persistent Returns to
+Expertise" (2026-06-16) — exist only as recollection in the dictation; none was clipped, and
+the direct quote in the note is unverified. Two dangling wikilinks (`sovereign-ai-for-middle-powers`,
+`auto-research`) mark the gap. Tracked as
+`tasks/2026-07-27-clip-sovereign-ai-and-expertise-sources.md`.
