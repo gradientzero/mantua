@@ -67,3 +67,22 @@ the grunt work of summarizing, cross-referencing and filing — is the same shif
 [[agentic-engineering-my-role-in-the-loop|the owner describes]] wrestling with in the
 harness-design cluster, just one level up: there it's managing a team of coding agents
 instead of a wiki-maintaining one. Same bottleneck, same fix.
+
+## The same bet, arrived at from teaching
+
+Karpathy makes a second version of the argument that isn't in the essay, and it is a stronger
+statement of what the pattern is for. Talking about documentation
+([[skill-issue-karpathy-on-code-agents|NoPriors, March 2026]]): stop writing HTML docs for
+humans and write markdown for agents, because an agent will re-explain any part of it to any
+reader at their level with infinite patience. He abandoned a walkthrough video for microGPT
+on exactly that reasoning — the 200 lines are simple enough that an agent can already explain
+them better than a fixed explanation can, in as many different ways as the reader needs.
+
+Which reframes what a wiki like this one is. Not a document you write for future-you to read,
+but **the corpus an agent reads in order to answer future-you** — which is precisely why
+`/oracle` files good answers back as pages, and why the schema lives in markdown the agent
+loads rather than in a style guide a person is supposed to remember. His formulation of what
+a person still contributes fits the provenance rule above: the few bits the agent cannot come
+up with on its own. An agent understands microGPT completely and cannot invent it. Everything
+downstream of that — the explaining, the cross-referencing, the filing — is not the human's
+job any more.

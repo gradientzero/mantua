@@ -1,0 +1,146 @@
+---
+title: "Skill Issue: Karpathy on code agents (NoPriors, 2026-03)"
+status: draft
+tags: [agentic-engineering, harness-design, evaluation]
+created: 2026-07-27
+updated: 2026-07-27
+summary: Notes on the NoPriors interview where Karpathy says he hasn't typed a line of code since December, that every remaining failure feels like a skill issue rather than a capability ceiling, and that token throughput is the resource you should feel nervous about wasting. Plus the jaggedness caveat that undercuts the whole picture.
+origin: agent
+---
+
+Source: [Skill Issue: Andrej Karpathy on Code Agents, AutoResearch, and the Loopy Era of AI](https://www.youtube.com/watch?v=kwSVtQ7dziU),
+NoPriors, 20 March 2026. YouTube auto-transcript, archived under
+`sources/2026-07/karpathy-nopriors-skill-issue/`.
+
+This is the podcast [[the-harness-is-a-skill-issue|the owner half-remembered]] when he wrote
+that operating agents badly is a skill issue. It is also, at four days before
+[[harness-design-for-long-running-coding-agents|Anthropic's harness-design post]], the same
+moment in time from outside a lab. [[auto-research]] has its own page; this one is
+everything else.
+
+## The state change
+
+Karpathy dates it precisely: in December something flipped, from writing 80% of his code by
+hand to writing perhaps 20%, and by March to not having typed a line since. His word for the
+resulting condition is psychosis, used affectionately and about a dozen times. The claim he
+makes about it is worth separating from the tone — that the default workflow of building
+software changed, that most people have not registered it, and that the change is recent
+enough that nobody knows what good looks like yet.
+
+## "Everything is skill issue"
+
+The phrase carries a specific argument. When something doesn't work, his instinct is that
+**the capability is there and he failed to string it together** — a bad AGENTS.md, no decent
+memory tool, the wrong parallelisation. Not a model ceiling.
+
+The corollary is a resource metric. He is nervous when a subscription goes unspent, because
+leftover quota means he did not maximise his token throughput; if Codex runs out he switches
+to Claude. He draws the analogy to being a PhD student with idle GPUs — the flops were the
+thing you felt guilty about wasting, and now it is tokens. His interviewer puts the general
+version well: engineering spent a decade not feeling compute-bound, and the binding
+constraint has moved back to the operator.
+
+That is the framing worth taking, and it cuts both ways. "It's a skill issue" is an
+empowering diagnosis precisely because it is unfalsifiable — there is always another
+configuration you have not tried, which is also why he describes the whole thing as infinite
+and himself as anxious about it. Nothing in the interview distinguishes a real skill issue
+from a real ceiling, and he does not claim it does.
+
+## Macro actions
+
+The concrete practice underneath the framing. The unit of manipulation is no longer a line
+or a function but a piece of functionality handed to one agent, with a second piece routed to
+another agent that won't collide with it, a third doing research, a fourth writing a plan.
+Review is proportional to how much you care about that particular code.
+
+The image he points at is Peter Steinberg's monitor tiled with Codex sessions across ten
+checked-out repos, each task sized to about twenty minutes at high effort. Note the sizing —
+twenty minutes is short enough to keep several in flight by hand, which is a different regime
+from the multi-hour unattended runs
+[[harness-design-for-long-running-coding-agents|Anthropic]] and
+[[keeping-an-agent-running|scheduled runs]] are aiming at. Karpathy is describing a human
+operating many short loops, not a human absent from long ones. Both are in the interview and
+they are not the same workflow.
+
+## Claws: persistence as its own layer
+
+His term for the layer above an agent session: something that keeps looping, has its own
+sandbox, acts on your behalf while you are not watching, and — the part he singles out —
+carries a real memory system rather than context compaction when the window fills. He is
+explicit that default agents do not have this and that open-source claw implementations do.
+
+His own is a home-automation elf reachable over WhatsApp: it found the Sonos system by
+scanning the LAN, reverse-engineered the API from web searches, and now runs lights, HVAC,
+shades, pool and a camera that texts him when a delivery van pulls up. Six apps replaced by
+one natural-language surface. The interesting claim attached to it is not the demo but the
+inference — that a great deal of bespoke app UI exists only because there was no other way
+to reach the API, and agents dissolve the need for it.
+
+He also thinks **personality is load-bearing**, which is the one design point here nobody
+else in this cluster raises. His reading: Claude's praise is calibrated well enough that he
+notices when a half-formed idea gets a flat response and a good one gets warmth, and he
+catches himself trying to earn it; Codex is dry and doesn't seem to care what is being built.
+Whether that is a feature or a manipulation is not examined.
+
+## The jaggedness caveat
+
+The counterweight, and he gives it real weight: the whole thing is "bursting at the seams",
+still rough, and pushing too far ahead makes it net *not useful*. He describes talking
+simultaneously to a brilliant lifelong systems programmer and a ten-year-old, and says he
+still gets badly frustrated by agents doing nonsensical things and by loops that go wrong
+and stay wrong.
+
+His hypothesis for why is the most useful thing in the interview: the models are shaped by
+reinforcement learning, so they improve exactly where behaviour is verifiable — did the
+program run, did the test pass — and stall everywhere else. Nuance about what you meant,
+knowing when to ask a clarifying question, anything soft: outside the optimised region. You
+are either on rails and moving at speed, or off them and meandering.
+
+His evidence is a joke. Ask a state-of-the-art model for one and you get the same atoms joke
+you got four years ago, unchanged, while the same model will move mountains on an agentic
+task for hours. Capability in verifiable domains is visibly *not* generalising to everything
+else. That is a direct, cheap counter-example to the "it all comes along for free as models
+scale" story, and it is the same boundary [[auto-research]] runs into from the other
+direction: what can be graded gets better, and what can't, doesn't.
+
+## Everything else, briefly
+
+The interview ranges wide. The parts that touch this notebook:
+
+- **Speciation.** The labs currently pursue one monolithic model good at everything. He
+  expects specialisation eventually — smaller models with the cognitive core intact, tuned
+  for a niche — but says the science of "manipulating the brains" is undeveloped: context
+  windows are cheap and safe to work with, weights are not, and fine-tuning without losing
+  capability is still not a reliable primitive. Relevant to
+  [[llm-customization-and-fine-tuning-notes|the fine-tuning thread]].
+- **Open source runs six to eight months behind, and that is fine.** His analogy is Linux:
+  the industry has always wanted a common open platform it feels safe building on, and the
+  gap is a decent power balance rather than a failure. He is explicit that his objection to
+  a fully closed frontier is about centralisation having a poor historical track record, not
+  about capability.
+- **Jevons paradox for software.** Software was scarce because it was expensive; making it
+  cheap should increase demand for it, on the ATMs-and-bank-tellers pattern. Cautiously
+  optimistic, explicitly hard to forecast.
+- **Digital first, atoms later.** Bits move a million times more easily than matter, so
+  expect an enormous amount of rewiring in digital work before the physical world moves, and
+  expect the interesting companies in between to be sensors and actuators — the interface
+  that lets a system ask the universe a question.
+- **Documentation is for agents now.** Instead of HTML docs for humans, markdown for agents,
+  because an agent will re-explain any part of it to any human at their level with infinite
+  patience. He tried to make a walkthrough video for microGPT (an LLM boiled down to ~200
+  lines) and abandoned it as not adding much. His framing of what is left for a person: the
+  few bits an agent cannot come up with — he notes an agent cannot invent microGPT but
+  understands it completely once shown — and a *skill* that scripts the curriculum through
+  it. That is the same bet as [[llm-wiki-pattern|this notebook]] and as
+  [[harness-engineering-agent-first-repositories|"what the agent can't see doesn't exist"]],
+  arrived at from teaching rather than from engineering.
+
+## Where he is speaking from
+
+Worth recording because it affects how to read the rest: he is outside the frontier labs by
+choice, and names the trade-off honestly in both directions. Inside, you cannot be a free
+agent — there are things you can't say and things the organisation would like you to say, and
+at the moment stakes get high an employee has little sway over what the entity does. Outside,
+your judgment drifts, because the systems are opaque and you no longer see what is coming.
+He expects to go back and forth. No part of this interview should be read as reporting on
+what any lab currently runs internally.

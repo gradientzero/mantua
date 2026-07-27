@@ -18,10 +18,12 @@ result.
    No URL or publication date captured. This is the entry point for the whole note and the
    only genuinely new thread in it; it deserves its own page. Target slug:
    `sovereign-ai-for-middle-powers`.
-2. **Andrej Karpathy, "Auto Research"** — described as his account of how he operates
-   models and coding agents. Not linked. Also worth finding: the podcast where he uses
-   "skill issue" about operating agents, since that phrase is doing load-bearing work in
-   the note and in the title. Target slug: `auto-research`.
+2. ~~**Andrej Karpathy, "Auto Research"** and the "skill issue" podcast.~~ **Done, same
+   day.** The owner dropped the NoPriors transcript mid-ingest; it is archived at
+   `sources/2026-07/karpathy-nopriors-skill-issue/` and covered by `auto-research` and
+   `skill-issue-karpathy-on-code-agents`. One thing left over: the transcript garbles the
+   name of the repo he ran Auto Research against ("data chat" / "Namat"). The wiki reads it
+   as nanochat by inference and says so — **worth confirming against the video**.
 3. **"Agentic Coding and Persistent Returns to Expertise", 2026-06-16** — publisher not
    named in the dictation. It is a usage-data analysis concluding that domain
    understanding, not coding training, predicts who directs agents successfully.

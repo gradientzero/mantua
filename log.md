@@ -249,3 +249,42 @@ Expertise" (2026-06-16) — exist only as recollection in the dictation; none wa
 the direct quote in the note is unverified. Two dangling wikilinks (`sovereign-ai-for-middle-powers`,
 `auto-research`) mark the gap. Tracked as
 `tasks/2026-07-27-clip-sovereign-ai-and-expertise-sources.md`.
+
+## [2026-07-27] ingest | Skill Issue: Karpathy on code agents (NoPriors, 2026-03-20)
+
+Dropped into the inbox mid-session, right after the dictation ingest above flagged the same
+podcast as an uncaptured source. A YouTube auto-transcript with heavy ASR damage — names and
+terms mangled throughout — so quotes were kept short and only taken where the raw text is
+unambiguous. Archived to `sources/2026-07/karpathy-nopriors-skill-issue/`.
+
+New: `skill-issue-karpathy-on-code-agents` — the source note. The December flip (he has not
+typed a line of code since), "everything is skill issue" as a diagnosis and token throughput
+as the resource you feel guilty wasting, macro actions and Steinberg's wall of 20-minute
+Codex sessions, claws as a persistence-plus-memory layer, and the jaggedness caveat that
+undercuts the rest: models improve where behaviour is verifiable and stall everywhere else,
+with the unchanged four-year-old atoms joke as the cheap counter-example to capability
+transfer.
+
+New: `auto-research` — the concept, previously a dangling wikilink. An objective, a metric,
+boundaries, go. The nanochat run that beat his own two-decades-of-experience hand-tuning
+overnight; `program.md` and the observation that a research organisation is just a set of
+markdown files, therefore tunable; the untrusted-worker swarm he has not solved; and the one
+constraint that bounds all of it — if you can't evaluate it, you can't auto-research it.
+
+**The correction this forces**: the dictation ingested earlier today says Auto Research "is
+not implemented yet". That is too strong. The single loop is implemented and produced this
+cluster's one uncontested result. What is unbuilt is the coordination — parallel loops, the
+swarm, the meta-layer over the loop's own spec. The owner's `origin: mixed` prose was left
+alone; the correction lives on `auto-research` and in the rewritten "How far along is this,
+really?" section of `agentic-engineering`, which had inherited the same overstatement.
+
+Also updated: `generator-evaluator-loops` (the evaluator as the prior question, not a
+component — plus metric overfitting as a named failure mode of long-running loops),
+`loop-engineering` (the recursion one level further out: code → prompt → loop → the thing
+that writes the loop, and why the objection gets sharper not weaker), `llm-wiki-pattern`
+(markdown for agents rather than HTML for humans — the same bet as this notebook, arrived at
+from teaching), and one wikilink added to `the-harness-is-a-skill-issue` with its wording
+untouched.
+
+Inbox empty. Still unclipped from this morning's dictation: the Anton Leicht sovereign-AI
+piece and *Agentic Coding and Persistent Returns to Expertise*.

@@ -78,6 +78,27 @@ wrong is high. That is the right line, and it is also
 tasks is easy, delegating *decisions* is the part that buys time and the part nobody has
 scoped. "Write loops" is advice about the easy half.
 
+## One turn further out
+
+Karpathy's version of the claim predates the article by four months and goes a step past it.
+His formulation is *remove yourself as the bottleneck* — you cannot be there to prompt the
+next thing, so arrange it once and hit go
+([[skill-issue-karpathy-on-code-agents|NoPriors, March 2026]]). The metric he holds himself
+to is token throughput: leftover subscription quota means he failed to get enough happening
+per token he typed.
+
+Then he takes the recursion one level further than anyone else in this cluster. If the loop
+is a markdown file, the loop is tunable — "a research organization is a set of markdown files
+that describe all the roles and how the whole thing connects", and you can therefore hold a
+contest between hand-written specifications, see where the improvements came from, and have
+a model write a better one ([[auto-research]]). First you stop writing the code, then the
+prompt, then the loop, then the thing that writes the loop.
+
+Which makes the objection above sharper rather than weaker. Every level of that stack still
+bottoms out in something unoptimised deciding what "better" means. Karpathy's own constraint
+says so — if you can't evaluate it you can't automate it — and his one working demonstration
+is a training run with a validation loss, the friendliest metric that exists.
+
 ## Open
 
 - Cherny's claim is about his own workflow on a tool he wrote. Nobody in the piece reports

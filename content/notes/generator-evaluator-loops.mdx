@@ -98,6 +98,18 @@ So the question to ask before adding one: *does this task sit past what the mode
 reliably solo?* If you can't say, the cheap experiment is to run both and compare — which
 is exactly the solo-vs-harness comparison Anthropic published.
 
+The prior question is whether the loop is possible at all, and
+[[auto-research|Karpathy states it in one line]]: **if you can't evaluate it, you can't
+automate it.** Writing CUDA kernels is the perfect case — same behaviour, faster, both
+mechanically checkable. Frontend taste is the hard case, which is why Anthropic had to build
+a rubric and calibrate it before anything else worked. The evaluator isn't a component you
+add to a loop; it's the thing that decides whether there can be a loop.
+
+He also names the failure mode of running one for long enough: an autonomous loop over a
+metric **will** overfit that metric. His proposed fix is to have the system generate more
+metrics for coverage, which is a hope rather than a result — the metrics that would catch
+metric-gaming are themselves ungraded. Add it to the limits below.
+
 ## Limits
 
 - **The judge can't perceive everything.** Claude can't hear, so the DAW's QA loop was
