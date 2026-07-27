@@ -71,26 +71,26 @@ need it?
 
 ## How far along is this, really?
 
-Worth stating explicitly, because the posts read more finished than the situation is:
-**nobody has published a working version of the fully automated loop.** The owner went
-looking for one after [[sovereign-ai-for-middle-powers|Anton Leicht's sovereign-AI piece]]
-argued that middle powers should want access to the labs' internal coding and auto-science
-agents — see
+Worth stating explicitly, because the posts read more finished than the situation is. The
+owner went looking for the state of the art after
+[[sovereign-ai-for-middle-powers|Anton Leicht's sovereign-AI piece]] argued that middle
+powers should want access to the labs' internal coding and auto-science agents — see
 [[the-harness-is-a-skill-issue]]. What is public is two experiments pointing in opposite
-directions on harness size. The labs are still testing approaches, they publish some of what
-they learn two to four months late, and the conclusion that follows is not "wait for them"
-but "build and train your own": the gap is a skill issue on the operator's side.
+directions on harness size, published two to four months after the fact.
 
-**Amended 2026-07-27, after the Karpathy transcript was ingested.** This section previously
-said there was "no implementation of Auto Research", which is too strong and was written
-before the source was in the notebook. The correct split, from
-[[skill-issue-karpathy-on-code-agents|the interview]]: the *single* loop is implemented and
-it worked — an overnight run beat his own hand-tuned baseline on a training repo he has two
-decades of experience tuning. What is unimplemented is the *parallel* version over an
-untrusted pool of workers, and the meta-layer that would tune the loop's own instructions.
-See [[auto-research]]. The conclusion above is unaffected; the gap is narrower and more
-specific than "nobody has done it", and it is a coordination problem rather than a loop
-problem.
+[[auto-research|Karpathy's Auto Research]] sharpens the picture rather than completing it.
+The single autonomous loop *is* implemented, and it produced this cluster's one uncontested
+result: an overnight run finding hyperparameters he had missed after two decades of tuning
+that class of model by hand. What is unbuilt is the coordination around it — parallel
+auto-researchers, the untrusted-worker swarm, and the meta-layer that would tune the loop's
+own specification. And on what the labs actually run internally,
+[[skill-issue-karpathy-on-code-agents|he is inferring like everyone else]]: he left one, and
+says plainly that his judgment about what is coming will drift because of it.
+
+So the honest summary is not "nobody has done it". It is that the loop works where the metric
+is clean, nobody has published the parallel version, and the conclusion that follows is still
+not "wait for them" but "build and train your own" — the gap is a skill issue on the
+operator's side.
 
 ## Where this sits in the notebook
 

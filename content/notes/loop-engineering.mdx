@@ -62,20 +62,6 @@ a rubric for an evaluator, which [[generator-evaluator-loops|is where the actual
 out to be]] in every harness in this cluster. The typing goes away. The specification
 doesn't.
 
-Karpathy states the same shift more starkly than any of the three, and one turn further out.
-His formulation in [[skill-issue-karpathy-on-code-agents|the NoPriors interview]] is that to
-get anything out of the current tools you have to **remove yourself as the bottleneck** —
-arrange it once, hit go, and measure yourself by how much happens per token you personally
-type. And he takes the recursion to its end: his `program.md` is the loop written as
-markdown, and once the loop is a file, the loop is tunable, so there is a layer above it that
-optimises the instructions. See [[auto-research]].
-
-Which sharpens the objection rather than answering it. Each turn of that recursion moves the
-specification work up a level; none of them removes it. At the top of Karpathy's stack sits a
-hand-written markdown file describing what a good research organisation does, written by a
-person, unvalidated, and load-bearing for everything below it. That is the same object as a
-rubric, and it has the same problem: nothing grades it.
-
 A separate line of evidence says the same thing from the other end. *Agentic Coding and
 Persistent Returns to Expertise* (2026-06-16), cited in [[the-harness-is-a-skill-issue]],
 reports from usage data that people with no formal coding training direct agents through
@@ -91,6 +77,27 @@ wrong is high. That is the right line, and it is also
 [[agentic-engineering-my-role-in-the-loop|exactly the owner's open question]] — delegating
 tasks is easy, delegating *decisions* is the part that buys time and the part nobody has
 scoped. "Write loops" is advice about the easy half.
+
+## One turn further out
+
+Karpathy's version of the claim predates the article by four months and goes a step past it.
+His formulation is *remove yourself as the bottleneck* — you cannot be there to prompt the
+next thing, so arrange it once and hit go
+([[skill-issue-karpathy-on-code-agents|NoPriors, March 2026]]). The metric he holds himself
+to is token throughput: leftover subscription quota means he failed to get enough happening
+per token he typed.
+
+Then he takes the recursion one level further than anyone else in this cluster. If the loop
+is a markdown file, the loop is tunable — "a research organization is a set of markdown files
+that describe all the roles and how the whole thing connects", and you can therefore hold a
+contest between hand-written specifications, see where the improvements came from, and have
+a model write a better one ([[auto-research]]). First you stop writing the code, then the
+prompt, then the loop, then the thing that writes the loop.
+
+Which makes the objection above sharper rather than weaker. Every level of that stack still
+bottoms out in something unoptimised deciding what "better" means. Karpathy's own constraint
+says so — if you can't evaluate it you can't automate it — and his one working demonstration
+is a training run with a validation loss, the friendliest metric that exists.
 
 ## Open
 

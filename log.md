@@ -252,55 +252,84 @@ the direct quote in the note is unverified. Two dangling wikilinks (`sovereign-a
 
 ## [2026-07-27] ingest | Skill Issue: Karpathy on code agents (NoPriors, 2026-03-20)
 
-The podcast the owner had been citing from memory, finally captured — an auto-generated
-YouTube transcript, one unbroken paragraph, proper nouns wrong throughout (Claude Code as
-"clot code", Qwen as "Quinn", Goodharting as "good harding"; the full correction table is in
-the source record). No timestamps, so nothing here is citable to a position in the recording.
+Dropped into the inbox mid-session, right after the dictation ingest above flagged the same
+podcast as an uncaptured source. A YouTube auto-transcript with heavy ASR damage — names and
+terms mangled throughout — so quotes were kept short and only taken where the raw text is
+unambiguous. Archived to `sources/2026-07/karpathy-nopriors-skill-issue/`.
 
-A previous commit (`33b9e95`) had dropped the file in the inbox and already written
-`auto-research` from it, but never archived, logged, or created the note that page links to.
-This ingest finishes that: `auto-research` kept as written, plus a source pointer and two
-cross-links.
+New: `skill-issue-karpathy-on-code-agents` — the source note. The December flip (he has not
+typed a line of code since), "everything is skill issue" as a diagnosis and token throughput
+as the resource you feel guilty wasting, macro actions and Steinberg's wall of 20-minute
+Codex sessions, claws as a persistence-plus-memory layer, and the jaggedness caveat that
+undercuts the rest: models improve where behaviour is verifiable and stall everywhere else,
+with the unchanged four-year-old atoms joke as the cheap counter-example to capability
+transfer.
 
-New: `skill-issue-karpathy-on-code-agents` (the interview note), `the-claw-layer`,
-`jaggedness-and-what-rl-optimises`, `the-customer-is-not-the-human`,
-`model-speciation-and-touching-the-weights`.
+New: `auto-research` — the concept, previously a dangling wikilink. An objective, a metric,
+boundaries, go. The nanochat run that beat his own two-decades-of-experience hand-tuning
+overnight; `program.md` and the observation that a research organisation is just a set of
+markdown files, therefore tunable; the untrusted-worker swarm he has not solved; and the one
+constraint that bounds all of it — if you can't evaluate it, you can't auto-research it.
 
-**The correction it forced**: `agentic-engineering` said there was "no implementation of
-Karpathy's Auto Research". Too strong, and written before the source was in the notebook.
-The single loop is implemented and it worked — overnight, against a repo its author had
-hand-tuned for two decades. What is unimplemented is the parallel version over untrusted
-workers and the meta-layer over `program.md`. Amended in place; the split is on
-`auto-research`, which already carried the same correction against the owner's page.
+**The correction this forces**: the dictation ingested earlier today says Auto Research "is
+not implemented yet". That is too strong. The single loop is implemented and produced this
+cluster's one uncontested result. What is unbuilt is the coordination — parallel loops, the
+swarm, the meta-layer over the loop's own spec. The owner's `origin: mixed` prose was left
+alone; the correction lives on `auto-research` and in the rewritten "How far along is this,
+really?" section of `agentic-engineering`, which had inherited the same overstatement.
 
-**What else touched other pages**: `generator-evaluator-loops` gained the evaluator as a
-*feasibility* gate rather than a quality measure ("if you can't evaluate it you can't
-automate it"), plus metric overfitting and the regress in Karpathy's proposed fix — the third
-independent arrival in this notebook at "what checks the check?", still unanswered.
-`keeping-an-agent-running` gained a fifth shape: the claw layer answers what stays *resident*
-between turns, where the other four answer what starts the next one. `loop-engineering`
-gained the recursion's next turn and the observation that a hand-written markdown file sits
-unvalidated at the top of it. `harness-engineering-agent-first-repositories` gained Karpathy
-arriving at "what the agent can't see doesn't exist" from audience rather than context
-budget. `harness-design-reading-list` records that this item is no longer missing.
+Also updated: `generator-evaluator-loops` (the evaluator as the prior question, not a
+component — plus metric overfitting as a named failure mode of long-running loops),
+`loop-engineering` (the recursion one level further out: code → prompt → loop → the thing
+that writes the loop, and why the objection gets sharper not weaker), `llm-wiki-pattern`
+(markdown for agents rather than HTML for humans — the same bet as this notebook, arrived at
+from teaching), and one wikilink added to `the-harness-is-a-skill-issue` with its wording
+untouched.
 
-Four `origin: human`/`mixed` pages got `related:` entries only, prose untouched:
-`the-harness-is-a-skill-issue`, `agentic-engineering-my-role-in-the-loop`,
-`llm-customization-and-fine-tuning-notes`, `serving-slms-on-a-desktop-gpu`.
+Inbox empty. Still unclipped from this morning's dictation: the Anton Leicht sovereign-AI
+piece and *Agentic Coding and Persistent Returns to Expertise*.
 
-The one hedge worth flagging for the owner: Karpathy himself says he cannot tell whether the
-remaining roughness is the models or the operator. Recorded on the interview note, because
-"everything is a skill issue" is unfalsifiable without it.
+## [2026-07-27] ingest | Karpathy transcript, second pass — the concept notes, and a duplicate ingest
 
-Archived to `sources/2026-07/skill-issue-karpathy-on-code-agents/`.
+**The same transcript was ingested twice, in parallel, by two sessions that could not see
+each other.** The entry above is the first; this is the second, reconciled onto it after the
+fact. Recorded rather than quietly squashed, because the duplication is a finding about how
+this notebook is being operated, not just a merge accident: two agent sessions were started
+on one inbox item minutes apart, and nothing in the repo made either aware of the other.
+Worth fixing before the ingest agent runs on a schedule — a lock, or a claim marker in the
+inbox, or simply not starting two.
 
-**Corrected before merge**, after a review pass over the diff against the archived
-transcript. Three fixes, all provenance rather than prose: `the-claw-layer` asserted that
-Karpathy's claw runs on a machine at home that stays up and hung a cross-link to
-`serving-slms-on-a-desktop-gpu` on it — the transcript says no such thing, so the claim is
-now scoped to what it supports ("not a closed laptop") and the link is gone. The joke's age
-was given as five years in two places; five is the interviewer's number, Karpathy says three
-or four. And the source record's correction table was missing "the soul and D document",
-which was smoothed to "the personality file" without being listed — now recorded as an
-unresolved garble, alongside a note that the two speakers are easy to conflate in a
-transcript with no speaker labels.
+What the reconciliation kept from the first pass: the source note
+`skill-issue-karpathy-on-code-agents` (both sessions wrote one, under the same slug; the
+first's is more complete and is the one that survives), the archive at
+`sources/2026-07/karpathy-nopriors-skill-issue/`, and the rewritten "How far along is this,
+really?" section of `agentic-engineering`. The second session's duplicate archive folder was
+deleted.
+
+What this pass adds on top — four concept notes spun out of sections the source note covers
+in brief, each linked from the relevant point in it:
+
+- `the-claw-layer` — the persistence layer, the Dobby demo, and the security story that does
+  not hold together. Also a fifth shape for `keeping-an-agent-running`: what stays *resident*
+  between turns, where the other four answer what starts the next one.
+- `jaggedness-and-what-rl-optimises` — followed through the cluster, where it turns out to be
+  the mechanism behind several findings collected separately, including why the model is a
+  poor QA agent out of the box.
+- `the-customer-is-not-the-human` — apps-should-be-APIs and docs-for-agents as one argument,
+  plus where it thins out (somebody pays for the API; the claim is made by someone who can
+  build the replacement).
+- `model-speciation-and-touching-the-weights` — the SLM thread's share: why customisation
+  stops at the context window, and open weights six to eight months behind.
+
+Also updated: `harness-engineering-agent-first-repositories`, `harness-design-reading-list`,
+`auto-research` (source pointer, jaggedness cross-link), and `related:` frontmatter on four
+`origin: human` / `mixed` pages, prose untouched.
+
+**Provenance fixes from a review pass** over this branch's own diff, before merge. Three
+slips, all found by checking the notes against the archived transcript rather than against
+the reasoning that produced them: `the-claw-layer` asserted the claw runs on a machine at
+home that stays up and hung a cross-link on it, which the transcript does not support (claim
+scoped, link dropped); the atoms joke was dated five years in two places, which is the
+*interviewer's* number, not Karpathy's; and the source record's correction table was missing
+"the soul and D document". All three are recorded in the addendum to that record, along with
+the fuller ASR correction table and a worked example of the speaker-attribution problem.
