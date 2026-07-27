@@ -75,11 +75,13 @@ velite.config.ts      # content schema (Zod) + wikilink extraction + build valid
 lib/
   wikilinks.ts        # [[wikilink]] remark plugin + outgoing-link extraction
   content.ts          # THE content access layer: draft filtering, backlinks, tags
+  graph.ts            # nodes+links for the graph view, derived from the wikilink structure
   site.ts             # site constants + provenance→byline mapping
 components/
   mdx.tsx             # MDX renderer; resolves wikilinks; REGISTER CUSTOM MDX COMPONENTS HERE
   note-list.tsx       # shared list/badge/tag UI
-app/                  # Next.js routes (article template, tags, hubs, OG images, sitemap)
+  graph/              # canvas force-directed graph (/graph + per-note neighborhood)
+app/                  # Next.js routes (article template, tags, hubs, graph, OG images, sitemap)
 next.config.mjs       # runs Velite as part of next dev/build — no separate content build step
 .velite/              # GENERATED, git-ignored — never edit, never commit
 ```
@@ -144,6 +146,22 @@ up front).
   section on every page is computed by inverting those lists (`backlinksFor` in
   `lib/content.ts`). Wikilinks inside code blocks/inline code are ignored on both the
   rendering and extraction side.
+
+## The graph view
+
+`/graph` draws the whole wiki as a force-directed map, Obsidian-style: notes and hubs as
+ink dots (hubs ringed; size = number of connections), tags as hollow circles, and dashed
+"unwritten" nodes for wikilink targets that don't exist yet — the same to-do list the
+build warnings print. Every note page ends with the same map reduced to its one-hop
+neighborhood. Hover spotlights a node's connections, click opens the page, drag/scroll
+pans and zooms; tag and unwritten nodes can be toggled off.
+
+Everything derives at build time from data that already exists (`links`, `tags`,
+`related`), assembled in `lib/graph.ts` and drawn by `components/graph/graph-view.tsx`
+with a small built-in force simulation — no new schema fields, no dependencies, no
+client-side content fetching. Draft pages appear on the map exactly where drafts appear
+at all: in `npm run dev`, marked amber. `/graph` is a reserved route like `/notes` and
+`/tags` — a hub with the slug `graph` would be shadowed by it.
 
 ## How to add a note by hand
 
@@ -232,7 +250,6 @@ manual asset work.
   [Pagefind](https://pagefind.app) post-build; no external service. Until then the wiki
   is small enough for hubs + links to be the index.
 - **RSS/Atom feed** — trivial to add as `app/feed.xml/route.ts` over `allNotes()`.
-- **Graph visualization** — the data already exists (`links` on every doc).
 - **Self-hosted web fonts** — the three families (Cormorant Garamond, Inter, JetBrains
   Mono) currently load from the Google Fonts CDN via an `@import` at the top of
   `app/globals.css`; swap to `next/font` or local `.woff2` if wanted.

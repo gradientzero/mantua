@@ -333,3 +333,14 @@ scoped, link dropped); the atoms joke was dated five years in two places, which 
 *interviewer's* number, not Karpathy's; and the source record's correction table was missing
 "the soul and D document". All three are recorded in the addendum to that record, along with
 the fuller ASR correction table and a worked example of the speaker-attribution problem.
+
+## [2026-07-27] setup | Graph view: the wiki as a map
+
+Added an Obsidian-style force-directed graph of the whole notebook at `/graph` — notes,
+hubs, tags and not-yet-written wikilink targets as nodes, wikilinks/`related`/tag
+membership as edges; hover spotlights a neighborhood, click opens the page, tags and
+unwritten targets toggle off. Every note page now ends with the same map reduced to its
+one-hop neighborhood. No schema change and no new dependencies: the data was already
+there (`links` on every doc), assembled in `lib/graph.ts` and drawn by a small built-in
+force simulation on canvas (`components/graph/graph-view.tsx`). New nav tab and sitemap
+entry; README section added; roadmap item closed.

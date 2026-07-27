@@ -12,5 +12,5 @@ export default function sitemap(): MetadataRoute.Sitemap {
     lastModified: h.updated,
   }))
   const tags = allTags().map(({ tag }) => ({ url: `${site.url}/tags/${tag}` }))
-  return [{ url: `${site.url}/notes` }, ...hubs, ...notes, ...tags]
+  return [{ url: `${site.url}/notes` }, { url: `${site.url}/graph` }, ...hubs, ...notes, ...tags]
 }
