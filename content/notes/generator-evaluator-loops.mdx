@@ -110,6 +110,20 @@ metric **will** overfit that metric. His proposed fix is to have the system gene
 metrics for coverage, which is a hope rather than a result — the metrics that would catch
 metric-gaming are themselves ungraded. Add it to the limits below.
 
+That makes three independent arrivals at *what checks the check?* in this notebook, from
+three unrelated directions: the tax-agent work listing a miscounting grader as a legitimate
+root cause, [[loop-engineering|a misspecified condition running to completion and reporting
+success]], and now metric overfitting in an unattended loop. No answer among them. The
+practical consequence for anything built here is that a rising score over a long run is weak
+evidence and gets weaker the longer the run — drift and gaming are indistinguishable from the
+inside. Reading a sample of the actual artifacts, the owner's "read what the evaluator
+produces, not its verdict" rule applied to the generator as well, is the only check in the
+cluster that does not itself need one.
+
+And [[jaggedness-and-what-rl-optimises]] is why this is so persistent: judging soft qualities
+sits outside what any of the training loops optimised, so the evaluator is weakest at exactly
+the task it is hired for.
+
 ## Limits
 
 - **The judge can't perceive everything.** Claude can't hear, so the DAW's QA loop was

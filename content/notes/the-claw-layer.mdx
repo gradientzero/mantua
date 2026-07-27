@@ -1,0 +1,89 @@
+---
+title: "The claw layer: an agent that persists when you close the lid"
+status: draft
+tags: [agentic-engineering, harness-design]
+created: 2026-07-27
+updated: 2026-07-27
+summary: Karpathy's name for the layer above a coding session — something that keeps looping in its own sandbox, remembers more than a compacted context, and answers on one messaging channel. The home-automation example he built, and why it is a partial answer to two open questions in this notebook.
+origin: agent
+---
+
+From [[skill-issue-karpathy-on-code-agents|the NoPriors interview]]. Karpathy uses "claw"
+for a layer he distinguishes from an agent, and the distinction is the useful part:
+
+- It **keeps looping**. You are not interactively in the middle of it.
+- It has **its own sandbox** and does things on your behalf while you are not looking.
+- It has **memory beyond context compaction** — his stated reason for finding the idea
+  interesting is that the default agent memory system is "compact the context when it runs
+  out", which is not a memory system so much as a way of not crashing.
+- It has **one portal**. His is WhatsApp. Every automation is reachable by texting the same
+  thread.
+
+The reference implementation he is describing is OpenClaw, Peter Steinberger's project. His
+assessment is that the achievement was doing five things at once rather than any one of
+them, and the one he singles out is the personality file.
+
+## Dobby
+
+The worked example, built over about a week in January. He asked an agent to find the smart
+home devices on his local network. It ran an IP scan, found the Sonos system, found there
+was no password on it, read the web for the API endpoints, and offered to try playing
+something. It worked. It did the same for the lights. It then built a dashboard, and now
+runs the lights, HVAC, shades, pool and spa, and the security system.
+
+The security camera path is the more interesting half, because it is a full pipeline rather
+than an API wrapper: change detection on the camera feed, a Qwen vision model looking at
+the clip that triggered, and a WhatsApp message with a still and a sentence — a delivery
+van pulled up, you may want to check. He says the honest summary of the payoff is that six
+separate phone apps became one text thread.
+
+**Two things he did not do, and says why.** He gave it no access to email or calendar — too
+new, too rough, and he did not want it holding his digital life. And he has not pushed the
+pattern much further because he keeps getting pulled onto other things.
+
+Worth noticing that the two halves of that paragraph sit oddly together. The Sonos story is
+charming because an unauthenticated device on a home network let a language model in on the
+first try; the caution about email is the same person, two minutes later, declining to hand
+over a system that *does* have authentication. The security argument for the claw layer is
+unaddressed in the interview: something that loops unattended in its own sandbox with
+credentials to your house is a larger blast radius than a coding session you are watching,
+and the only control described is not giving it the interesting credentials.
+
+## Why it matters here
+
+This is a fifth shape next to the four in [[keeping-an-agent-running]]. Those four —
+`/goal`, `/loop`, Stop hooks, scheduled runs — all answer "what starts the next turn". The
+claw layer answers something else: **what stays resident between the runs.** A scheduled run
+has no session open in between and therefore no state except what it wrote to disk. A claw
+is the case where the process is the memory.
+
+That makes it a partial answer to two open questions the owner has been carrying in
+[[agentic-engineering-my-role-in-the-loop]]:
+
+- *Where do the agents run?* Only negatively, and only by implication. Something that
+  answers a text message about your house at any hour is not running on a laptop that
+  travels with you — but **the transcript never says where it runs**, and no inference
+  beyond "not the closed lid" is supported. He mentions in passing that a claw "has a
+  machine", in a speculative aside about a future where it assembles software for you, not
+  about his own setup. What the example establishes is that the resident-process shape
+  exists and is useful, not what it is resident *on*.
+- *What carries across sessions?* His claim is that the answer should be better than files,
+  and that OpenClaw's memory is meaningfully more sophisticated than compaction. He does not
+  say what it does. So this is a pointer at an answer, not an answer — and
+  [[agentic-engineering|the harness cluster's]] version of the question, "is there anything
+  better than files yet?", stays open until someone reads the implementation.
+
+## The personality claim
+
+He argues, at some length, that personality is not decoration. Claude reads as a teammate
+that cares what you are building; Codex is dry and does not seem to; and — the part that is
+harder to dismiss than it sounds — he thinks Claude's sycophancy is *calibrated*, in that
+praise for a half-formed idea is muted and praise for a good one is not, to the point where
+he notices himself trying to earn it.
+
+Recorded because he clearly believes it is load-bearing for adoption, and because there is
+no way to check it. It is one operator's read on four or five models, it is exactly the kind
+of soft judgment that [[jaggedness-and-what-rl-optimises|nothing in the training loop is
+optimising]], and a system that makes you want to earn its approval is not obviously a
+system you should trust to grade your work. The same instinct is what
+[[generator-evaluator-loops|the evaluator split]] exists to defeat.

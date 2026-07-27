@@ -109,7 +109,9 @@ same machinery that decides whether an agent's sprint passed.
   run costs on either.
 - What carries across sessions? Anthropic uses handoff artifacts and (in the older
   harness) context resets; OpenAI uses execution plans checked into the repo. Both are
-  memory systems built out of files. Is there anything better than files yet?
+  memory systems built out of files. Is there anything better than files yet? Karpathy
+  says yes and points at OpenClaw without describing what it does — see
+  [[the-claw-layer]], which is a pointer at an answer rather than one.
 - What does a good evaluator cost, and when is it not worth it? Anthropic's answer — worth
   it when the task sits beyond what the model does reliably solo — is honest but only
   measurable after the fact.
@@ -120,6 +122,22 @@ same machinery that decides whether an agent's sprint passed.
 
 The prior work these posts build on is listed in [[harness-design-reading-list]] — the
 articles themselves still need clipping.
+
+## The Karpathy transcript, and what it adds
+
+The NoPriors interview that gave this notebook the phrase "skill issue" was ingested on
+2026-07-27 — [[skill-issue-karpathy-on-code-agents]]. It is the only source in the cluster
+that is not a lab write-up, and it argues from the operator's chair rather than from a
+project retrospective. Four things branch off it:
+
+- [[auto-research]] — the loop with the human removed, and the boundary that decides where
+  it applies.
+- [[the-claw-layer]] — the persistent entity above a session, and the memory question above.
+- [[jaggedness-and-what-rl-optimises]] — why capability only advances where a reward can be
+  computed, which turns out to be the mechanism behind several separate findings in this
+  cluster.
+- [[the-customer-is-not-the-human]] — the same conclusion as OpenAI's "what the agent can't
+  see doesn't exist", reached from audience rather than from context budget.
 
 ## The mechanics, one level down
 

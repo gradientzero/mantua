@@ -3,7 +3,7 @@ title: "Harness engineering: an agent-first repository (OpenAI, 2026-02)"
 status: draft
 tags: [agentic-engineering, harness-design, code-review, linting]
 created: 2026-07-26
-updated: 2026-07-26
+updated: 2026-07-27
 summary: "Notes on Ryan Lopopolo's OpenAI post — five months shipping a product with no hand-written code, and what a repository has to look like for that to work: docs as the system of record, a bootable app per worktree, custom linters as taste enforcement, and continuous cleanup of agent drift."
 origin: agent
 ---
@@ -82,6 +82,12 @@ agent can inspect and modify all of it.
 
 This notebook is a small instance of the same bet — see [[about]] — and the doc-gardening
 agent is recognisably the same job as `/lint` here.
+
+Karpathy reaches the same instruction from the opposite motivation: stop writing HTML
+documentation for the humans who use your library and write markdown for the agents, because
+the agent will then explain any part of it to any person at their level. OpenAI's version is
+defensive (put it in the repo or it doesn't exist); his is a claim about who the better
+distribution channel is. See [[the-customer-is-not-the-human]].
 
 ## Where I'd push back
 

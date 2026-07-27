@@ -11,6 +11,14 @@ owner's recollection in the dictation. Nothing was clipped and nothing is archiv
 note currently asserts them on his memory alone. Three wikilink targets are dangling as a
 result.
 
+**Update 2026-07-27: item 2 is done, two remain.** The Karpathy transcript came in and was
+ingested. One thing it changed about the rest of this task: his account, read in full,
+turned out to be *more* qualified than the recollection of it — he says the single Auto
+Research loop worked, and he says he cannot tell whether the remaining roughness is the
+models or the operator. Worth keeping in mind for the other two: the note's summaries of
+them are also unverified recollections, and the one that has now been checked needed
+correcting.
+
 ## To clip
 
 1. **Anton Leicht** — the piece arguing middle powers have not really tried sovereign AI,
@@ -21,9 +29,12 @@ result.
 2. ~~**Andrej Karpathy, "Auto Research"** and the "skill issue" podcast.~~ **Done, same
    day.** The owner dropped the NoPriors transcript mid-ingest; it is archived at
    `sources/2026-07/karpathy-nopriors-skill-issue/` and covered by `auto-research` and
-   `skill-issue-karpathy-on-code-agents`. One thing left over: the transcript garbles the
-   name of the repo he ran Auto Research against ("data chat" / "Namat"). The wiki reads it
-   as nanochat by inference and says so — **worth confirming against the video**.
+   `skill-issue-karpathy-on-code-agents`, plus four concept notes spun out of it. One thing
+   left over: the transcript garbles the name of the repo he ran Auto Research against
+   ("data chat" / "Namat"). The wiki reads it as nanochat by inference and says so —
+   **worth confirming against the video**. Two smaller unresolved garbles are listed in the
+   source record's addendum, and one of them ("the soul and D document") would be worth
+   settling at the same time.
 3. **"Agentic Coding and Persistent Returns to Expertise", 2026-06-16** — publisher not
    named in the dictation. It is a usage-data analysis concluding that domain
    understanding, not coding training, predicts who directs agents successfully.

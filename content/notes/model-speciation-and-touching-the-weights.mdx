@@ -1,0 +1,98 @@
+---
+title: "Speciation, and why we only ever touch the context window"
+status: draft
+tags: [fine-tuning, deployment, inference]
+created: 2026-07-27
+updated: 2026-07-27
+summary: Karpathy expects specialised models and does not see them arriving, and his explanation is that adjusting weights without losing capability is still an underdeveloped science while context windows just work. Plus where he puts the open-weight models — six to eight months behind, and better off there.
+origin: agent
+---
+
+From [[skill-issue-karpathy-on-code-agents|the NoPriors interview]]. This is the part of
+the transcript that belongs to the notebook's other thread — which model to run, and what it
+costs to adapt one — rather than to the harness cluster.
+
+## The monoculture, and the speciation he expects instead
+
+His read of what the labs are doing: pursue a single model that is arbitrarily intelligent
+across every domain and stuff all of it into the parameters. His expectation is that this
+does not hold, by analogy to the animal kingdom — brains are diverse because niches are, and
+some animals run an overdeveloped visual cortex and less of everything else.
+
+What he expects instead is smaller models that keep the cognitive core, specialise, and win
+on latency and throughput for the task you actually care about. He cites recent releases
+aimed at mathematicians working in Lean as the sort of thing that will make sense more often.
+
+Then the honest part: he does not think we have seen it yet. What is visible is a
+monoculture, with pressure to build a good coding model and then merge it back into the main
+line rather than keep it separate.
+
+## Why it hasn't happened: the primitives are missing
+
+His explanation is the most useful thing in this section, and it is a claim about tooling
+rather than about demand:
+
+> we don't have these primitives for actually like working with the intelligences in ways
+> other than just context windows
+
+Context windows work, and they are cheap to manipulate. That is where essentially all
+customisation happens today. Touching the weights is different in kind — you are changing
+the whole model and possibly its intelligence, and the things you would need are not solved:
+fine-tuning a domain without losing capabilities elsewhere, continual learning, deeper
+adjustment that is predictable. He calls it a developing science, and adds the cost
+condition: it also has to be cheap enough to be worth doing.
+
+That lands directly on the framing in
+[[llm-customization-and-fine-tuning-notes|the Bahree & Tok reading notes]]. The book presents
+a continuum — prompting, RAG, LoRA/QLoRA, SFT, distillation, preference optimisation — as a
+ladder of increasing cost with reasonably even steps. Karpathy's remark says the rungs above
+prompting are less like steps and more like a research area, and that the capability-loss
+risk is not priced into the decision. That is a stronger version of the owner's own
+scepticism in those notes, where he flags the ROI claims as unevidenced.
+
+It cuts both ways as evidence, though, and should be labelled as such: this is one
+practitioner's aside on a podcast, with no data, about a question the book at least tries to
+support with numbers. It is a hypothesis to test against the LoRA work, not a finding that
+overrides it. The place it would show up concretely is a capability-regression check either
+side of a fine-tune — which is the same eval harness the notebook already needs for
+[[slm-evaluation-harness|other reasons]].
+
+## Does the compute crunch force specialisation?
+
+Asked whether the current supply crunch pushes toward smaller specialised models on
+efficiency grounds, he does not take the bait — he says we have not seen much speciation
+yet, full stop. His one structural reason: a lab serving everybody does not know what the
+next request will be, so it has to multitask across everything that might be asked. Where
+you would expect to see specialisation is a lab partnering with a business on a specific
+problem, or a high-value niche.
+
+Which is, from the other end, an argument for the [[private-deployment|self-hosted]] case.
+If specialisation only pays when someone knows the workload, the person who knows the
+workload is the operator, not the lab.
+
+## Open weights: behind, and better there
+
+He puts the open-weight models roughly six to eight months behind the closed frontier, down
+from about eighteen, and thinks that gap persists rather than closes or explodes. His
+analogy is operating systems: Windows and macOS on one side, Linux on the other, and Linux
+winning the majority of machines because the industry needs a common platform everyone feels
+safe building on. He thinks the same demand exists here. The difference he names is capex —
+this is not a project you can hand to volunteers.
+
+Where he expects it to land: open models eat the ordinary use cases, increasingly running
+locally, while frontier closed models get reserved for the largest jobs. His two examples of
+what "largest" means are Nobel-calibre research and porting Linux from C to Rust, which is a
+useful calibration — not "hard prompts", but projects.
+
+He calls the current arrangement a good accident, and the reason is political rather than
+technical: he distrusts centralisation on track record, wants more labs rather than fewer,
+and wants a capable common substrate that is not owned. His phrasing for the general
+principle is that ensembles beat any individual model, and he wants the same to be true of
+the people in the room.
+
+**For this notebook** that mostly confirms an existing bet rather than changing it. The
+[[serving-slms-on-a-desktop-gpu|desktop under the desk]] runs open weights on the assumption
+that the ordinary cases are covered locally and the hard ones go out to an API. Karpathy's
+version adds a number to it — the local box is running something about half a year behind
+what you would rent — and a reason to expect that to keep being true rather than to be a
+temporary state worth waiting out.

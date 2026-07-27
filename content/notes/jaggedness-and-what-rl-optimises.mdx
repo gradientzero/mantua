@@ -1,0 +1,89 @@
+---
+title: "Jaggedness: what RL optimises, and what stalls"
+status: draft
+tags: [agentic-engineering, evaluation]
+created: 2026-07-27
+updated: 2026-07-27
+summary: Karpathy's argument that models are advancing only where a reward can be computed, with a joke that hasn't changed in three or four years as the demonstration — and why that is the same boundary the harness cluster keeps running into from the other side.
+origin: agent
+---
+
+From [[skill-issue-karpathy-on-code-agents|the NoPriors interview]]. The observation first:
+working with a current agent feels like talking to a brilliant systems programmer and a
+ten-year-old at the same time. His point is not that it is uneven — people are uneven — but
+that the *combination* is one you would never meet in a person. Human ability is far more
+correlated across domains than this.
+
+## The joke test
+
+His demonstration is deliberately petty. Ask a frontier model for a joke and you get the one
+about scientists not trusting atoms, because atoms make everything up. It is the joke you
+would have got three or four years ago. Meanwhile the same model will work for hours on an
+agentic task and move mountains.
+
+The joke has not improved because nothing is optimising it. Coding, maths and anything else
+with a checkable answer sit inside the reinforcement-learning loop; humour sits outside it,
+so it is frozen at whatever the pre-training distribution produced.
+
+Asked directly whether competence at code generalises to everything else, he says no — maybe
+a little, "not a satisfying amount". This is worth recording plainly because the opposite is
+a common background assumption: that capability bought in verifiable domains arrives free
+everywhere else as a side effect. His answer is that it does not, and that the gains are
+clustered inside opaque models where you cannot see which parts got the attention.
+
+## Where the ridge falls
+
+The formulation he uses: you are either on rails, inside the verifiable domains, where
+everything moves at the speed of light — or you are off them, and things meander.
+
+What he names as off-rails and consequently weak:
+
+- **Working out what you actually meant.** Nuance about intent.
+- **Knowing when to ask a clarifying question.** He calls this out specifically, which is
+  interesting, because it is the behaviour that would most reduce wasted work.
+- Anything he describes as "softer".
+
+Both interviewers volunteer the same complaint from the user side: the frustration is not
+that the agent fails, it is that it burns a lot of compute on something it should have
+recognised as an obvious dead end.
+
+## Why this is the same wall the harness cluster keeps hitting
+
+Karpathy's constraint on [[auto-research]] is that if you cannot evaluate it you cannot
+automate it. Jaggedness is that same line drawn from the training side rather than the
+harness side: the reason your loop only works on verifiable tasks is that a verifiable
+reward is also the only thing that made the model good at them.
+
+That makes several scattered findings in this notebook one finding:
+
+- **The model is a poor QA agent out of the box** —
+  [[generator-evaluator-loops|Anthropic's observation]], and the reason the evaluator needed
+  several rounds of prompt surgery before it graded sensibly. Judging taste is off-rails
+  work. Nothing trained it.
+- **Concrete criteria beat quality questions.** The owner's rule from
+  [[the-harness-is-a-skill-issue]] — name the colour scheme, check the spacing, check the
+  buttons are clickable — is not just good rubric hygiene. It is a way of dragging a
+  judgment onto the rails, where the model is competent.
+- **The evaluator that drives the artifact beats the one that reads a transcript.** Same
+  move again: replace a soft judgment with an observation.
+- **`/goal`'s tool-free evaluator** ([[keeping-an-agent-running]]) is cheap precisely
+  because it stays inside the verifiable slice — a test exit code in the transcript — and
+  useless outside it.
+
+The practical reading: when you are designing a loop, the question "can this be checked
+mechanically?" is not a nice-to-have constraint you might engineer around later. It is a
+prediction of whether the model is any good at the task at all.
+
+## The unresolved part
+
+He does not claim to know whether the remaining roughness is a model limitation or an
+operator one, and says so. That hedge is discussed in
+[[skill-issue-karpathy-on-code-agents|the interview note]]; it applies here more than
+anywhere else in the transcript, because jaggedness is the one part of his account that is
+an argument about the models rather than about how you drive them.
+
+Two things follow that the interview does not address. If capability is concentrated where
+rewards exist, then a benchmark suite is a map of what was optimised, not of what the model
+can do — and the gaps are unmeasured by construction. And the same argument predicts that
+jaggedness gets *worse* as the verifiable domains advance, not better, which is the opposite
+of what "the models keep improving" implies. Neither is tested in the transcript.

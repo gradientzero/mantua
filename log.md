@@ -288,3 +288,48 @@ untouched.
 
 Inbox empty. Still unclipped from this morning's dictation: the Anton Leicht sovereign-AI
 piece and *Agentic Coding and Persistent Returns to Expertise*.
+
+## [2026-07-27] ingest | Karpathy transcript, second pass — the concept notes, and a duplicate ingest
+
+**The same transcript was ingested twice, in parallel, by two sessions that could not see
+each other.** The entry above is the first; this is the second, reconciled onto it after the
+fact. Recorded rather than quietly squashed, because the duplication is a finding about how
+this notebook is being operated, not just a merge accident: two agent sessions were started
+on one inbox item minutes apart, and nothing in the repo made either aware of the other.
+Worth fixing before the ingest agent runs on a schedule — a lock, or a claim marker in the
+inbox, or simply not starting two.
+
+What the reconciliation kept from the first pass: the source note
+`skill-issue-karpathy-on-code-agents` (both sessions wrote one, under the same slug; the
+first's is more complete and is the one that survives), the archive at
+`sources/2026-07/karpathy-nopriors-skill-issue/`, and the rewritten "How far along is this,
+really?" section of `agentic-engineering`. The second session's duplicate archive folder was
+deleted.
+
+What this pass adds on top — four concept notes spun out of sections the source note covers
+in brief, each linked from the relevant point in it:
+
+- `the-claw-layer` — the persistence layer, the Dobby demo, and the security story that does
+  not hold together. Also a fifth shape for `keeping-an-agent-running`: what stays *resident*
+  between turns, where the other four answer what starts the next one.
+- `jaggedness-and-what-rl-optimises` — followed through the cluster, where it turns out to be
+  the mechanism behind several findings collected separately, including why the model is a
+  poor QA agent out of the box.
+- `the-customer-is-not-the-human` — apps-should-be-APIs and docs-for-agents as one argument,
+  plus where it thins out (somebody pays for the API; the claim is made by someone who can
+  build the replacement).
+- `model-speciation-and-touching-the-weights` — the SLM thread's share: why customisation
+  stops at the context window, and open weights six to eight months behind.
+
+Also updated: `harness-engineering-agent-first-repositories`, `harness-design-reading-list`,
+`auto-research` (source pointer, jaggedness cross-link), and `related:` frontmatter on four
+`origin: human` / `mixed` pages, prose untouched.
+
+**Provenance fixes from a review pass** over this branch's own diff, before merge. Three
+slips, all found by checking the notes against the archived transcript rather than against
+the reasoning that produced them: `the-claw-layer` asserted the claw runs on a machine at
+home that stays up and hung a cross-link on it, which the transcript does not support (claim
+scoped, link dropped); the atoms joke was dated five years in two places, which is the
+*interviewer's* number, not Karpathy's; and the source record's correction table was missing
+"the soul and D document". All three are recorded in the addendum to that record, along with
+the fuller ASR correction table and a worked example of the speaker-attribution problem.
