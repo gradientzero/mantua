@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
+import { EditInEditorButton } from '@/components/edit-in-editor-button'
 import { MDXContent } from '@/components/mdx'
 import { DraftBadge, TagList, formatDate } from '@/components/note-list'
 import { allNotes, backlinksFor, getNote, relatedNotes } from '@/lib/content'
@@ -65,6 +66,7 @@ export default async function NotePage({ params }: { params: Promise<{ slug: str
             <> · updated <time dateTime={note.updated}>{formatDate(note.updated)}</time></>
           )}
         </span>
+        <EditInEditorButton path={note.path} />
       </div>
 
       {note.summary && <p className="article-lead">{note.summary}</p>}

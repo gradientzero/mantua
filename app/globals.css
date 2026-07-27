@@ -528,6 +528,33 @@ th:not(:first-child) {
   padding: 3px 8px;
 }
 
+.edit-in-editor-button {
+  font-family: var(--font-mono);
+  font-weight: var(--weight-mono);
+  font-size: 10px;
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  background: transparent;
+  border: var(--stroke-hairline) solid var(--border-subtle);
+  border-radius: var(--radius-xs);
+  padding: 3px 8px;
+  cursor: pointer;
+  margin-left: auto;
+  transition: color var(--duration-fast) var(--ease-standard),
+    border-color var(--duration-fast) var(--ease-standard);
+}
+
+.edit-in-editor-button:hover:not(:disabled) {
+  color: var(--text-primary);
+  border-color: var(--border-strong);
+}
+
+.edit-in-editor-button:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
 /* ------------------------------------------------------------ link sections */
 
 .link-section {
