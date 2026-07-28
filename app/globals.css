@@ -859,23 +859,68 @@ th:not(:first-child) {
   margin: 0;
 }
 
-.graph-page-intro {
-  font-size: 15px;
-  line-height: 1.55;
-  color: var(--text-secondary);
-  margin: 0 0 20px;
+/* /graph is a full-viewport room: the header stays, the footer goes, the
+   page itself never scrolls — the map takes everything below the nav.
+   Without :has() support the page falls back to a tall boxed panel. */
+body:has(.graph-page) {
+  height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
+body:has(.graph-page) main {
+  flex: 1;
+  min-height: 0;
+  max-width: none;
+  margin-inline: 0; /* auto margins would win over the flex stretch */
+  padding: 14px clamp(12px, 2vw, 24px) clamp(12px, 2vw, 24px);
+  display: flex;
+  flex-direction: column;
+}
+
+body:has(.graph-page) .site-footer {
+  display: none;
+}
+
+.graph-page {
+  flex: 1;
+  min-height: 0;
+  height: min(78vh, 900px); /* :has() fallback */
+}
+
+body:has(.graph-page) .graph-page {
+  height: auto;
+}
+
+.graph-page .graph-view {
+  height: 100%;
+}
+
+/* Toolbar and legend float inside the frame; only the chips take the pointer,
+   the map stays draggable between them. */
 .graph-toolbar {
+  position: absolute;
+  top: 10px;
+  left: 12px;
+  right: 12px;
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: 8px;
-  margin-bottom: 12px;
+  pointer-events: none;
+}
+
+.graph-toolbar > * {
+  pointer-events: auto;
 }
 
 .graph-toolbar .section-label {
   margin-right: auto;
+  padding: 3px 7px;
+  border-radius: var(--radius-xs);
+  background: var(--surface);
+  background: color-mix(in srgb, var(--surface) 88%, transparent);
 }
 
 .graph-chip {
@@ -885,7 +930,8 @@ th:not(:first-child) {
   letter-spacing: var(--tracking-label);
   text-transform: uppercase;
   color: var(--text-muted);
-  background: transparent;
+  background: var(--surface);
+  background: color-mix(in srgb, var(--surface) 88%, transparent);
   border: var(--stroke-hairline) solid var(--border-subtle);
   border-radius: var(--radius-xs);
   padding: 3px 8px;
@@ -906,6 +952,7 @@ th:not(:first-child) {
 }
 
 .graph-canvas-frame {
+  position: relative;
   background: var(--surface);
   border: var(--stroke-hairline) solid var(--border-subtle);
   border-radius: var(--radius-xs);
@@ -921,11 +968,15 @@ th:not(:first-child) {
 }
 
 .graph-legend {
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  bottom: 10px;
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 14px;
-  margin: 10px 0 0;
+  gap: 8px 14px;
+  margin: 0;
   font-family: var(--font-mono);
   font-weight: var(--weight-mono);
   font-size: 10px;
@@ -933,12 +984,17 @@ th:not(:first-child) {
   text-transform: uppercase;
   color: var(--text-muted);
   line-height: var(--leading-label);
+  pointer-events: none;
 }
 
 .graph-legend span {
   display: inline-flex;
   align-items: center;
   gap: 6px;
+  padding: 3px 7px;
+  border-radius: var(--radius-xs);
+  background: var(--surface);
+  background: color-mix(in srgb, var(--surface) 88%, transparent);
 }
 
 .graph-legend-hint {

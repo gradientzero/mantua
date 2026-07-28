@@ -10,14 +10,8 @@ export const metadata: Metadata = {
 export default function GraphPage() {
   const graph = buildGraph()
   return (
-    <>
-      <h1 className="page-title">Graph</h1>
-      <p className="graph-page-intro">
-        Every page in the notebook, connected by its wikilinks. Hubs are ringed, tags hollow,
-        dashed circles are pages other notes link to that nobody has written yet. Hover to trace
-        a neighborhood, drag to rearrange, scroll to zoom, click to open.
-      </p>
-      <GraphView data={graph} />
-    </>
+    <div className="graph-page">
+      <GraphView data={graph} height="100%" />
+    </div>
   )
 }

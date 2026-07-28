@@ -13,9 +13,16 @@
  * on a phyllotaxis spiral and settle the same way each time.
  *
  * Interactions: drag nodes; drag the background to pan; wheel/pinch to zoom;
- * hover to spotlight a neighborhood; click to open a page (cmd/ctrl-click:
- * new tab). Colors are read from the design tokens at runtime so the map
- * stays on the e-ink palette.
+ * hover to spotlight a neighborhood. Click pins a node — the spotlight stays
+ * on its neighborhood while the cursor roams — click the background to
+ * unpin, double-click (or cmd/ctrl-click) to open the page. Colors are read
+ * from the design tokens at runtime so the map stays on the e-ink palette.
+ *
+ * Labels earn their place instead of all drawing at once: titles wrap to
+ * short lines, well-connected pages reveal first as the zoom deepens, and a
+ * greedy screen-space pass drops any label that would overlap one already
+ * placed (hovered/focused pages always win). Each label eases its alpha so
+ * the visible set changes without popping.
  */
 
 import { useRouter } from 'next/navigation'
@@ -34,6 +41,11 @@ interface SimNode {
   vy: number
   fx: number | null
   fy: number | null
+  /** Zoom level at which this node's label starts to appear. */
+  revealK: number
+  /** Label alpha, eased: current value and this frame's target. */
+  la: number
+  lt: number
 }
 
 interface SimLink {
@@ -71,12 +83,77 @@ const radiusFor = (kind: GraphNode['kind'], degree: number): number => {
 const chargeFor = (kind: GraphNode['kind']): number =>
   kind === 'note' || kind === 'hub' ? -190 : kind === 'tag' ? -120 : -70
 
-const linkDistFor = (kind: GraphLinkKind): number => (kind === 'tag' ? 62 : 86)
+const linkDistFor = (kind: GraphLinkKind): number => (kind === 'tag' ? 72 : 100)
 
 /** Deterministic stand-in for the tiny random nudges d3 uses to split overlaps. */
 const jiggle = (i: number): number => ((((i + 1) * 2654435761) % 100000) / 100000 - 0.5) * 1e-3
 
-const truncate = (s: string, n: number): string => (s.length > n ? `${s.slice(0, n - 1)}…` : s)
+interface LabelBlock {
+  lines: string[]
+  w: number
+  h: number
+  lineH: number
+}
+
+/**
+ * Greedy word wrap for canvas text, breaking after spaces and hyphens
+ * (missing-page labels are hyphenated slugs), with an ellipsis when the
+ * title outruns `maxLines`. Cached per (font, width, text) — measureText
+ * is not free and the same blocks are needed every frame.
+ */
+function wrapLabel(
+  ctx: CanvasRenderingContext2D,
+  cache: Map<string, LabelBlock>,
+  raw: string,
+  font: string,
+  maxW: number,
+  maxLines: number,
+  lineH: number,
+): LabelBlock {
+  const key = `${font}|${maxW}|${maxLines}|${raw}`
+  const hit = cache.get(key)
+  if (hit) return hit
+  ctx.font = font
+
+  const pieces: string[] = []
+  let from = 0
+  for (let i = 0; i < raw.length; i++) {
+    if (raw[i] === ' ' || raw[i] === '-') {
+      pieces.push(raw.slice(from, i + 1))
+      from = i + 1
+    }
+  }
+  if (from < raw.length) pieces.push(raw.slice(from))
+
+  const lines: string[] = []
+  let line = ''
+  let overflow = false
+  for (const piece of pieces) {
+    const probe = line + piece
+    if (line && ctx.measureText(probe.trimEnd()).width > maxW) {
+      lines.push(line.trimEnd())
+      line = piece
+      if (lines.length === maxLines) {
+        overflow = true
+        break
+      }
+    } else {
+      line = probe
+    }
+  }
+  if (!overflow && line.trimEnd()) lines.push(line.trimEnd())
+  if (overflow) {
+    let last = lines[maxLines - 1]
+    while (last.length > 1 && ctx.measureText(`${last}…`).width > maxW) last = last.slice(0, -1)
+    lines[maxLines - 1] = `${last}…`
+  }
+
+  let w = 1
+  for (const l of lines) w = Math.max(w, ctx.measureText(l).width)
+  const block = { lines, w, h: lines.length * lineH, lineH }
+  cache.set(key, block)
+  return block
+}
 
 export interface GraphViewProps {
   data: GraphData
@@ -100,9 +177,11 @@ export function GraphView({
   const [tagsOn, setTagsOn] = useState(true)
   const [missingOn, setMissingOn] = useState(true)
 
-  // Layout and camera survive toggle rebuilds so the map doesn't reshuffle.
+  // Layout, camera and the pinned node survive toggle rebuilds so the map
+  // doesn't reshuffle or lose its place.
   const positionsRef = useRef(new Map<string, { x: number; y: number }>())
   const viewRef = useRef<View | null>(null)
+  const selectedRef = useRef<string | null>(null)
   const interactedRef = useRef(false)
   const fitRef = useRef<() => void>(() => {})
 
@@ -142,6 +221,13 @@ export function GraphView({
     }
     const fontBody = "'Inter', system-ui, sans-serif"
     const fontMono = "'JetBrains Mono', ui-monospace, monospace"
+    const labelCache = new Map<string, LabelBlock>()
+    const fontFor = (n: SimNode, prime: boolean): string =>
+      n.data.kind === 'tag'
+        ? `400 9px ${fontMono}`
+        : n.data.kind === 'missing'
+          ? `italic 400 10.5px ${fontBody}`
+          : `${prime ? 500 : 400} 10.5px ${fontBody}`
 
     const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
     const positions = positionsRef.current
@@ -171,9 +257,24 @@ export function GraphView({
         vy: 0,
         fx: null,
         fy: null,
+        revealK: 0,
+        la: 0,
+        lt: 0,
       }
     })
     const byId = new Map(nodes.map((n) => [n.id, n]))
+
+    // The pinned ("selected") node: click sets it, background click clears it.
+    let selected: SimNode | null =
+      selectedRef.current != null ? (byId.get(selectedRef.current) ?? null) : null
+    if (!selected) selectedRef.current = null
+
+    // The best-connected pages label first; leaves and tags wait for zoom.
+    let maxDegree = 1
+    for (const n of nodes) maxDegree = Math.max(maxDegree, n.degree)
+    for (const n of nodes) {
+      n.revealK = 0.34 + (1 - n.degree / maxDegree) * 0.42 + (n.data.kind === 'tag' ? 0.12 : 0)
+    }
 
     // Nodes that just toggled into an existing layout start next to a placed
     // neighbor instead of on the spiral, so the map grows rather than convulses.
@@ -283,7 +384,7 @@ export function GraphView({
         const a = nodes[i]
         for (let j = i + 1; j < nodes.length; j++) {
           const b = nodes[j]
-          const min = a.r + b.r + 3
+          const min = a.r + b.r + 4.5
           let dx = b.x - a.x
           let dy = b.y - a.y
           if (Math.abs(dx) >= min || Math.abs(dy) >= min) continue
@@ -388,6 +489,9 @@ export function GraphView({
     let dragOffY = 0
     let panning = false
     let travel = 0
+    let lastClickId: string | null = null
+    let lastClickAt = 0
+    let multiTouch = false
     const pointers = new Map<number, { x: number; y: number }>()
     /** Last known cursor position, so hover stays honest while nodes drift under it. */
     let cursorAt: { x: number; y: number } | null = null
@@ -439,17 +543,23 @@ export function GraphView({
         live = live || fitAnim !== null
       }
       if (needsDraw) {
-        draw()
+        const settling = draw()
         needsDraw = false
+        if (settling) {
+          // Label alphas are still easing — keep the loop alive until they land.
+          needsDraw = true
+          live = true
+        }
       }
       if (live) schedule()
     }
 
-    function draw() {
+    function draw(): boolean {
       ctx!.setTransform(dpr, 0, 0, dpr, 0, 0)
       ctx!.clearRect(0, 0, cw, ch)
       const { k, tx, ty } = view
-      const spot = hover ?? dragNode
+      // Hover leads, the pinned node holds the spotlight once the cursor moves on.
+      const spot = hover ?? dragNode ?? selected
 
       // Edges, in graph space.
       ctx!.setTransform(dpr * k, 0, 0, dpr * k, dpr * tx, dpr * ty)
@@ -475,7 +585,7 @@ export function GraphView({
 
       // Nodes.
       for (const n of nodes) {
-        ctx!.globalAlpha = spot != null && !inHood(spot, n) ? 0.16 : 1
+        ctx!.globalAlpha = spot != null && !inHood(spot, n) && n !== selected ? 0.16 : 1
         ctx!.beginPath()
         ctx!.arc(n.x, n.y, n.r, 0, TAU)
         if (n.data.kind === 'tag') {
@@ -508,7 +618,7 @@ export function GraphView({
             ctx!.stroke()
           }
         }
-        if (n === spot || n === focusNode) {
+        if (n === spot || n === focusNode || n === selected) {
           ctx!.beginPath()
           ctx!.arc(n.x, n.y, n.r + (n.data.kind === 'hub' ? 4.6 : 3.2), 0, TAU)
           ctx!.strokeStyle = color.accent
@@ -518,43 +628,95 @@ export function GraphView({
       }
 
       // Labels, in screen space so they stay crisp and readable at any zoom.
+      // Which labels show is re-decided every frame: nodes reveal by
+      // connectedness as the zoom deepens, then a greedy pass (spotlight >
+      // focus > neighborhood > degree) drops any label that would overlap
+      // one already placed.
       ctx!.setTransform(dpr, 0, 0, dpr, 0, 0)
-      const base = Math.min(Math.max((k - 0.5) / 0.35, 0), 1)
       ctx!.textAlign = 'center'
       ctx!.textBaseline = 'top'
       ctx!.lineJoin = 'round'
+
+      const cands: {
+        n: SimNode
+        sx: number
+        sy: number
+        font: string
+        block: LabelBlock
+        tier: number
+      }[] = []
       for (const n of nodes) {
-        let a = base
-        if (spot != null) a = inHood(spot, n) ? 1 : base * 0.1
-        if (n === spot || n === focusNode) a = 1
-        if (a < 0.03) continue
         const sx = n.x * k + tx
         const sy = (n.y + n.r) * k + ty + 4
-        if (sx < -160 || sx > cw + 160 || sy < -30 || sy > ch + 24) continue
-        const highlighted = spot != null && inHood(spot, n)
+        const hood = spot != null && inHood(spot, n)
+        let a = Math.min(Math.max((k - n.revealK) / 0.22, 0), 1)
+        if (spot != null) a = hood ? 1 : a * 0.1
+        if (n === spot || n === focusNode || n === selected) a = 1
+        if (sx < -110 || sx > cw + 110 || sy < -52 || sy > ch + 6 || (a < 0.03 && n.la < 0.03)) {
+          n.lt = 0
+          n.la = 0
+          continue
+        }
+        const prime = n === spot || n === focusNode || n === selected
         const raw = n.data.kind === 'tag' ? `#${n.data.label}` : n.data.label
-        const text = highlighted || n === focusNode ? raw : truncate(raw, 26)
-        ctx!.font =
-          n.data.kind === 'tag'
-            ? `400 9px ${fontMono}`
-            : n.data.kind === 'missing'
-              ? `italic 400 10.5px ${fontBody}`
-              : `400 10.5px ${fontBody}`
-        ctx!.globalAlpha = a
+        const font = fontFor(n, prime)
+        const block = wrapLabel(
+          ctx!,
+          labelCache,
+          raw,
+          font,
+          prime ? 170 : 120,
+          prime ? 3 : 2,
+          n.data.kind === 'tag' ? 11 : 12.5,
+        )
+        n.lt = a
+        cands.push({ n, sx, sy, font, block, tier: prime ? 2 : hood ? 1 : 0 })
+      }
+
+      cands.sort((p, q) => q.tier - p.tier || q.n.degree - p.n.degree || q.n.r - p.n.r)
+      const placed: { x0: number; y0: number; x1: number; y1: number }[] = []
+      for (const c of cands) {
+        if (c.n.lt < 0.03) continue // already fading out; reserves no space
+        const w2 = c.block.w / 2 + 2
+        const box = { x0: c.sx - w2, y0: c.sy - 2, x1: c.sx + w2, y1: c.sy + c.block.h + 2 }
+        const blocked =
+          c.tier < 2 &&
+          placed.some((p) => box.x0 < p.x1 && box.x1 > p.x0 && box.y0 < p.y1 && box.y1 > p.y0)
+        if (blocked) c.n.lt = 0
+        else placed.push(box)
+      }
+
+      // Ease each label toward its target; draw low tiers first so the
+      // spotlight paints on top.
+      let settling = false
+      for (let i = cands.length - 1; i >= 0; i--) {
+        const { n, sx, sy, font, block } = cands[i]
+        if (reducedMotion || Math.abs(n.lt - n.la) <= 0.02) {
+          n.la = n.lt
+        } else {
+          n.la += (n.lt - n.la) * 0.3
+          settling = true
+        }
+        if (n.la < 0.03) continue
+        ctx!.font = font
+        ctx!.globalAlpha = n.la
         ctx!.strokeStyle = color.surface
-        ctx!.lineWidth = 3
-        ctx!.strokeText(text, sx, sy)
+        ctx!.lineWidth = 3.5
         ctx!.fillStyle =
-          n === spot
+          n === spot || n === selected
             ? color.ink
             : n.data.draft
               ? color.draftText
               : n.data.kind === 'tag' || n.data.kind === 'missing'
                 ? color.muted
                 : color.secondary
-        ctx!.fillText(text, sx, sy)
+        for (let li = 0; li < block.lines.length; li++) {
+          ctx!.strokeText(block.lines[li], sx, sy + li * block.lineH)
+          ctx!.fillText(block.lines[li], sx, sy + li * block.lineH)
+        }
       }
       ctx!.globalAlpha = 1
+      return settling
     }
 
     // ---- pointer + wheel handlers ---------------------------------------------
@@ -579,12 +741,18 @@ export function GraphView({
 
     function onPointerDown(e: PointerEvent) {
       if (e.pointerType === 'mouse' && e.button !== 0) return
-      canvas!.setPointerCapture(e.pointerId)
+      try {
+        canvas!.setPointerCapture(e.pointerId)
+      } catch {
+        // best-effort: a fast tap can already be gone by the time we run
+      }
       pointers.set(e.pointerId, { x: e.clientX, y: e.clientY })
       interactedRef.current = true
       travel = 0
+      if (pointers.size === 1) multiTouch = false
 
       if (pointers.size === 2) {
+        multiTouch = true
         // Second finger: switch to pinch, drop any node drag.
         if (dragNode) {
           dragNode.fx = null
@@ -685,10 +853,29 @@ export function GraphView({
           settleNow()
           needsDraw = true
         }
-        if (clicked && n.data.url) {
-          if (e.metaKey || e.ctrlKey) window.open(n.data.url, '_blank', 'noopener')
-          else router.push(n.data.url)
+        if (clicked) {
+          // First click pins the node so its neighborhood stays lit; a second
+          // click within 400ms (or cmd/ctrl-click) opens the page.
+          const now = performance.now()
+          const dbl = lastClickId === n.id && now - lastClickAt < 400
+          lastClickId = n.id
+          lastClickAt = now
+          if (n.data.url && (e.metaKey || e.ctrlKey)) {
+            window.open(n.data.url, '_blank', 'noopener')
+          } else if (n.data.url && dbl) {
+            router.push(n.data.url)
+          } else {
+            selected = n
+            selectedRef.current = n.id
+          }
+          needsDraw = true
         }
+      } else if (panning && pointers.size === 0 && travel < 5 && !multiTouch) {
+        // A plain click on empty canvas releases the pinned node.
+        selected = null
+        selectedRef.current = null
+        lastClickId = null
+        needsDraw = true
       }
       panning = pointers.size > 0
       setCursor()
@@ -737,6 +924,7 @@ export function GraphView({
     let disposed = false
     document.fonts?.ready.then(() => {
       if (!disposed) {
+        labelCache.clear() // wrap widths measured against the fallback face are stale now
         needsDraw = true
         schedule()
       }
@@ -769,72 +957,73 @@ export function GraphView({
   if (data.nodes.length === 0) return <p className="muted">Nothing to map yet.</p>
 
   return (
-    <figure className="graph-view">
-      {showControls && (
-        <div className="graph-toolbar">
-          <span className="section-label">
-            {pageCount} pages · {active.links.length} links
-          </span>
-          {hasTags && (
-            <button
-              type="button"
-              className="graph-chip"
-              aria-pressed={tagsOn}
-              onClick={() => setTagsOn((v) => !v)}
-            >
-              tags
+    <div className="graph-view">
+      <div ref={wrapRef} className="graph-canvas-frame" style={{ height }}>
+        <canvas
+          ref={canvasRef}
+          className="graph-canvas"
+          role="img"
+          aria-label={`Map of ${pageCount} pages connected by ${active.links.length} links. The same connections are listed as text on each page.`}
+        />
+        {showControls && (
+          <div className="graph-toolbar">
+            <span className="section-label">
+              {pageCount} pages · {active.links.length} links
+            </span>
+            {hasTags && (
+              <button
+                type="button"
+                className="graph-chip"
+                aria-pressed={tagsOn}
+                onClick={() => setTagsOn((v) => !v)}
+              >
+                tags
+              </button>
+            )}
+            {hasMissing && (
+              <button
+                type="button"
+                className="graph-chip"
+                aria-pressed={missingOn}
+                onClick={() => setMissingOn((v) => !v)}
+              >
+                unwritten
+              </button>
+            )}
+            <button type="button" className="graph-chip" onClick={() => fitRef.current()}>
+              fit view
             </button>
-          )}
-          {hasMissing && (
-            <button
-              type="button"
-              className="graph-chip"
-              aria-pressed={missingOn}
-              onClick={() => setMissingOn((v) => !v)}
-            >
-              unwritten
-            </button>
-          )}
-          <button type="button" className="graph-chip" onClick={() => fitRef.current()}>
-            fit view
-          </button>
-        </div>
-      )}
-      <div
-        ref={wrapRef}
-        className="graph-canvas-frame"
-        style={{ height }}
-        role="img"
-        aria-label={`Map of ${pageCount} pages connected by ${active.links.length} links. The same connections are listed as text on each page.`}
-      >
-        <canvas ref={canvasRef} className="graph-canvas" />
+          </div>
+        )}
+        {showControls && (
+          <div className="graph-legend">
+            <span>
+              <i className="graph-dot graph-dot-note" /> note
+            </span>
+            <span>
+              <i className="graph-dot graph-dot-hub" /> hub
+            </span>
+            {hasTags && tagsOn && (
+              <span>
+                <i className="graph-dot graph-dot-tag" /> tag
+              </span>
+            )}
+            {hasMissing && missingOn && (
+              <span>
+                <i className="graph-dot graph-dot-missing" /> unwritten
+              </span>
+            )}
+            {hasDrafts && (
+              <span>
+                <i className="graph-dot graph-dot-draft" /> draft
+              </span>
+            )}
+            <span className="graph-legend-hint">
+              click pins a page · double-click opens · zoom for labels
+            </span>
+          </div>
+        )}
       </div>
-      {showControls && (
-        <figcaption className="graph-legend">
-          <span>
-            <i className="graph-dot graph-dot-note" /> note
-          </span>
-          <span>
-            <i className="graph-dot graph-dot-hub" /> hub
-          </span>
-          {hasTags && tagsOn && (
-            <span>
-              <i className="graph-dot graph-dot-tag" /> tag
-            </span>
-          )}
-          {hasMissing && missingOn && (
-            <span>
-              <i className="graph-dot graph-dot-missing" /> unwritten
-            </span>
-          )}
-          {hasDrafts && (
-            <span>
-              <i className="graph-dot graph-dot-draft" /> draft
-            </span>
-          )}
-          <span className="graph-legend-hint">drag · scroll to zoom · click to open</span>
-        </figcaption>
-      )}
-    </figure>
+    </div>
   )
 }
