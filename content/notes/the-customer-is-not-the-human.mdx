@@ -1,10 +1,10 @@
 ---
 title: "The customer is not the human anymore"
 status: draft
-tags: [agentic-engineering, harness-design]
+tags: [agentic-engineering, harness-design, agentic-commerce]
 created: 2026-07-27
-updated: 2026-07-27
-summary: Karpathy makes the same argument twice in one interview — smart-home apps should be APIs, and documentation should be markdown for agents rather than HTML for people — because in both cases the thing consuming the interface is an agent that then routes to a human. Where that lands for this notebook, and where it thins out.
+updated: 2026-07-28
+summary: Karpathy makes the same argument twice in one interview — smart-home apps should be APIs, docs should be markdown for agents rather than HTML for people — because in both cases an agent consumes the interface and routes to a human. Where that lands for this notebook, where it thins out, and what changes when a vendor does it deliberately.
 origin: agent
 ---
 
@@ -61,13 +61,56 @@ It is also, fairly directly, the bet [[llm-wiki-pattern|this notebook runs on]]:
 a git repository, maintained by agents, with the operations themselves written as markdown
 files in `.claude/commands/`. See [[about]].
 
+## Third pass, from the other side of the counter
+
+Four months later, [[doordash-on-agentic-commerce-and-dot|DoorDash's two co-founders]] arrive
+at the same conclusion from the vendor's chair, which is the seat missing from Karpathy's
+version. Their evidence and their moves:
+
+- **Ask DoorDash**, a conversational surface over the catalogue, where half of restaurant
+  trajectories end at a merchant the customer has never used and grocery baskets run ~40%
+  larger. Numbers with no denominators — see the source note — but they are the first figures
+  in this notebook attached to the claim that a natural-language surface changes what gets
+  bought, not just how it gets found.
+- **A DoorDash CLI**, launched July 2026, described in exactly Karpathy's terms: reduce the
+  friction for an agent to participate. The worked example is an office manager who pointed a
+  camera at the pantry shelf and has the agent restock when it looks empty.
+- The stat Andy Fang says he keeps returning to: **more agent traffic on the web than human
+  traffic** (asserted, unsourced), and the inference that if you started DoorDash today it
+  would be agent-first.
+
+## What the vendor case fixes, and what it doesn't
+
+**It localises the objection below rather than refuting it.** DoorDash's revenue is the
+transaction; the app is a means to it. A vendor like that loses nothing by being callable and
+gains order volume, which is why it ships the CLI unprompted. A vendor whose app *is* the
+business model — subscription, upsell, ad inventory, data — has the opposite incentive. So
+Karpathy's argument holds exactly where the interface is not the product, and the treadmill
+company he complains about is on the wrong side of that line. That is a sharper claim than his,
+and it predicts which endpoints will appear without anyone being persuaded of anything.
+
+**It is not the shape he asked for, though.** Ask DoorDash keeps the conversation inside
+DoorDash, and the CLI is DoorDash's own agent surface: the storefront rebuilt for agents, not
+dissolved into endpoints that somebody else's claw composes. The capability argument in his
+first pass — the automation no single vendor's app can offer, because it spans six of them —
+requires the vendor to accept being one call among several. A marketplace that owns routing,
+merchants and a fleet has every reason to be the composer rather than the composed. Which way
+the CLI goes is the thing worth watching, and the interview does not say.
+
+**And nobody has discussed the credential.** Karpathy withheld email and calendar from his
+claw on the grounds that it was too rough to hold his digital life. A shelf-restocking loop
+needs a payment method on file, and it is the vendor shipping the tool that makes it easy. The
+failure mode of an unattended loop that spends money is absent from both interviews — see
+[[the-claw-layer]], where the same gap shows up as an unaddressed blast radius.
+
 ## Where it thins out
 
 **Somebody has to pay for the API.** The apps he wants deleted are, for most vendors, the
 surface where the business model lives — subscriptions, upsells, data. "It should just be
 endpoints" is an argument about what is technically better, and it does not engage with why
 the apps exist. The Sonos anecdote is not a counter-example; it is a device that shipped
-without authentication.
+without authentication. The DoorDash case above is the real partial answer, and it is partial
+in a specific way: it shows the argument working where the app was never the product.
 
 **The claim is made by someone who can build the replacement.** He can vibe-code a
 home-automation dashboard in an evening, so for him the UX layer genuinely is disposable. It

@@ -3,7 +3,7 @@ title: "Speciation, and why we only ever touch the context window"
 status: draft
 tags: [fine-tuning, deployment, inference]
 created: 2026-07-27
-updated: 2026-07-27
+updated: 2026-07-28
 summary: Karpathy expects specialised models and does not see them arriving, and his explanation is that adjusting weights without losing capability is still an underdeveloped science while context windows just work. Plus where he puts the open-weight models — six to eight months behind, and better off there.
 origin: agent
 ---
@@ -89,6 +89,19 @@ technical: he distrusts centralisation on track record, wants more labs rather t
 and wants a capable common substrate that is not owned. His phrasing for the general
 principle is that ensembles beat any individual model, and he wants the same to be true of
 the people in the room.
+
+**One buyer acting on exactly this, four months later.**
+[[doordash-on-agentic-commerce-and-dot|DoorDash]] describes routing cheap tasks to open-weight
+models and paying frontier prices only where they buy something, with the stated goal of
+frontier-level intelligence below frontier cost — the split above, turned into a procurement
+policy by someone with a spend line to defend (see
+[[benchmarking-your-own-agent-spend]]). Their other arrangement is a closer fit to the
+prediction in the section above than to this one: they take a specific internal problem —
+accounting, analytics — to a frontier lab, scrub the data, and have an RL environment built
+around it. That is the "lab partnering with a business on a specific problem" he names as
+where specialisation would first show up. It is also, notably, still not touching the weights
+of anything the business runs: the environment is built around the task, the model stays the
+lab's.
 
 **For this notebook** that mostly confirms an existing bet rather than changing it. The
 [[serving-slms-on-a-desktop-gpu|desktop under the desk]] runs open weights on the assumption

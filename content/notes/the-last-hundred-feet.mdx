@@ -1,0 +1,135 @@
+---
+title: "The last hundred feet: building toward a use case"
+status: draft
+tags: [robotics, evaluation]
+created: 2026-07-28
+updated: 2026-07-28
+summary: DoorDash's argument for why they had to build their own robot — the field builds a capability and then hunts for a problem — plus the edge cases nobody writes down at a desk, and the one incumbent data advantage in the interview that is actually load-bearing.
+origin: agent
+---
+
+From [[doordash-on-agentic-commerce-and-dot|the NoPriors interview]]. Stanley Tang's account
+of why DoorDash built a delivery robot after several years of trying to buy one. The vehicle
+is the least transferable part; the reasoning is the reason this has a page.
+
+## The diagnosis: technology first, use case afterwards
+
+Having partnered with everyone from sidewalk-robot startups to robotaxi companies, his
+conclusion was that none of it was quite what DoorDash needed, and that the pattern behind
+that was general: these companies **built the technology first and retroactively looked for
+a problem to fit it into.** He notes how strange that is coming from software, where
+build-something-people-want is drilled in from the start, and observes that hard tech tends
+to do the opposite.
+
+The interviewer's hypothesis for why is the sharper version of it: people expect everything
+to work the way ChatGPT did — a general capability that is then close to free to point at any
+application — so in autonomy the assumption becomes *make the model, and the rest is
+secondary*. Both of them reject that for physical-world businesses. It is also, read against
+[[jaggedness-and-what-rl-optimises|jaggedness]], the same mistaken inference in a different
+domain: capability bought in one place is assumed to arrive everywhere else for free.
+
+The use case, stated as numbers, then determines the machine. The average DoorDash delivery is
+3–5 miles and about 15 minutes excluding cook time. A 2–3 mph sidewalk cooler cannot cover
+that distance in that time — the constraint is arithmetic, not engineering. A 4,000 lb
+robotaxi is a vehicle for carrying people, with chairs and air conditioning, for an errand
+that may be two burritos. So the answer is in between: a bike-lane profile, ~300 lb,
+20–25 mph, moving between road and sidewalk. Nobody was building it, so they did.
+
+## The first and last hundred feet
+
+Tang's name for the part the robotaxi comparison exposes. A Waymo can drop you half a block
+short and it costs you nothing, because you walk. A package cannot walk. So the problem is
+not the drive:
+
+- At the merchant: how the food is actually handed over, per integration, and a drive-thru,
+  a strip mall and a Main Street storefront are three different pickups.
+- At the customer: which driveway, which porch, which gate, which of an apartment complex's
+  doors. **The GPS pin from an address is not the drop-off point.** A human Dasher resolves
+  that without noticing they are doing it. A robot arrives at the pin and has to look around.
+
+And this is where the interview's one genuinely load-bearing data claim sits: DoorDash knows,
+per address, **where the human Dashers actually dropped it off** — historical drop-off
+locations for billions of deliveries. Tang's line is that this data does not exist in Google
+Maps and exists nowhere but DoorDash.
+
+That is worth separating from the surrounding boilerplate about scale, because the
+interviewer draws the general form of it out loud: early arguments about incumbent data
+advantage were mostly surface-level — *we have customer records* — which turns out to have
+almost nothing to do with what an agent is being asked to accomplish. The test is not how
+much data you hold, it is whether the data localises the specific thing your system keeps
+getting wrong. Drop-off pins pass that test. A customer database does not. The same test is
+what makes [[self-improving-agents-from-production-feedback|the tax-agent loop]] work —
+citations back to source documents and structured records of what the practitioner changed —
+and it is the question to ask of any claim that an incumbent is sitting on a moat.
+
+## You cannot imagine the distribution
+
+The other half of the interview, and the part I would keep if I kept one paragraph. Once the
+fleet ran seven days a week at scale, the failures were things no one would have written down
+in advance:
+
+- **Leaves on the right-hand side of the road.** DOT rides like a bike, so it hugs the right.
+  Two wheels on leaves and two on asphalt is a different torque problem, and it has to be
+  handled in the low-level controls.
+- **Dirt on a camera sensor**, and how gracefully the stack degrades when it happens.
+- **Regenerative braking overpowering the battery** on the hardest stops — rare, and not
+  optional, because those are exactly the stops safety requires.
+- **Boot time.** The original boot was a Jenkins script an engineer hacked together in a
+  couple of hours, which was fine. At hundreds of robots every morning, 30–45 minutes each
+  with a script that crashes half the time, it is the constraint on the whole operation.
+
+The interviewer's parallel from Sunday, a home-robotics company they have invested in, is the
+cleanest statement of the underlying point: you are trying to load a dishwasher and there is
+a cat in it, because the cat likes the dishwasher. Nobody imagines that at a desk. And the
+follow-on question is the harder one — *how much of the distribution is cats in dishwashers?*
+— which you can only answer with real deployment data, not by an engineer inventing scenarios.
+
+For this notebook that is the same argument as
+[[generator-evaluator-loops|"the evaluator is the prior question"]], pointed at the physical
+world: the eval set you need is the one you cannot write from your desk, and a cherry-picked
+demo is evidence about one point in a distribution you have not measured. It also puts a floor
+under [[skill-issue-karpathy-on-code-agents|Karpathy's "digital first, atoms later"]]: bits
+move a million times more easily than matter, and this is the bill for the matter.
+
+## What moved: autonomy stopped being the bottleneck
+
+The most useful update in the interview, and stated plainly. Five years ago the question was
+whether autonomy was possible at all. Now, on their account, **autonomy is increasingly the
+least of the three constraints**, and the two that bind are:
+
+1. **Operations and the interface layer** — merchant behaviour differs by metro and country,
+   so integrations, depots, charging, maintenance and fleet management all have to scale with
+   the fleet.
+2. **Hardware and manufacturing.** They hand-built the first hundred robots. The next thousand
+   or ten thousand is supply chain and component reliability, and Tang notes the reversal
+   directly: five years ago everyone assumed hardware was the commodity part. Their answer is
+   a partnership with **Also**, the Rivian-spinout micromobility company, on the grounds that
+   scaling vehicles is somebody else's expertise.
+
+That reversal is the transferable claim. The scarce thing migrates: once the capability lands,
+the binding constraint moves to everything around it — which is
+[[agentic-engineering|the same shape as the harness argument]], where model capability stopped
+being the thing between a prompt and a working application and the scaffolding became it.
+Worth noticing that a Dashbench-shaped question follows for robotics too and is not asked in
+the interview: nobody says what a DOT delivery costs against a human one.
+
+## Where it thins out
+
+**One metro, self-reported.** Everything is Phoenix/Tempe over about two years, described by
+the people who built it, with no disengagement rate, intervention rate or safety record given.
+"It feels like a Waymo in San Francisco" is their comparison, not an outside assessment. The
+transcript's own dates are loose too — "almost two years", "over two years", and "five years
+ago" against a 2018 start.
+
+**The multimodal routing story assumes a classifier nobody describes.** DOT for the suburban
+strip-mall run, a drone where the roads are poor and the order is light, a human for the
+grocery order with stairs — that only works if you can tell, before dispatch, which delivery
+is which. That prediction is the actual product, and it is exactly the kind of judgment that
+is easy in hindsight and hard at assignment time. The interview does not say how it is made,
+or how often it is wrong, or what it costs when it is.
+
+**"Build toward the use case" is also a convenient thing for an incumbent to say.** It is a
+principle and it is a moat argument, and here they are the same sentence. The startups accused
+of building a capability without a use case are the ones without 10 billion deliveries of
+operational data; the advice reduces, for them, to *have a distribution business first*. That
+does not make it wrong — the sidewalk-robot arithmetic is real — but it is not neutral advice.

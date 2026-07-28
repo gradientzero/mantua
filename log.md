@@ -373,3 +373,58 @@ section rewritten, including the one limit worth knowing: this link graph is nea
 so on a very wide screen the map stays a centered ball — shaping the springs, repulsion or
 collision clearance to the viewport was measured and made it worse. No schema change, no
 content touched.
+
+## [2026-07-28] ingest | DoorDash on agentic commerce and DOT (NoPriors)
+
+One item: a NoPriors transcript with DoorDash's co-founders, Andy Fang and Stanley Tang,
+pasted into the inbox with no URL, no date and no speaker labels. Dated to July 2026 at the
+earliest from its own internal references — a CLI launched "last week", Dashbench announced
+"a couple weeks ago", June's model spend in the past tense. Archived to
+`sources/2026-07/doordash-nopriors-agentic-commerce-and-dot/`, whose `SOURCE.md` carries the
+transcription corrections, the attribution reasoning (who says what is read off the hosts'
+questions), and every number as stated so the wiki's discount of them stays checkable.
+
+It is the first source in the notebook from a company that *buys* this tooling at scale and
+deploys autonomy in the physical world, rather than a lab describing its own harness. That is
+what it adds.
+
+New: `doordash-on-agentic-commerce-and-dot` — the source note. Ask DoorDash and its two
+numbers (half of restaurant trajectories ending at a never-before-ordered merchant, ~40%
+larger grocery baskets), voice as the modality that didn't land, the CLI as an agent-first
+storefront, and a "how to read this" section that discounts every figure for missing
+denominators.
+
+New: `benchmarking-your-own-agent-spend` — model spend ~20× from January to June and now
+deliberately flatlined; Dashbench scoring **models and harnesses together** to answer what the
+spend bought; open weights for the cheap tasks. And the finding underneath: a team says "yeah,
+it works okay", the lab scrubs the data and builds an RL environment and the models crush it,
+and the same thing on real enterprise data does not hold — which is both an instance of
+jaggedness and an indictment of the benchmark that found it.
+
+New: `the-last-hundred-feet` — the argument for building toward a use case rather than shipping
+a capability and hunting for a problem, the sidewalk-robot-versus-robotaxi arithmetic that
+produced DOT's form factor, the edge cases nobody writes down at a desk (leaves under two
+wheels, regen braking overpowering the battery, a Jenkins boot script × 500 robots), and the
+one data claim in the interview that is actually load-bearing: DoorDash knows where the human
+Dashers *actually* dropped the package, which Google Maps does not. Also the reversal worth
+keeping — autonomy is no longer the binding constraint; operations and hardware are.
+
+Also updated: `the-customer-is-not-the-human` gained the vendor side of Karpathy's argument,
+and the "somebody has to pay for the API" objection is now narrowed rather than left standing —
+the argument holds where the app was never the business model, which is why a marketplace ships
+a CLI unprompted and a treadmill company does not. Two new caveats there: a first-party agent
+surface is not the endpoints he asked for, and nobody has discussed the payment credential.
+`jaggedness-and-what-rl-optimises` gained the same ridge seen from a buyer's chair.
+`model-speciation-and-touching-the-weights` gained a buyer routing cheap work to open weights,
+plus the lab-partners-with-a-business arrangement he predicted, still not touching any weights.
+`the-claw-layer` gained the pantry camera that buys rather than reports.
+`self-improving-agents-from-production-feedback` gained the answer from the far end of scale to
+its own closing question — when corrections aren't a free by-product, you pay a fleet for them.
+`agentic-engineering` gained a section on the cluster's first buyer-side source.
+
+The provenance caveat is unusually thick on this one and lives in `SOURCE.md` plus
+`tasks/2026-07-28-verify-doordash-nopriors-source.md`: find the episode, and check Dashbench,
+the Also partnership and the Metis acquisition before anything here is quoted elsewhere. The
+reasoning survives without them; the numbers do not.
+
+Inbox empty.
