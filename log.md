@@ -445,3 +445,28 @@ Owner call: all 23 remaining drafts in `/content/notes` flipped to `status: publ
 The wiki now has no draft pages — 25 notes, all live. No prose touched, no frontmatter
 beyond the one field, no schema change. `npm run build` clean; every note is now a
 prerendered page and appears in the graph, tag pages and sitemap without the draft halo.
+
+## [2026-07-28] setup | Graph view: a composed opening, and room between the discs
+
+`/graph` built itself chaotically and then sat there as a knot. Four separate causes for the
+first: nodes were seeded on a phyllotaxis spiral in data order, so linked pages started on
+opposite sides and the springs hauled them across each other; the auto-framing camera solved
+the fit fresh every frame, rescaling the whole map under the reader; the violent first second
+of the settle was on screen; and the webfonts landing afterwards resized every disc a second
+time. Nodes are now seeded on a radial tidy tree of the graph's own breadth-first structure,
+the camera eases toward the fit, a cold layout is stepped silently until it has calmed
+(~72 ticks, 3ms) before the first paint, and that paint waits for Cormorant on a 700ms leash
+so the map is measured once. A per-tick speed ceiling stops a repulsion spike from flinging
+anything across the map.
+
+The knot was the centering: it pulled every node toward the middle in proportion to its
+distance, which is a spring to a point, so whatever the links were saying about structure got
+squeezed back into a ball. Nothing pulls on the middle now — containment is a soft wall out at
+the radius the discs could possibly need, and centering is a rigid translation of the centroid,
+which shapes nothing. Shape comes from two things instead: springs crossing between clusters
+rest longer and pull less than springs inside one (by neighbourhood overlap), and the whole
+outline is leaned toward the panel's proportions by an area-preserving stretch. On a 1400×705
+panel that is 24px of clear paper between neighbouring discs where they used to overlap, and
+the titles came out slightly *larger* rather than smaller — a map shaped like its panel fits
+better, so the extra room paid for itself. One file,
+`components/graph/graph-view.tsx`. No schema change, no content touched.
