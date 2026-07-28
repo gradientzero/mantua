@@ -428,3 +428,13 @@ the Also partnership and the Metis acquisition before anything here is quoted el
 reasoning survives without them; the numbers do not.
 
 Inbox empty.
+
+## [2026-07-28] setup | Graph view: clicking a node no longer jostles the map
+
+Selecting a node on `/graph` used to reheat the force simulation. Pointer-down warmed it so
+a drag's neighbours could follow, but a plain click took the same path, and the whole layout
+then drifted for several seconds settling again — distracting, and it moved the very node
+you had just clicked to read. The reheat now waits for the pointer to actually travel past
+the click threshold, so a click only changes what's lit and the map holds perfectly still;
+drag behaves as before. One file, `components/graph/graph-view.tsx`. No schema change, no
+content touched.

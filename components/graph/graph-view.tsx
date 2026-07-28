@@ -96,6 +96,12 @@ const FIT_MS = 180 // --duration-base
  */
 const COLLIDE_GAP = 20
 /**
+ * Pointer travel, in CSS pixels, that separates a click from a drag. Below it a
+ * press is a selection and the layout must not move at all; past it the node is
+ * being dragged and the simulation reheats to follow.
+ */
+const CLICK_SLOP = 5
+/**
  * Candidate measures for wrapping a title, as multiples of its own type size.
  * The floor matters as much as the tightest fit: narrower than about six ems
  * and titles break into one-word lines, which is compact and unreadable.
@@ -863,10 +869,9 @@ export function GraphView({
         dragOffY = n.y - gy
         n.fx = n.x
         n.fy = n.y
-        if (!reducedMotion) {
-          alphaTarget = 0.3
-          if (alpha < 0.3) alpha = 0.3
-        }
+        // No reheat here: pressing a node is a selection until the pointer has
+        // travelled, and a click that jostles the whole map is only distracting.
+        // `onPointerMove` warms the simulation once this becomes a real drag.
       } else {
         panning = true
       }
@@ -903,6 +908,11 @@ export function GraphView({
         const { gx, gy } = toGraph(e.clientX, e.clientY)
         dragNode.fx = gx + dragOffX
         dragNode.fy = gy + dragOffY
+        // Past the click threshold this is a drag, so let the neighbours follow.
+        if (!reducedMotion && travel >= CLICK_SLOP) {
+          alphaTarget = 0.3
+          if (alpha < 0.3) alpha = 0.3
+        }
         if (reducedMotion) {
           dragNode.x = dragNode.fx
           dragNode.y = dragNode.fy
@@ -933,7 +943,7 @@ export function GraphView({
       pointers.delete(e.pointerId)
 
       if (dragNode) {
-        const clicked = travel < 5
+        const clicked = travel < CLICK_SLOP
         const n = dragNode
         n.fx = null
         n.fy = null
@@ -960,7 +970,7 @@ export function GraphView({
           }
           needsDraw = true
         }
-      } else if (panning && pointers.size === 0 && travel < 5 && !multiTouch) {
+      } else if (panning && pointers.size === 0 && travel < CLICK_SLOP && !multiTouch) {
         // A plain click on empty canvas releases the pinned node.
         selected = null
         selectedRef.current = null
