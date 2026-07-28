@@ -1,0 +1,108 @@
+---
+title: "Benchmarking your own agent spend"
+status: draft
+tags: [evaluation, agentic-engineering, harness-design]
+created: 2026-07-28
+updated: 2026-07-28
+summary: DoorDash's model spend rose about 20× in five months, so they built a benchmark over their own coding tasks to work out what it bought — and found that the models crush a scrubbed version of a task and then underperform on the real data. The first buyer-side view in this notebook, and the open question it leaves.
+origin: agent
+---
+
+From [[doordash-on-agentic-commerce-and-dot|the NoPriors interview]]. Andy Fang on what a
+10,000-person company does after a year of letting people spend on models freely. It is the
+first source here written from the buyer's chair rather than the vendor's, which changes which
+questions get asked.
+
+## The numbers, such as they are
+
+**June's spend was about 20× January's.** Asked whether it is still climbing, he says it has
+flatlined — and attributes that to deliberate effort rather than saturation: the easy waste
+removed first, then the harder question of what the rest is returning.
+
+**Dashbench** is their published benchmark, announced a couple of weeks before the recording.
+Two things about it are worth noting. It scores *models and harnesses together* on coding
+tasks, not models alone — which is the correct unit, and the one
+[[agentic-engineering|this whole cluster]] argues for. And its stated purpose is not
+leaderboard position but **working out the ROI on the spend**, including the specific move of
+routing cheap tasks to open-weight models and paying frontier prices only where they buy
+something. His phrasing for the target is frontier-level intelligence at less than frontier
+cost.
+
+Also worth recording, because it is the part nobody publishes: **seat growth is fastest in the
+non-technical organisations** — analysts, operators, account managers automating merchant QBRs
+— while spend remains overwhelmingly engineering. They have no benchmark for that work yet.
+That is where they say they are going next, and it is the harder problem: coding tasks come
+with an exit code, and a QBR does not. Which is
+[[jaggedness-and-what-rl-optimises|the whole difficulty]], stated as an org chart.
+
+## The finding: scrubbed tasks pass, real ones don't
+
+The part I would keep. Their loop with the frontier labs on non-coding work — accounting,
+analytics — runs into a consistent pattern:
+
+1. Ask the team how the models do on their task. Answer: "yeah, it works okay."
+2. Scrub the data, hand it to a lab, build an RL environment around the task. **The models
+   crush it.**
+3. Point the same thing at real enterprise data with everything attached. **It does not hold.**
+
+Fang's open question is whether that is a harness gap — things they have to build for the
+model to perform — or something the models genuinely lack in their data distribution. He
+does not resolve it, and the honest answer is that the interview contains no way to tell.
+
+Two readings, and they are not exclusive:
+
+**As evidence about the models**, it is the enterprise instance of
+[[jaggedness-and-what-rl-optimises|jaggedness]] observed from the outside. Step 2 *is* the
+verifiability operation — scrubbing and building an RL environment is exactly the work of
+turning a soft task into a gradable one — and the result is the model performing inside the
+rails and losing it outside. The gap between step 2 and step 3 is a measurement of how much
+of the real task the rails did not cover.
+
+**As evidence about the benchmark**, it is worse news than it sounds, and it applies to
+Dashbench itself. If the models are graded on the scrubbed task, the benchmark reports on the
+scrubbed task. That is the closing worry on the jaggedness page — a benchmark suite is a map
+of what was optimised — arriving from the other direction: not "the gaps are unmeasured" but
+"the thing you built to measure ROI shares the blind spot you built it to find". The correction
+is unglamorous and expensive: grade on the messy data, and accept a benchmark that is harder
+to run and less comparable to anyone else's.
+
+Note also what step 1 says on its own. **"Yeah, it works okay" is not a measurement**, and the
+whole apparatus exists because self-reported satisfaction from the team using the tool turned
+out to be uncorrelated with anything. That is the same reason
+[[generator-evaluator-loops|the maker cannot be the judge]] — one level up, with a
+department in the generator's seat.
+
+## Why this matters for a one-person version
+
+Dashbench is out of reach for one person and the shape of the question is not. The notebook's
+evaluation thread has so far been about grading *an artifact an agent produced*
+([[generator-evaluator-loops]], [[building-a-generator-evaluator-harness-plan]]). This is the
+other question, and it has never been asked here: **what is the spend buying, and which model
+should do which job?** The owner's version of that has a concrete form already — the
+[[serving-slms-on-a-desktop-gpu|desktop under the desk]] exists on precisely the bet DoorDash
+is now trying to price, that ordinary work runs locally on open weights and only the hard jobs
+go out to an API. See [[model-speciation-and-touching-the-weights]], where the same routing
+decision is discussed from the model side.
+
+What transfers is the sequence rather than the tooling: you cannot route by cost until you have
+a task set you actually care about, and you cannot claim a return until something on the output
+side is counted. This repo has the first half — `npm run build` is the test, `/lint` is the
+health check, and the sessions in `log.md` are a task history nobody has ever scored.
+
+## Where it thins out
+
+**A flatlining cost curve is not a return.** No output measure is offered against the spend, so
+"we need to start calculating the ROI" is where this account stops, not a result it reports.
+The 20× is also unnormalised — over a period in which headcount using the tools, and the price
+per token, both moved.
+
+**Dashbench is named, not described.** Where the tasks come from, how they are scored, whether
+they leak into training data, how a harness is held fixed while a model varies — none of it is
+in the interview. Everything above about "the correct unit" is taken on trust from one
+sentence.
+
+**And the acquisition is the same claim in a different register.** They bought a company
+(transcribed as *Metis*) to import AI-native habits, on the diagnosis that a large company's
+problem is not access but that people cannot imagine what is possible. Plausible, and also the
+kind of thing that is said after an acquisition. There is no before-and-after here, which is
+the one thing that would make it evidence.

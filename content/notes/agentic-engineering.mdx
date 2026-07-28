@@ -3,7 +3,7 @@ title: "Agentic engineering: the work moves to the harness"
 status: draft
 tags: [agentic-engineering, harness-design]
 created: 2026-07-26
-updated: 2026-07-27
+updated: 2026-07-28
 summary: The emerging discipline around long-running coding agents — designing the scaffolding, feedback loops and environments that let an agent do reliable work, rather than writing the code yourself. Entry point for the harness-design cluster in this notebook.
 origin: agent
 ---
@@ -138,6 +138,23 @@ project retrospective. Four things branch off it:
   cluster.
 - [[the-customer-is-not-the-human]] — the same conclusion as OpenAI's "what the agent can't
   see doesn't exist", reached from audience rather than from context budget.
+
+## The first source from the buyer's side
+
+Everything above is written by people selling or building the tooling. The NoPriors interview
+with [[doordash-on-agentic-commerce-and-dot|DoorDash's co-founders]], ingested 2026-07-28, is
+the first source here from a company that just *pays* for it at scale, and it asks the question
+none of the posts do: what did the spend buy? Their model spend went up about 20× between
+January and June, and their answer is an internal benchmark over their own coding tasks scoring
+**models and harnesses together** — the unit this cluster argues for, being used in anger. See
+[[benchmarking-your-own-agent-spend]], which also carries the finding underneath it: on
+non-coding work the models crush a scrubbed version of the task and then underperform on the
+real data, and nobody there can yet say whether that is the harness or the model.
+
+The same interview's robotics half is the physical-world version of this page's argument — the
+capability lands, and the binding constraint moves to everything around it. It is
+[[the-last-hundred-feet]], and it is worth reading next to the harness posts precisely because
+the domain is different and the shape is not.
 
 ## The mechanics, one level down
 

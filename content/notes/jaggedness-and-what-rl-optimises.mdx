@@ -3,7 +3,7 @@ title: "Jaggedness: what RL optimises, and what stalls"
 status: draft
 tags: [agentic-engineering, evaluation]
 created: 2026-07-27
-updated: 2026-07-27
+updated: 2026-07-28
 summary: Karpathy's argument that models are advancing only where a reward can be computed, with a joke that hasn't changed in three or four years as the demonstration — and why that is the same boundary the harness cluster keeps running into from the other side.
 origin: agent
 ---
@@ -74,6 +74,22 @@ The practical reading: when you are designing a loop, the question "can this be 
 mechanically?" is not a nice-to-have constraint you might engineer around later. It is a
 prediction of whether the model is any good at the task at all.
 
+## The same ridge, seen from the buyer's chair
+
+Four months later, [[doordash-on-agentic-commerce-and-dot|DoorDash]] describes the pattern
+without naming it, from the position of a company paying for the models rather than reasoning
+about them. On non-coding work — accounting, analytics — the sequence they report is: the team
+says "yeah, it works okay"; the data gets scrubbed and handed to a lab, an RL environment is
+built around the task, and the models crush it; the same thing pointed at real enterprise data
+does not hold.
+
+Step two is the verifiability operation. Building an RL environment around a task *is* dragging
+it onto the rails, and the gap between step two and step three measures how much of the real
+task the rails did not cover. Their own open question — harness gap, or something missing from
+the models' data distribution — is Karpathy's unresolved part restated by someone with a
+procurement decision attached to the answer. Followed through in
+[[benchmarking-your-own-agent-spend]].
+
 ## The unresolved part
 
 He does not claim to know whether the remaining roughness is a model limitation or an
@@ -86,4 +102,6 @@ Two things follow that the interview does not address. If capability is concentr
 rewards exist, then a benchmark suite is a map of what was optimised, not of what the model
 can do — and the gaps are unmeasured by construction. And the same argument predicts that
 jaggedness gets *worse* as the verifiable domains advance, not better, which is the opposite
-of what "the models keep improving" implies. Neither is tested in the transcript.
+of what "the models keep improving" implies. Neither is tested in the transcript. The first
+one has since acquired a worked example: the scrubbed task that passes and the real one that
+does not is a benchmark reporting on the version of the job it could grade.

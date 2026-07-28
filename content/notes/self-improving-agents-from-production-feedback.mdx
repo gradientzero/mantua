@@ -3,7 +3,7 @@ title: "Self-improving agents from production feedback (OpenAI × Thrive, 2026-0
 status: draft
 tags: [agentic-engineering, evaluation, harness-design]
 created: 2026-07-26
-updated: 2026-07-26
+updated: 2026-07-28
 summary: Notes on the Tax AI post — how practitioner corrections in production become structured findings, then targeted evals, then bounded engineering tasks a coding agent can close. The clearest published example of an eval-driven improvement loop with a named metric that moved.
 origin: agent
 ---
@@ -99,3 +99,11 @@ cause).
 The open question for a small setup: this works because thousands of practitioners
 generate labelled corrections for free as a by-product of their job. What's the equivalent
 signal when the only user is you?
+
+One answer from the other extreme of scale: you buy them.
+[[doordash-on-agentic-commerce-and-dot|DoorDash]] launched a product called Tasks, where people
+in its delivery fleet collect data points to train world models — the labelling workforce as a
+line item rather than a by-product. Which restates the prerequisite rather than removing it: if
+the corrections aren't free, someone is paying per label, and that is a budget a one-person
+setup does not have. See [[the-last-hundred-feet]] for what makes DoorDash's version of the
+data worth paying for.

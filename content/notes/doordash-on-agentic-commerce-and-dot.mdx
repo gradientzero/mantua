@@ -1,0 +1,162 @@
+---
+title: "DoorDash on agentic commerce and DOT (NoPriors)"
+status: draft
+tags: [agentic-commerce, robotics, evaluation]
+created: 2026-07-28
+updated: 2026-07-28
+summary: Notes on the NoPriors interview with DoorDash's two co-founders — a natural-language ordering surface that half the time sends people to a merchant they have never used, a delivery robot built to a use case rather than to a capability, and an internal benchmark built to work out what a 20× rise in model spend actually bought.
+origin: agent
+---
+
+Source: a NoPriors episode with **Andy Fang** and **Stanley Tang**, DoorDash's co-founders.
+The transcript arrived as a paste with no URL and no date; its own internal references — a
+CLI launched "last week", a benchmark announced "a couple weeks ago", June's model spend
+discussed in the past tense — put the recording in July 2026 at the earliest. Archived
+under `sources/2026-07/doordash-nopriors-agentic-commerce-and-dot/`, which also records the
+transcription damage and which attributions are inferred.
+
+This is the first source in the notebook from a company that *buys* this tooling at scale
+and *deploys* autonomy in the physical world, rather than a lab describing a harness it
+built or an operator describing his own workflow. That is most of its value here. Two of
+its threads land on pages that already exist: the argument that
+[[the-customer-is-not-the-human|the customer is no longer the human]] gets a vendor
+actually doing it, and [[jaggedness-and-what-rl-optimises|jaggedness]] gets an instance
+observed from the buyer's side of a contract.
+
+## Ask DoorDash, and the two numbers
+
+The product is a conversational surface over the catalogue. Fang's history of it is worth
+keeping: they started a couple of years ago and were bullish on **voice** as the modality,
+and voice "ended up not being the thing". What worked was the natural conversational
+experience — people translating what is in their head directly, instead of doing research
+elsewhere and then keyword-optimising a search box.
+
+Two figures are given for what changed in behaviour:
+
+- **Restaurants: 50% of Ask DoorDash trajectories end at a merchant the user has never
+  ordered from before.** He flags this as historically one of the hardest metrics at
+  DoorDash to move at all.
+- **Groceries: about 40% larger baskets.** The described use is not search but a task —
+  photograph the fridge and ask it to restock, meal-plan around dietary constraints, or
+  reorder the usuals without tapping through.
+
+The interviewer's read is the interesting part: DoorDash had never seemed hard to *use*, so
+the numbers imply latent demand the old interface was not serving — people build habits, but
+also want variety, and nothing in a search box let them express that.
+
+One deliberate investment: **world knowledge**. What is trending online about restaurants,
+outside DoorDash's own data and past the model's cutoff. Fang's stated reason is trust —
+people want to eat what is current, and an assistant that clearly knows what is being talked
+about is one they believe.
+
+## The agent-first storefront
+
+Asked about five years out, Fang declines and then gives the shape anyway: if college kids
+started DoorDash today it would look very different, "probably more agentic first". The stat
+he says he keeps returning to is that **there is now more agent traffic on the web than human
+traffic** — no source, no definition — and the question he draws from it is how you have a
+DoorDash-shaped experience that plays into that.
+
+The concrete move is a **DoorDash CLI**, launched the week of the recording, described as
+reducing the friction for an agent to participate. His worked example came from a user who
+wanted to automate the office-manager job, discovered DoorDash sells more than lunch, pointed
+a camera at the pantry shelf, and now fires the agent to restock when the shelf looks empty.
+The same example turns up earlier in Tang's half of the interview, so it is evidently the
+demo they are both carrying.
+
+That is the vendor side of an argument this notebook already has from the consumer side —
+see [[the-customer-is-not-the-human]], where it also answers one of that page's objections
+and raises a different one.
+
+## DOT
+
+Tang's half. DoorDash has been working on autonomy **since 2018**, starting as "me and half
+an engineer's time" — a skunkworks whose brief was to partner and learn rather than to build.
+They worked with the whole field, from sidewalk robots up to robotaxis, and drew three
+conclusions: autonomy was a question of when rather than if; a great deal of non-autonomy
+infrastructure has to exist around it (their name for what they built is the *autonomous
+delivery platform* — APIs, dispatch, merchant integration, consumer experience); and — the
+one that made them build hardware — **the field builds technology first and looks for a use
+case afterwards.**
+
+The form-factor argument follows from the delivery itself: 3–5 miles, about 15 minutes
+excluding cook time. A 2 mph sidewalk cooler cannot do it. A 4,000 lb robotaxi is built for
+carrying people, and a passenger can walk the last half block from where it stops — a burrito
+cannot. So: roughly 300 lb, 20–25 mph, a bike-lane profile that moves between road and
+sidewalk. Live in Phoenix, "fully autonomous L4", running deliveries for about two years.
+
+The rest of that thread — the first-and-last-100-feet problem, the edge cases nobody writes
+down, and the claim about which incumbent data is actually load-bearing — is
+[[the-last-hundred-feet|its own page]], because the transferable part is not the vehicle.
+
+Worth recording the fleet position too, since it is the answer to the question everyone asks
+first. Tang's prediction is **more Dashers in ten years, not fewer**: the business is growing
+~25% a year on 9 million Dashers and 3 billion deliveries, and 5–10× from there cannot come
+from recruiting half of America. The stance is a multimodal fleet — DOT for suburban
+strip-mall runs, drones where road infrastructure is poor and the order is light, a human for
+a multi-step grocery order with stairs — with routing as the thing DoorDash owns and merchants
+seeing one integration regardless. He also expects cheaper delivery to grow demand, which is
+the [[skill-issue-karpathy-on-code-agents|Jevons argument]] applied to a physical service.
+
+## Dashbench, and the 20×
+
+The part of the interview closest to what this notebook is about. **Model spend in June was
+about 20× January's**, and when asked directly whether it is still climbing, Fang says it is
+flatlining — deliberately. **Dashbench** is their published benchmark over coding tasks,
+scoring *models and harnesses*, built to work out the ROI on that spend and to route cheap
+tasks to open-weight models while paying frontier prices only where they buy something.
+
+And the finding that is worth more than the numbers: ask a team how the models do on their
+task and the answer is "yeah, it works okay"; scrub the data, hand it to a lab, build an RL
+environment around it, and the models crush it; run it against real enterprise data with all
+the real stuff attached and it does not hold. Fang's own framing of the open question — is
+that a harness gap, or something missing from the models' data distribution — is the honest
+one, and he does not resolve it.
+
+Both halves are [[benchmarking-your-own-agent-spend|their own page]]: the ROI question a buyer
+has to answer, and why the scrubbed-versus-real gap is the same boundary
+[[jaggedness-and-what-rl-optimises|jaggedness]] draws from the training side.
+
+Two smaller things from the same stretch. They acquired a company (transcribed as **Metis**)
+last year explicitly to import AI-native working habits, on the diagnosis that a
+10,000-person company's problem is not access but that people cannot see what is possible
+because they are used to how things worked. And **seat growth is fastest in the non-technical
+organisations** — analysts, operators, account managers automating merchant QBRs — while the
+spend is still overwhelmingly engineering. They have no benchmark for that work yet, which is
+where they say they are going next.
+
+## Tasks, and buying the labels
+
+Mentioned in passing and easy to miss: DoorDash launched a product called **Tasks** a few
+months before the recording, where people in the Dasher fleet collect data points to help
+train world models. Fang's own caveat is that this is very early and that the field disagrees
+about which form factors and model types will work.
+
+It is a real answer to a question left open in
+[[self-improving-agents-from-production-feedback|the tax-agent notes]] — what you do when
+labelled corrections are not a free by-product of somebody's job. You pay a fleet to generate
+them. That is available to DoorDash and to almost nobody else.
+
+## How to read this
+
+Two founders on a podcast, talking about their own products. Nothing here is audited and
+almost nothing is falsifiable from the outside:
+
+- **The behaviour numbers have no denominators.** "50% of trajectories" is a ratio over an
+  unstated base of users who self-selected into a new feature, over an unstated window;
+  larger grocery baskets are exactly what you would expect from the subset of customers
+  willing to try a restocking assistant, with or without any causal effect. Both numbers are
+  interesting as directions and worthless as effect sizes.
+- **"More agent traffic than human traffic" is asserted, not sourced.** It is doing real work
+  in the argument, and it is the kind of figure that depends entirely on whether scrapers
+  count.
+- **"Fully autonomous L4" is a self-report.** No disengagement rate, no intervention rate, no
+  incident record, no word on remote assistance, one metro. The comparison to riding a Waymo
+  in San Francisco is theirs.
+- **The spend story is one-sided.** A flatlining cost curve is a cost curve. No output measure
+  is offered against it, so "we need to calculate the ROI" is where the account stops rather
+  than a result.
+
+What survives that discount is the reasoning rather than the evidence: build toward a use
+case, expect the physical world to be messier than the model, and go looking for the data
+nobody else has instead of the data everybody has.
