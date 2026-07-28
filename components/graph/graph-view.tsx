@@ -10,7 +10,9 @@
  * Self-contained on purpose: a small deterministic force simulation (link
  * springs, pairwise repulsion, collision, a soft wall — d3-force's recipe,
  * without the dependency). At notebook scale the O(n²) pair pass is nothing,
- * and with no randomness the layout is identical on every load.
+ * and with no randomness the layout is identical on every load — the similarity
+ * weights the springs read are precomputed at build over the whole graph
+ * (lib/graph.ts), so that stays true.
  *
  * The opening is composed, not just watched: nodes are seeded on a radial tree
  * of the graph's own breadth-first structure, the first violent second of the
@@ -643,6 +645,26 @@ export function GraphView({
     // little its two pages have in common, measured against the closest pair on
     // the map: pages that share a neighbourhood stay tight, a lone link between
     // two otherwise unrelated corners gives way.
+    //
+    // Two different questions shape a spring, and they are deliberately kept
+    // apart. `apart` above asks whether the two pages keep the same company in
+    // the link graph — pure topology, recomputed here because it depends on which
+    // nodes are currently on screen. `l.weight` asks whether they are about the
+    // same thing — lexical similarity over their prose, precomputed at build over
+    // the whole graph (lib/graph.ts). Two pages can be linked, share no
+    // neighbours, and still read alike; that pair stretches for the seam but
+    // keeps some pull. The weight is a build-time constant on the data, never
+    // recomputed here and never in response to hover or selection — doing that
+    // would put the layout back to drifting on a plain click.
+    //
+    // The cap is for the one regime that can overshoot. A free spring here stays
+    // stable up to a per-tick gain of 16/9, and every edge on this map sits far
+    // below that — but `collide()` runs at gain 0.5 and, unlike the forces, isn't
+    // scaled by alpha, so a linked pair that also overlaps is already near that
+    // bound before any weight applies. It also keeps `weight > 1` on a
+    // degree-1 pair from pushing stiffness past 1. Note the spring pass below
+    // runs once: a second pass would compound to `1 - (1 - g)²` and this ceiling
+    // would have to come down with it.
     const kinship = active.links.map((l) => jaccard(adjacency, l.source, l.target))
     const closest = kinship.length > 0 ? Math.max(...kinship) : 0
     const links: SimLink[] = active.links.map((l, i) => {
@@ -651,13 +673,14 @@ export function GraphView({
       const busy = Math.min(source.degree, target.degree)
       const apart = closest > 0 ? 1 - kinship[i] / closest : 1
       const gap = linkGapFor(l.kind, busy) * (1 + BRIDGE_STRETCH * apart)
+      const base = (1 - BRIDGE_SLACK * apart) / Math.min(source.degree || 1, target.degree || 1)
       return {
         source,
         target,
         kind: l.kind,
         gap,
         dist: source.r + target.r + gap,
-        strength: (1 - BRIDGE_SLACK * apart) / Math.min(source.degree || 1, target.degree || 1),
+        strength: Math.min(1, base * (l.weight ?? 1)),
       }
     })
 

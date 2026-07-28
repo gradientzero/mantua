@@ -76,6 +76,7 @@ lib/
   wikilinks.ts        # [[wikilink]] remark plugin + outgoing-link extraction
   content.ts          # THE content access layer: draft filtering, backlinks, tags
   graph.ts            # nodes+links for the graph view, derived from the wikilink structure
+  similarity.ts       # tf-idf cosine between pages; weights the graph's edges
   search.ts           # dependency-free BM25F ranking behind the header search
   site.ts             # site constants + provenance→byline mapping
 components/
@@ -111,6 +112,13 @@ related: [some-slug]     # optional, note slugs; manual "Related" section
 slug: custom-slug        # optional override — by convention OMIT IT (slug = filename)
 ---
 ```
+
+Two fields are *derived* at build time rather than written by hand, both computed in
+`velite.config.ts` from the raw file and available on every document:
+
+- `links` — outgoing wikilink targets (`lib/wikilinks.ts`), inverted into backlinks.
+- `terms` — prose term frequencies (`lib/similarity.ts`), used to weight the graph's edges.
+  Server-only: it never reaches the browser, since only the resulting number is serialised.
 
 Conventions the schema can't enforce:
 
@@ -170,19 +178,48 @@ titles break into one-word lines), and both the springs and the collision pass r
 `r + r + gap`, so well-connected pages earn their room instead of piling into a knot.
 Titles ease out once the zoom takes them below reading size and back in on the way home.
 
-Everything derives at build time from data that already exists (`links`, `tags`,
-`related`), assembled in `lib/graph.ts` and drawn by `components/graph/graph-view.tsx`
-with a small built-in force simulation — no new schema fields, no dependencies, no
-client-side content fetching. Draft pages appear on the map exactly where drafts appear
+Everything derives at build time — the link structure from data that already exists
+(`links`, `tags`, `related`) and the edge weights from the derived `terms` field —
+assembled in `lib/graph.ts` and drawn by `components/graph/graph-view.tsx` with a small
+built-in force simulation. No dependencies and no client-side content fetching: the
+browser receives nodes, edges and one number per edge, never any prose.
+
+Edges are not all equal, and two separate things differentiate them. **Neighbourhood
+overlap** asks whether two pages keep the same company in the link graph; a spring bridging
+two clusters rests longer and pulls less than one inside a cluster, which is what opens the
+seams enough to see them. That is pure topology, computed per render because it depends on
+which nodes are currently shown. **Similarity** asks whether two pages are about the same
+thing — plain tf-idf cosine over their prose (`lib/similarity.ts`), no embeddings and no
+API — and scales stiffness only, so pages on one subject pull together and the map clusters
+by subject as well as by who links whom.
+
+They are kept apart deliberately: two pages can be linked, share no neighbours, and still
+read alike, and that spring should stretch for the seam while keeping some pull. Rest length
+is left to overlap alone so the two effects stay legible on the map. Similarity edges are
+ranked against each other and mapped to ±30% around neutral, which keeps the *average*
+stiffness unchanged — the point is to redistribute pull, not to tighten or loosen the whole
+map. Tag edges, edges to unwritten pages, and anything with no prose to compare stay
+neutral. Those weights are computed once over the whole graph at build, so a page's local
+map agrees with the big one and the layout is still identical on every load.
+
+Draft pages appear on the map exactly where drafts appear
 at all: in `npm run dev`, haloed amber. `/graph` is a reserved route like `/notes` and
 `/tags` — a hub with the slug `graph` would be shadowed by it.
 
 One known limit: the notebook's link graph is close to complete, and springs that dense
-settle into a ball, so on a very wide screen the map is a centered ball with empty
-margins either side. Shaping the springs, the repulsion or the collision clearance to the
-viewport's aspect was measured and rejected — the outline barely moves and the layout
-inflates, which costs the zoom the titles are read at. Only the centering force is
-shaped, which helps for free.
+want to settle into a ball. Nothing pulls on the middle any more — containment is a soft
+wall at the radius the discs could possibly need, and centering is a rigid translation of
+the centroid, which shapes nothing — so the interior is free to take whatever shape the
+links imply, and the outline is leaned toward the panel's proportions by an area-preserving
+stretch. It does not fully reach a very wide panel's aspect, and leaning harder than this
+was measured worse: the springs fight back and inflate both axes, which costs the zoom the
+titles are read at.
+
+That zoom is the budget everything here is spent against, and it is why the similarity
+weights are held to ±30%. A weakened spring rests further out, and in the crowded middle of
+this map that overshoot is already a few hundred units, so a wider spread would inflate the
+layout and spend exactly what the paragraph above refuses to spend. Percentile ranking is
+what makes the ±30% safe: it pins the mean weight to 1, so the redistribution is free.
 
 ## Search
 

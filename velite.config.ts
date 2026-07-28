@@ -8,6 +8,7 @@
 
 import rehypeSlug from 'rehype-slug'
 import { defineCollection, defineConfig, s } from 'velite'
+import { termCounts } from './lib/similarity'
 import { extractWikilinks, remarkWikilinks } from './lib/wikilinks'
 
 const SLUG_RE = /^[a-z0-9]+(?:-[a-z0-9]+)*$/
@@ -43,6 +44,13 @@ const withComputedFields = <T extends { slug?: string; path: string }>(
   slug: data.slug ?? data.path.split('/').pop()!,
   /** Outgoing wikilink targets; inverted into backlinks in lib/content.ts. */
   links: extractWikilinks(meta.content ?? ''),
+  /**
+   * Prose term frequencies, for the graph's similarity-weighted edges
+   * (lib/similarity.ts → lib/graph.ts). Derived and server-only: it never
+   * reaches the browser, since only the resulting numeric weight is
+   * serialised into the graph data.
+   */
+  terms: termCounts(meta.content ?? ''),
 })
 
 const notes = defineCollection({

@@ -470,3 +470,48 @@ panel that is 24px of clear paper between neighbouring discs where they used to 
 the titles came out slightly *larger* rather than smaller — a map shaped like its panel fits
 better, so the extra room paid for itself. One file,
 `components/graph/graph-view.tsx`. No schema change, no content touched.
+
+## [2026-07-28] setup | Graph edges now carry a similarity weight
+
+Every edge on the map used to pull equally hard: stiffness came from node degree alone, so
+a link between two pages about the same thing was indistinguishable from a link between two
+unrelated ones. Each page-to-page edge now carries a weight from how similar the two pages
+read, and stiffness is scaled by it, so the map clusters by subject as well as by who links
+whom.
+
+The measure is plain tf-idf cosine over the prose — no embeddings, no API key, no model
+download, no cached artifact to invalidate. Because it is a pure function of the content,
+the layout is still identical on every load and every build. It reads body text, not titles
+and summaries: at ~1,300 words a note that is where the signal is, and the thin version
+would mostly have restated tag overlap. Bare `[[wikilink]]` targets are excluded on purpose
+— counting them would let an edge's weight partly restate that same edge.
+
+Edges are ranked against each other rather than scored absolutely (every note here is about
+roughly one subject, so raw cosines bunch into a band whose midpoint means nothing), then
+mapped to ±30% around neutral. Ranking makes the mean weight exactly 1, so nothing tightens
+or loosens on average; the ±30% ceiling is the layout-inflation budget from the graph's
+existing tuning notes, since a weakened spring rests further out and inflation is paid for
+in the zoom the titles are read at. Mean weight comes out at exactly 1.0000 and the mean of
+1/weight at 1.033 — the ~3% inflation the spread was chosen for.
+
+110 of 196 edges are weighted. Tag edges, edges to unwritten pages, and any pair with no
+prose to compare stay at exactly 1. Top-ranked pairs check out by eye ("Building a
+generator–evaluator harness" with "Generator–evaluator loops"; "The LLM-wiki pattern" with
+"How this notebook works"), as do the bottom ones.
+
+This lands on top of the composed-opening work above, which had already started
+differentiating springs — by neighbourhood overlap, i.e. whether two pages keep the same
+company in the link graph. The two are kept as separate terms because they answer different
+questions: overlap is topology and is recomputed per render (it depends on which nodes are on
+screen), while this is about subject matter and is fixed at build. Two pages can be linked,
+share no neighbours, and still read alike — that spring now stretches for the seam but keeps
+some of its pull. Overlap keeps both levers it had (rest length and stiffness); similarity
+only scales stiffness, and rest length is deliberately left to overlap alone so the two can
+be told apart when reading the map.
+
+New `lib/similarity.ts`; one derived schema field (`terms`) in `velite.config.ts`; the
+weighting pass and a `weight` field in `lib/graph.ts`; the stiffness term in
+`graph-view.tsx`. This adds the first derived field the graph depends on beyond
+`links`/`tags`/`related`, so the README's graph section was corrected — it previously
+promised "no new schema fields". `fold` is now exported from `lib/search.ts` and shared. No
+content touched, no dependency added. `npm run build` clean.
