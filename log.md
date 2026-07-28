@@ -446,6 +446,31 @@ The wiki now has no draft pages — 25 notes, all live. No prose touched, no fro
 beyond the one field, no schema change. `npm run build` clean; every note is now a
 prerendered page and appears in the graph, tag pages and sitemap without the draft halo.
 
+## [2026-07-28] setup | Graph view: a composed opening, and room between the discs
+
+`/graph` built itself chaotically and then sat there as a knot. Four separate causes for the
+first: nodes were seeded on a phyllotaxis spiral in data order, so linked pages started on
+opposite sides and the springs hauled them across each other; the auto-framing camera solved
+the fit fresh every frame, rescaling the whole map under the reader; the violent first second
+of the settle was on screen; and the webfonts landing afterwards resized every disc a second
+time. Nodes are now seeded on a radial tidy tree of the graph's own breadth-first structure,
+the camera eases toward the fit, a cold layout is stepped silently until it has calmed
+(~72 ticks, 3ms) before the first paint, and that paint waits for Cormorant on a 700ms leash
+so the map is measured once. A per-tick speed ceiling stops a repulsion spike from flinging
+anything across the map.
+
+The knot was the centering: it pulled every node toward the middle in proportion to its
+distance, which is a spring to a point, so whatever the links were saying about structure got
+squeezed back into a ball. Nothing pulls on the middle now — containment is a soft wall out at
+the radius the discs could possibly need, and centering is a rigid translation of the centroid,
+which shapes nothing. Shape comes from two things instead: springs crossing between clusters
+rest longer and pull less than springs inside one (by neighbourhood overlap), and the whole
+outline is leaned toward the panel's proportions by an area-preserving stretch. On a 1400×705
+panel that is 24px of clear paper between neighbouring discs where they used to overlap, and
+the titles came out slightly *larger* rather than smaller — a map shaped like its panel fits
+better, so the extra room paid for itself. One file,
+`components/graph/graph-view.tsx`. No schema change, no content touched.
+
 ## [2026-07-28] setup | Graph edges now carry a similarity weight
 
 Every edge on the map used to pull equally hard: stiffness came from node degree alone, so
@@ -466,19 +491,27 @@ roughly one subject, so raw cosines bunch into a band whose midpoint means nothi
 mapped to ±30% around neutral. Ranking makes the mean weight exactly 1, so nothing tightens
 or loosens on average; the ±30% ceiling is the layout-inflation budget from the graph's
 existing tuning notes, since a weakened spring rests further out and inflation is paid for
-in the zoom the titles are read at. Measured after: mean weight 1.0000, mean of 1/weight
-1.033 (~3% inflation, as designed), and the vertical extent — the axis the fit is bound by —
-came out unchanged, so no zoom was lost. Horizontal extent came in ~5%: the clustering
-compacted the map rather than inflating it.
+in the zoom the titles are read at. Mean weight comes out at exactly 1.0000 and the mean of
+1/weight at 1.033 — the ~3% inflation the spread was chosen for.
 
 110 of 196 edges are weighted. Tag edges, edges to unwritten pages, and any pair with no
 prose to compare stay at exactly 1. Top-ranked pairs check out by eye ("Building a
 generator–evaluator harness" with "Generator–evaluator loops"; "The LLM-wiki pattern" with
 "How this notebook works"), as do the bottom ones.
 
+This lands on top of the composed-opening work above, which had already started
+differentiating springs — by neighbourhood overlap, i.e. whether two pages keep the same
+company in the link graph. The two are kept as separate terms because they answer different
+questions: overlap is topology and is recomputed per render (it depends on which nodes are on
+screen), while this is about subject matter and is fixed at build. Two pages can be linked,
+share no neighbours, and still read alike — that spring now stretches for the seam but keeps
+some of its pull. Overlap keeps both levers it had (rest length and stiffness); similarity
+only scales stiffness, and rest length is deliberately left to overlap alone so the two can
+be told apart when reading the map.
+
 New `lib/similarity.ts`; one derived schema field (`terms`) in `velite.config.ts`; the
-weighting pass and a `weight` field in `lib/graph.ts`; one line of `graph-view.tsx`. This
-adds the first derived field the graph depends on beyond `links`/`tags`/`related`, so the
-README's graph section was corrected — it previously promised "no new schema fields".
-`fold` is now exported from `lib/search.ts` and shared. No content touched, no dependency
-added. `npm run build` clean.
+weighting pass and a `weight` field in `lib/graph.ts`; the stiffness term in
+`graph-view.tsx`. This adds the first derived field the graph depends on beyond
+`links`/`tags`/`related`, so the README's graph section was corrected — it previously
+promised "no new schema fields". `fold` is now exported from `lib/search.ts` and shared. No
+content touched, no dependency added. `npm run build` clean.

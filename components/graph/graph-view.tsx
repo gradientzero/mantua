@@ -8,20 +8,29 @@
  * (wikilink targets nobody has written yet) are dashed.
  *
  * Self-contained on purpose: a small deterministic force simulation (link
- * springs, pairwise repulsion, centering, collision — d3-force's recipe,
+ * springs, pairwise repulsion, collision, a soft wall — d3-force's recipe,
  * without the dependency). At notebook scale the O(n²) pair pass is nothing,
- * and with no randomness the layout is identical on every load: nodes start
- * on a phyllotaxis spiral and settle the same way each time. Edge stiffness is
- * scaled by a similarity weight so pages that read alike sit closer together;
- * the weights are computed once at build over the whole graph (lib/graph.ts),
- * which is what keeps "identical on every load" true.
+ * and with no randomness the layout is identical on every load — the similarity
+ * weights the springs read are precomputed at build over the whole graph
+ * (lib/graph.ts), so that stays true.
+ *
+ * The opening is composed, not just watched: nodes are seeded on a radial tree
+ * of the graph's own breadth-first structure, the first violent second of the
+ * settle is spent off-screen, and the auto-framing camera eases toward the fit
+ * instead of re-solving it every frame. What the reader sees is a map that is
+ * already structured, breathing into place.
  *
  * Because the label lives *inside* the disc, the label decides the radius:
  * each title is wrapped at whichever measure gives the tightest enclosing
  * circle, and springs and collision both rest at `r + r + gap`, so
- * well-connected pages earn their room instead of piling into a knot. The
- * centering force is shaped to the viewport's aspect, so a wide screen gets a
- * wide map rather than a ball with empty margins.
+ * well-connected pages earn their room instead of piling into a knot. Nothing
+ * pulls on the middle of the map — only a soft wall out at the radius the discs
+ * could possibly need — so the interior is free to fall into whatever shape the
+ * links imply. Two things shape it from outside that: springs crossing between
+ * clusters rest longer and pull less than springs inside one, which opens the
+ * seams enough to see them, and the whole outline is leaned toward the panel's
+ * proportions by an area-preserving stretch, so a wide screen gets a wide map
+ * rather than a ball with empty margins.
  *
  * Interactions: drag nodes; drag the background to pan; wheel/pinch to zoom;
  * hover to spotlight a neighborhood. Click pins a node — the spotlight stays
@@ -69,6 +78,8 @@ interface SimLink {
   source: SimNode
   target: SimNode
   kind: GraphLinkKind
+  /** Rest clearance between the two rims, stretched for a bridge. */
+  gap: number
   dist: number
   strength: number
 }
@@ -83,21 +94,82 @@ const TAU = Math.PI * 2
 const GOLDEN_ANGLE = Math.PI * (3 - Math.sqrt(5))
 
 const ALPHA_MIN = 0.002
-const ALPHA_DECAY = 0.023
-const VELOCITY_KEEP = 0.6
-const MAX_REPEL_DIST2 = 700 * 700
+/** A shade slower than d3's 0.0228: this settle is meant to be watched. */
+const ALPHA_DECAY = 0.019
+const VELOCITY_KEEP = 0.62
+/**
+ * Speed ceiling per tick, in graph units. Only one thing in a force layout
+ * really reads as chaos — a node flung clear across the map by a repulsion
+ * spike at near-zero distance — and a ceiling stops that without having any
+ * effect on the shape the forces settle into.
+ */
+const MAX_SPEED = 22
+const MAX_REPEL_DIST2 = 1100 * 1100
 const ZOOM_MIN = 0.15
 const ZOOM_MAX = 4
 /** Zoom-to-fit stops here: the label sizes are tuned to read at k ≈ 1. */
 const FIT_MAX_K = 1.15
 const FIT_MS = 180 // --duration-base
+/**
+ * How fast the auto-framing camera chases the layout while it settles. Solving
+ * the fit fresh every frame — the obvious thing — is what made the opening feel
+ * jumpy: the whole map rescales under the reader every time the outline
+ * changes. Easing toward the same answer costs nothing and reads as one slow
+ * pull-back.
+ */
+const CAM_EASE = 0.12
+/**
+ * The opening is played from here rather than from a standing start: a cold
+ * layout is stepped silently until alpha falls to this, so the reader gets the
+ * gentle back half of the settle and never the violent first second of it.
+ */
+const PRESETTLE_ALPHA = 0.25
+const PRESETTLE_MAX_TICKS = 400
+/**
+ * How long the first frame waits on the webfonts. Every disc radius comes from
+ * measured text, so a map laid out on Georgia's metrics has to be rebuilt when
+ * Cormorant lands — and rebuilding a map the reader is already looking at is
+ * exactly the lurch this file is trying to avoid. A beat of empty panel is the
+ * cheaper trade, but only a beat.
+ */
+const FONT_WAIT_MS = 700
 
 /**
  * Breathing room collision keeps between two discs. Wide enough that the
  * links stay visible between them — packed edge to edge, the discs hide the
  * very structure the map is drawing.
  */
-const COLLIDE_GAP = 20
+const COLLIDE_GAP = 36
+/** Share of an overlap that collision resolves per relaxation pass. */
+const COLLIDE_PUSH = 0.68
+/**
+ * Fraction of the map's area the discs would cover if they were packed, which is
+ * how the containing wall is sized — generously, since the wall is a backstop
+ * against sprawl and not a hand on the map. It scales with the notebook instead
+ * of being a constant somebody has to retune every time the wiki grows.
+ */
+const PACK_FILL = 0.16
+/** Strength of the wall's pull, growing with how far past it a node has drifted. */
+const BOUND_PULL = 0.055
+/**
+ * How hard the outline is leaned toward the panel's proportions each tick, as an
+ * area-preserving stretch, and the ceiling on any single tick's worth of it. A
+ * change of frame rather than a force — it trades vertical reach for horizontal
+ * on a wide screen without compressing anything, which is where the aspect-
+ * shaped centering this replaces went wrong, and the springs argue back freely.
+ */
+const SHAPE_EASE = 0.18
+const SHAPE_MAX = 1.02
+/**
+ * How much longer, at most, a spring rests when its two pages share none of
+ * their neighbours. Uniform spring lengths on a graph this densely linked
+ * settle into one undifferentiated ball; letting the bridges stretch while the
+ * springs inside a cluster stay short is what pulls the clusters apart far
+ * enough to see the seams.
+ */
+const BRIDGE_STRETCH = 0.65
+/** And how much of a bridge spring's pull is given up in that bargain. */
+const BRIDGE_SLACK = 0.38
 /**
  * Pointer travel, in CSS pixels, that separates a click from a drag. Below it a
  * press is a selection and the layout must not move at all; past it the node is
@@ -136,18 +208,25 @@ const minRadiusFor = (kind: GraphNode['kind'], degree: number): number =>
       ? 10
       : 15 + 1.8 * Math.sqrt(degree)
 
-/** Springs rest clear of both discs; busy pages get a longer leash. */
+/**
+ * Springs rest well clear of both discs; busy pages get a longer leash. Long
+ * enough matters more than it looks: a spring that rests barely past the
+ * collision gap leaves collision to decide the geometry, and collision knows
+ * nothing about the links — fifty discs packed into a raft, every line hidden
+ * underneath them. Give the springs room and the links do the arranging.
+ */
 const linkGapFor = (kind: GraphLinkKind, busy: number): number =>
-  (kind === 'tag' ? 22 : 34) + Math.min(26, 2.6 * Math.sqrt(busy))
+  (kind === 'tag' ? 34 : 56) + Math.min(34, 3.4 * Math.sqrt(busy))
 
 /**
- * Repulsion grows with the disc, but gently: collision and the spring rest
- * lengths already guarantee clearance, so charge only has to keep unrelated
- * pages from crowding. Anything stronger inflates the whole map, and every
- * unit of inflation is a unit of zoom the titles lose.
+ * Repulsion grows with the disc: collision and the spring rest lengths
+ * guarantee clearance between *linked* pages, and charge is what keeps
+ * unrelated ones from drifting into the same corner. Every unit of the
+ * inflation it causes is a unit of zoom the titles lose, so it is set as low as
+ * will still open the seams between clusters.
  */
 const chargeFor = (kind: GraphNode['kind'], r: number): number =>
-  -(2.2 * r + 60) * (kind === 'note' || kind === 'hub' ? 1 : 0.8)
+  -(2.9 * r + 105) * (kind === 'note' || kind === 'hub' ? 1 : 0.8)
 
 /** Deterministic stand-in for the tiny random nudges d3 uses to split overlaps. */
 const jiggle = (i: number): number => ((((i + 1) * 2654435761) % 100000) / 100000 - 0.5) * 1e-3
@@ -259,6 +338,141 @@ function fitLabel(
   return uncut && uncutR <= tightestR * UNCUT_SLACK ? uncut : tightest!
 }
 
+/**
+ * Overlap between two pages' neighbourhoods, ignoring each other: 1 when they
+ * keep exactly the same company, 0 when the only thing they share is the link
+ * between them. Cheap at notebook scale, and it is the whole basis for telling
+ * a spring inside a cluster from a spring bridging two.
+ */
+function jaccard(adjacency: Map<string, Set<string>>, a: string, b: string): number {
+  const A = adjacency.get(a)
+  const B = adjacency.get(b)
+  if (!A || !B) return 0
+  const [small, big] = A.size <= B.size ? [A, B] : [B, A]
+  let shared = 0
+  for (const id of small) if (big.has(id)) shared++
+  // a is in B and b is in A; neither counts as shared context.
+  const union = A.size + B.size - shared - 2
+  return union > 0 ? shared / union : 0
+}
+
+/**
+ * Deterministic starting positions from the graph's own shape: a radial tree
+ * over its breadth-first forest, rooted at the busiest page, each subtree given
+ * an angular wedge in proportion to its size and each depth a ring wide enough
+ * to seat its members.
+ *
+ * The point is the first frame. Seeding on a phyllotaxis spiral — pretty, and
+ * what this used to do — puts linked pages on opposite sides of the map, and
+ * the springs then have to haul them across each other; that scramble *is* the
+ * chaotic opening. Seeded on structure, neighbours start as neighbours, and the
+ * simulation has nothing left to do but tidy.
+ */
+function seedLayout(
+  ids: string[],
+  radii: Map<string, number>,
+  adjacency: Map<string, Set<string>>,
+): Map<string, { x: number; y: number }> {
+  const seed = new Map<string, { x: number; y: number }>()
+  const radiusOf = (id: string) => radii.get(id) ?? 16
+  const degreeOf = (id: string) => adjacency.get(id)?.size ?? 0
+  // Busiest first, ties by slug: the roots — and every wedge below them — have
+  // to come out the same on every load.
+  const byRank = [...ids].sort((a, b) => degreeOf(b) - degreeOf(a) || (a < b ? -1 : 1))
+
+  const seen = new Set<string>()
+  let placed = 0
+  let claimed = 0
+
+  for (const root of byRank) {
+    if (seen.has(root)) continue
+
+    // Breadth-first tree for this component.
+    const order = [root]
+    const depth = new Map([[root, 0]])
+    const kids = new Map<string, string[]>()
+    seen.add(root)
+    for (let i = 0; i < order.length; i++) {
+      const id = order[i]
+      const mine: string[] = []
+      const neighbours = [...(adjacency.get(id) ?? [])].sort(
+        (a, b) => degreeOf(b) - degreeOf(a) || (a < b ? -1 : 1),
+      )
+      for (const next of neighbours) {
+        if (seen.has(next)) continue
+        seen.add(next)
+        depth.set(next, depth.get(id)! + 1)
+        mine.push(next)
+        order.push(next)
+      }
+      kids.set(id, mine)
+    }
+
+    // Leaf counts, bottom-up: how wide a wedge each subtree has earned.
+    const weight = new Map<string, number>()
+    for (let i = order.length - 1; i >= 0; i--) {
+      let w = 0
+      for (const kid of kids.get(order[i])!) w += weight.get(kid)!
+      weight.set(order[i], Math.max(1, w))
+    }
+
+    // Ring radii: each depth needs circumference for its members, and has to
+    // clear the ring inside it.
+    const tiers: string[][] = []
+    for (const id of order) (tiers[depth.get(id)!] ??= []).push(id)
+    const ring = [0]
+    for (let d = 1; d < tiers.length; d++) {
+      let need = 0
+      let widest = 0
+      for (const id of tiers[d]) {
+        need += 2 * radiusOf(id) + COLLIDE_GAP
+        widest = Math.max(widest, radiusOf(id))
+      }
+      let inner = 0
+      for (const id of tiers[d - 1]) inner = Math.max(inner, radiusOf(id))
+      ring[d] = Math.max(ring[d - 1] + inner + widest + COLLIDE_GAP * 1.5, need / TAU)
+    }
+
+    // Wedges, top-down. The root sits in the middle and owns the full circle.
+    const wedge = new Map<string, [number, number]>([[root, [0, TAU]]])
+    let reach = radiusOf(root)
+    for (const id of order) {
+      const [from, to] = wedge.get(id)!
+      const d = depth.get(id)!
+      const at = ring[d]
+      const angle = (from + to) / 2
+      seed.set(id, { x: Math.cos(angle) * at, y: Math.sin(angle) * at })
+      reach = Math.max(reach, at + radiusOf(id))
+      const mine = kids.get(id)!
+      if (mine.length === 0) continue
+      let total = 0
+      for (const kid of mine) total += weight.get(kid)!
+      let cut = from
+      for (const kid of mine) {
+        const share = ((to - from) * weight.get(kid)!) / total
+        wedge.set(kid, [cut, cut + share])
+        cut += share
+      }
+    }
+
+    // Later components sit beside the first rather than on top of it.
+    if (placed > 0) {
+      const angle = placed * GOLDEN_ANGLE
+      const off = claimed + reach + COLLIDE_GAP * 2
+      for (const id of order) {
+        const p = seed.get(id)!
+        p.x += Math.cos(angle) * off
+        p.y += Math.sin(angle) * off
+      }
+      claimed = off + reach
+    } else {
+      claimed = reach
+    }
+    placed++
+  }
+  return seed
+}
+
 export interface GraphViewProps {
   data: GraphData
   /** Slug to mark as "you are here": accent ring + a stronger pull to the center. */
@@ -338,14 +552,22 @@ export function GraphView({
 
     const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
     const positions = positionsRef.current
+    /** No remembered layout: this is an opening, not a toggle mid-session. */
+    const cold = positions.size === 0
 
     // ---- simulation state --------------------------------------------------
 
     const degree = new Map<string, number>()
+    const adjacency = new Map<string, Set<string>>()
+    for (const d of active.nodes) adjacency.set(d.id, new Set())
     for (const l of active.links) {
       degree.set(l.source, (degree.get(l.source) ?? 0) + 1)
       degree.set(l.target, (degree.get(l.target) ?? 0) + 1)
+      adjacency.get(l.source)!.add(l.target)
+      adjacency.get(l.target)!.add(l.source)
     }
+    const inHood = (center: SimNode, n: SimNode): boolean =>
+      n === center || (adjacency.get(center.id)?.has(n.id) ?? false)
 
     /** Measure the title, then let it set the disc it has to fit inside. */
     const layOut = (d: GraphNode, deg: number) => {
@@ -358,20 +580,28 @@ export function GraphView({
       return { font, size, block, r: Math.max(blockRadius(block, pad), minRadiusFor(d.kind, deg)) }
     }
 
-    const nodes: SimNode[] = active.nodes.map((d, i) => {
-      const seat = positions.get(d.id)
-      const spiralR = 52 * Math.sqrt(0.5 + i)
-      const spiralA = i * GOLDEN_ANGLE
+    // Discs are measured in their own pass, ahead of everything else: the seed
+    // layout sizes its rings from the radii and the springs rest on them.
+    const laid = active.nodes.map((d) => {
       const deg = degree.get(d.id) ?? 0
-      const { font, size, block, r } = layOut(d, deg)
+      return { d, deg, ...layOut(d, deg) }
+    })
+    const seed = seedLayout(
+      active.nodes.map((d) => d.id),
+      new Map(laid.map((l) => [l.d.id, l.r])),
+      adjacency,
+    )
+
+    const nodes: SimNode[] = laid.map(({ d, deg, font, size, block, r }) => {
+      const seat = positions.get(d.id) ?? seed.get(d.id)!
       return {
         id: d.id,
         data: d,
         degree: deg,
         r,
         charge: chargeFor(d.kind, r),
-        x: seat?.x ?? Math.cos(spiralA) * spiralR,
-        y: seat?.y ?? Math.sin(spiralA) * spiralR,
+        x: seat.x,
+        y: seat.y,
         vx: 0,
         vy: 0,
         fx: null,
@@ -410,64 +640,73 @@ export function GraphView({
     }
 
     // Springs rest clear of both discs, and busy pages get a longer leash — the
-    // extra length is what opens up the highly connected middle of the map.
+    // extra length is what opens up the highly connected middle of the map. On
+    // top of that, a spring is stretched and slackened in proportion to how
+    // little its two pages have in common, measured against the closest pair on
+    // the map: pages that share a neighbourhood stay tight, a lone link between
+    // two otherwise unrelated corners gives way.
     //
-    // Stiffness is d3's `1 / min(degree)` scaled by the edge's similarity weight
-    // (lib/graph.ts), so pages that read alike pull together harder. The weight
-    // is a build-time constant on the data — never recomputed here, and never in
-    // response to hover or selection, which would put the layout back to
-    // drifting on a plain click.
+    // Two different questions shape a spring, and they are deliberately kept
+    // apart. `apart` above asks whether the two pages keep the same company in
+    // the link graph — pure topology, recomputed here because it depends on which
+    // nodes are currently on screen. `l.weight` asks whether they are about the
+    // same thing — lexical similarity over their prose, precomputed at build over
+    // the whole graph (lib/graph.ts). Two pages can be linked, share no
+    // neighbours, and still read alike; that pair stretches for the seam but
+    // keeps some pull. The weight is a build-time constant on the data, never
+    // recomputed here and never in response to hover or selection — doing that
+    // would put the layout back to drifting on a plain click.
     //
     // The cap is for the one regime that can overshoot. A free spring here stays
     // stable up to a per-tick gain of 16/9, and every edge on this map sits far
-    // below that — but `collide()` runs twice at gain 0.5 and, unlike the forces,
-    // isn't scaled by alpha, so a linked pair that also overlaps is already near
-    // that bound before any weight applies. Note the spring pass below runs
-    // once: a second pass would compound to `1 - (1 - g)²` and this ceiling
+    // below that — but `collide()` runs at gain 0.5 and, unlike the forces, isn't
+    // scaled by alpha, so a linked pair that also overlaps is already near that
+    // bound before any weight applies. It also keeps `weight > 1` on a
+    // degree-1 pair from pushing stiffness past 1. Note the spring pass below
+    // runs once: a second pass would compound to `1 - (1 - g)²` and this ceiling
     // would have to come down with it.
-    const links: SimLink[] = active.links.map((l) => {
+    const kinship = active.links.map((l) => jaccard(adjacency, l.source, l.target))
+    const closest = kinship.length > 0 ? Math.max(...kinship) : 0
+    const links: SimLink[] = active.links.map((l, i) => {
       const source = byId.get(l.source)!
       const target = byId.get(l.target)!
       const busy = Math.min(source.degree, target.degree)
-      const base = 1 / Math.min(source.degree || 1, target.degree || 1)
+      const apart = closest > 0 ? 1 - kinship[i] / closest : 1
+      const gap = linkGapFor(l.kind, busy) * (1 + BRIDGE_STRETCH * apart)
+      const base = (1 - BRIDGE_SLACK * apart) / Math.min(source.degree || 1, target.degree || 1)
       return {
         source,
         target,
         kind: l.kind,
-        dist: source.r + target.r + linkGapFor(l.kind, busy),
+        gap,
+        dist: source.r + target.r + gap,
         strength: Math.min(1, base * (l.weight ?? 1)),
       }
     })
-
-    const adjacency = new Map<string, Set<string>>()
-    for (const l of links) {
-      if (!adjacency.has(l.source.id)) adjacency.set(l.source.id, new Set())
-      if (!adjacency.has(l.target.id)) adjacency.set(l.target.id, new Set())
-      adjacency.get(l.source.id)!.add(l.target.id)
-      adjacency.get(l.target.id)!.add(l.source.id)
-    }
-    const inHood = (center: SimNode, n: SimNode): boolean =>
-      n === center || (adjacency.get(center.id)?.has(n.id) ?? false)
 
     // Big nodes first so small ones (and their titles) draw on top.
     nodes.sort((a, b) => b.r - a.r)
 
     const focusNode = focus ? byId.get(focus) : undefined
-    const centerPull = nodes.length > 60 ? 0.02 : 0.032
 
-    let alpha = positions.size > 0 ? 0.65 : 1
+    /**
+     * Radius the layout is entitled to, from the area its discs could possibly
+     * need — the soft wall in `tick` sits here, so it grows with the notebook
+     * rather than against a constant.
+     */
+    let boundR = 0
+    const measureBounds = () => {
+      let area = 0
+      for (const n of nodes) area += (n.r + COLLIDE_GAP / 2) ** 2
+      boundR = Math.sqrt(area / PACK_FILL)
+    }
+    measureBounds()
+
+    let alpha = cold ? 1 : 0.5
     let alphaTarget = 0
 
     function tick() {
       alpha += (alphaTarget - alpha) * ALPHA_DECAY
-
-      // Lean the centering toward the panel's long axis so the map drifts a
-      // little wider on a wide screen. Only the centering is shaped: the wiki's
-      // link graph is close to complete, and springs that dense settle it into
-      // a ball whatever else is done. Shaping the springs, the repulsion or the
-      // collision clearance instead all measured worse — the outline barely
-      // moved and the layout inflated, which costs the zoom titles are read at.
-      const shape = Math.min(Math.max((ch || 1) / (cw || 1), 0.45), 1.6)
 
       for (let i = 0; i < links.length; i++) {
         const { source: s, target: t, dist, strength } = links[i]
@@ -510,13 +749,23 @@ export function GraphView({
         }
       }
 
+      // Containment, not compression. The centering this replaces pulled every
+      // node toward the middle in proportion to its distance from it, which is a
+      // spring to a point: whatever the links were trying to say about
+      // structure, the middle squeezed back into a ball. All that holds the map
+      // together now is a soft wall out at the radius the discs could possibly
+      // need, which says nothing whatsoever about the interior and on a healthy
+      // graph is never even touched.
       for (const n of nodes) {
-        n.vx -= n.x * centerPull * shape * alpha
-        n.vy -= (n.y * centerPull * alpha) / shape
+        const past = (n.x * n.x + n.y * n.y) / (boundR * boundR) - 1
+        if (past <= 0) continue
+        const pull = BOUND_PULL * Math.min(past, 3) * alpha
+        n.vx -= n.x * pull
+        n.vy -= n.y * pull
       }
       if (focusNode) {
-        focusNode.vx -= focusNode.x * 0.2 * alpha
-        focusNode.vy -= focusNode.y * 0.2 * alpha
+        focusNode.vx -= focusNode.x * 0.16 * alpha
+        focusNode.vy -= focusNode.y * 0.16 * alpha
       }
 
       // Collision. Two relaxation passes: the discs are label-sized now, so one
@@ -524,7 +773,17 @@ export function GraphView({
       collide()
       collide()
 
+      let cx = 0
+      let cy = 0
       for (const n of nodes) {
+        // Ceiling on the step, so no single spike can fling a node across the
+        // map — the difference between a layout settling and a layout thrashing.
+        const speed2 = n.vx * n.vx + n.vy * n.vy
+        if (speed2 > MAX_SPEED * MAX_SPEED) {
+          const brake = MAX_SPEED / Math.sqrt(speed2)
+          n.vx *= brake
+          n.vy *= brake
+        }
         if (n.fx != null) {
           n.x = n.fx
           n.vx = 0
@@ -538,6 +797,44 @@ export function GraphView({
         } else {
           n.vy *= VELOCITY_KEEP
           n.y += n.vy
+        }
+        cx += n.x
+        cy += n.y
+      }
+
+      // Keep the map on its origin with a rigid translation rather than a force,
+      // so drift is corrected without anything being said about the shape.
+      // Skipped while a node is held: a pinned node and a moving frame of
+      // reference only fight each other.
+      if (!dragNode && nodes.length > 0) {
+        cx /= nodes.length
+        cy /= nodes.length
+        for (const n of nodes) {
+          n.x -= cx
+          n.y -= cy
+        }
+      }
+
+      // Lean the outline toward the panel's proportions. Area-preserving, so
+      // nothing is squeezed — reach along the short axis is traded for reach
+      // along the long one — and scaled by alpha, so it has finished arguing by
+      // the time the map comes to rest.
+      if (!dragNode && nodes.length > 1 && alpha > ALPHA_MIN) {
+        let mx = 1
+        let my = 1
+        for (const n of nodes) {
+          mx += n.x * n.x
+          my += n.y * n.y
+        }
+        const have = Math.sqrt(mx / my)
+        const want = Math.min(Math.max((cw || 1) / (ch || 1), 0.62), 2.05)
+        const lean = Math.min(
+          Math.max((want / have) ** (SHAPE_EASE * alpha), 1 / SHAPE_MAX),
+          SHAPE_MAX,
+        )
+        for (const n of nodes) {
+          n.x *= lean
+          n.y /= lean
         }
       }
     }
@@ -560,7 +857,7 @@ export function GraphView({
             d2 = dx * dx + dy * dy
           }
           const d = Math.sqrt(d2)
-          const push = ((min - d) / d) * 0.5
+          const push = ((min - d) / d) * COLLIDE_PUSH
           const wa = (b.r * b.r) / (a.r * a.r + b.r * b.r)
           a.vx -= dx * push * wa
           a.vy -= dy * push * wa
@@ -571,7 +868,16 @@ export function GraphView({
     }
 
     const settleNow = () => {
-      for (let i = 0; i < 320 && alpha > ALPHA_MIN; i++) tick()
+      for (let i = 0; i < 420 && alpha > ALPHA_MIN; i++) tick()
+    }
+
+    /**
+     * Step the layout off-screen until the motion left in it is worth watching.
+     * Fifty discs finding their clearance at full alpha is a scramble no reader
+     * needs to sit through, and it is over in a few milliseconds of arithmetic.
+     */
+    const presettle = () => {
+      for (let i = 0; i < PRESETTLE_MAX_TICKS && alpha > PRESETTLE_ALPHA; i++) tick()
     }
 
     // ---- camera ------------------------------------------------------------
@@ -671,9 +977,6 @@ export function GraphView({
 
       if (!reducedMotion && (alpha > ALPHA_MIN || alphaTarget > 0)) {
         tick()
-        // Keep everything in frame while the layout unfolds; stop the moment
-        // the user takes the camera.
-        if (!interactedRef.current) view = computeFit()
         // Nodes move under a stationary cursor while the sim runs — retest.
         if (cursorAt && pointers.size === 0) {
           const { gx, gy } = toGraph(cursorAt.x, cursorAt.y)
@@ -685,6 +988,28 @@ export function GraphView({
         }
         needsDraw = true
         live = true
+      }
+      // Keep everything in frame while the layout unfolds — easing toward the
+      // fit, never snapping to it. Solving it fresh every frame is what made the
+      // opening lurch: the map rescales under the reader every time a node on
+      // the rim moves. Stops the moment the user takes the camera.
+      if (!interactedRef.current && !fitAnim) {
+        const to = computeFit()
+        if (
+          Math.abs(to.k - view.k) < 1e-4 &&
+          Math.abs(to.tx - view.tx) < 0.05 &&
+          Math.abs(to.ty - view.ty) < 0.05
+        ) {
+          view = to
+        } else {
+          view = {
+            k: view.k + (to.k - view.k) * CAM_EASE,
+            tx: view.tx + (to.tx - view.tx) * CAM_EASE,
+            ty: view.ty + (to.ty - view.ty) * CAM_EASE,
+          }
+          needsDraw = true
+          live = true
+        }
       }
       if (fitAnim) {
         const t = Math.min((now - fitAnim.start) / FIT_MS, 1)
@@ -1031,6 +1356,18 @@ export function GraphView({
       const prevW = cw
       const prevH = ch
       measure()
+      // The wall is shaped by the panel, so a change of shape is a change of
+      // layout: let the map reflow into the new proportions instead of sitting
+      // in the outline of the old ones.
+      if (
+        !reducedMotion &&
+        prevW > 0 &&
+        prevH > 0 &&
+        Math.abs(cw / (ch || 1) - prevW / prevH) > 0.12 &&
+        alpha < 0.22
+      ) {
+        alpha = 0.22
+      }
       if (!interactedRef.current) view = computeFit()
       else view = { ...view, tx: view.tx + (cw - prevW) / 2, ty: view.ty + (ch - prevH) / 2 }
       needsDraw = true
@@ -1038,12 +1375,8 @@ export function GraphView({
     })
     ro.observe(wrap)
 
-    // Titles were measured against the fallback face until the webfonts land;
-    // re-lay them out once Cormorant and JetBrains Mono are actually here,
-    // since the wrap — and with it every disc radius — depends on the metrics.
-    let disposed = false
-    document.fonts?.ready.then(() => {
-      if (disposed) return
+    /** Re-measure every disc against the face that is actually loaded now. */
+    const relayout = () => {
       labelCache.clear()
       for (const n of nodes) {
         const { font, size, block, r } = layOut(n.data, n.degree)
@@ -1053,29 +1386,56 @@ export function GraphView({
         n.r = r
         n.charge = chargeFor(n.data.kind, r)
       }
-      for (const l of links) {
-        const busy = Math.min(l.source.degree, l.target.degree)
-        l.dist = l.source.r + l.target.r + linkGapFor(l.kind, busy)
-      }
+      for (const l of links) l.dist = l.source.r + l.target.r + l.gap
       nodes.sort((a, b) => b.r - a.r)
-      // Let the layout breathe out to the new radii rather than snap.
-      if (alpha < 0.35) alpha = 0.35
+      measureBounds()
+    }
+
+    /** Raise the curtain: settle off-screen, frame the result, then hand it over. */
+    let opened = false
+    const open = () => {
+      opened = true
       if (reducedMotion) settleNow()
+      else if (cold) presettle()
+      if (!interactedRef.current) view = computeFit()
       needsDraw = true
       schedule()
-    })
-
-    if (reducedMotion) {
-      settleNow()
-      if (!interactedRef.current) view = computeFit()
     }
-    needsDraw = true
-    schedule()
+
+    // Every disc radius comes from measured text, so the map can only be laid
+    // out once the face it is set in is here. Wait for it — on a short leash —
+    // rather than build the layout on Georgia's metrics and then rebuild it
+    // under a reader who is already looking at it.
+    let disposed = false
+    let late = 0
+    if (!document.fonts || document.fonts.status === 'loaded') {
+      open()
+    } else {
+      late = window.setTimeout(() => {
+        if (!disposed && !opened) open()
+      }, FONT_WAIT_MS)
+      document.fonts.ready.then(() => {
+        window.clearTimeout(late)
+        if (disposed) return
+        relayout()
+        if (opened) {
+          // The leash ran out and the map is already up: let it breathe out to
+          // the new radii instead of snapping to them.
+          if (alpha < 0.3) alpha = 0.3
+          if (reducedMotion) settleNow()
+          needsDraw = true
+          schedule()
+        } else {
+          open()
+        }
+      })
+    }
 
     return () => {
       disposed = true
       cancelAnimationFrame(raf)
       raf = 0
+      window.clearTimeout(late)
       ro.disconnect()
       canvas.removeEventListener('pointerdown', onPointerDown)
       canvas.removeEventListener('pointermove', onPointerMove)
@@ -1083,7 +1443,10 @@ export function GraphView({
       canvas.removeEventListener('pointercancel', endPointer)
       canvas.removeEventListener('pointerleave', onPointerLeave)
       canvas.removeEventListener('wheel', onWheel)
-      for (const n of nodes) positions.set(n.id, { x: n.x, y: n.y })
+      // Only a layout that was actually raised is worth remembering — a mount
+      // torn down during the font wait would otherwise hand the next one a
+      // half-built map and rob it of its opening.
+      if (opened) for (const n of nodes) positions.set(n.id, { x: n.x, y: n.y })
       viewRef.current = view
       fitRef.current = () => {}
     }
