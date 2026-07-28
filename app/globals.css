@@ -874,7 +874,7 @@ body:has(.graph-page) main {
   min-height: 0;
   max-width: none;
   margin-inline: 0; /* auto margins would win over the flex stretch */
-  padding: 14px clamp(12px, 2vw, 24px) clamp(12px, 2vw, 24px);
+  padding: 0;
   display: flex;
   flex-direction: column;
 }
@@ -919,8 +919,8 @@ body:has(.graph-page) .graph-page {
   margin-right: auto;
   padding: 3px 7px;
   border-radius: var(--radius-xs);
-  background: var(--surface);
-  background: color-mix(in srgb, var(--surface) 88%, transparent);
+  background: var(--bg-app);
+  background: color-mix(in srgb, var(--bg-app) 86%, transparent);
 }
 
 .graph-chip {
@@ -930,8 +930,8 @@ body:has(.graph-page) .graph-page {
   letter-spacing: var(--tracking-label);
   text-transform: uppercase;
   color: var(--text-muted);
-  background: var(--surface);
-  background: color-mix(in srgb, var(--surface) 88%, transparent);
+  background: var(--bg-app);
+  background: color-mix(in srgb, var(--bg-app) 86%, transparent);
   border: var(--stroke-hairline) solid var(--border-subtle);
   border-radius: var(--radius-xs);
   padding: 3px 8px;
@@ -951,12 +951,20 @@ body:has(.graph-page) .graph-page {
   border-color: var(--border-strong);
 }
 
+/* The map sits on the same paper as the rest of the site — the discs are the
+   only white in it. Embedded (per-note) maps keep a hairline frame; the
+   full-page map has none, so it reads as a room rather than a panel. */
 .graph-canvas-frame {
   position: relative;
-  background: var(--surface);
-  border: var(--stroke-hairline) solid var(--border-subtle);
+  background: var(--bg-app);
+  border: var(--stroke-hairline) solid var(--border-faint);
   border-radius: var(--radius-xs);
   overflow: hidden;
+}
+
+.graph-page .graph-canvas-frame {
+  border: 0;
+  border-radius: 0;
 }
 
 .graph-canvas {
@@ -993,46 +1001,45 @@ body:has(.graph-page) .graph-page {
   gap: 6px;
   padding: 3px 7px;
   border-radius: var(--radius-xs);
-  background: var(--surface);
-  background: color-mix(in srgb, var(--surface) 88%, transparent);
+  background: var(--bg-app);
+  background: color-mix(in srgb, var(--bg-app) 86%, transparent);
 }
 
 .graph-legend-hint {
   margin-left: auto;
 }
 
+/* The swatches mirror the map: paper inside, status on the rim. */
 .graph-dot {
   display: inline-block;
   width: 9px;
   height: 9px;
   border-radius: var(--radius-circle);
+  background: var(--surface);
 }
 
 .graph-dot-note {
-  background: var(--text-primary);
+  border: 1px solid var(--text-primary);
 }
 
 .graph-dot-hub {
-  width: 5px;
-  height: 5px;
-  margin: 2px;
-  background: var(--text-primary);
-  box-shadow: 0 0 0 1.5px var(--surface), 0 0 0 2.5px var(--text-primary);
+  width: 7px;
+  height: 7px;
+  border: 1px solid var(--text-primary);
+  box-shadow: 0 0 0 1.5px var(--bg-app), 0 0 0 2.5px var(--text-primary);
 }
 
 .graph-dot-tag {
-  background: var(--surface);
-  border: 1px solid var(--text-secondary);
+  border: 1px solid var(--border-subtle);
 }
 
 .graph-dot-missing {
-  background: var(--surface);
   border: 1px dashed var(--text-muted);
 }
 
 .graph-dot-draft {
-  background: var(--attention-bg);
   border: 1px solid var(--attention-text);
+  box-shadow: 0 0 0 2px var(--attention-bg);
 }
 
 .graph-more {

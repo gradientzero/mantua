@@ -355,3 +355,21 @@ dependency-free in `lib/search.ts` — same spirit as the graph's built-in force
 simulation. The index is inlined by the layout from `searchDocs()` in `lib/content.ts`,
 so the draft policy applies unchanged: drafts searchable in dev, absent in production.
 README section added; roadmap item closed. No schema change, no content touched.
+
+## [2026-07-28] setup | Graph view: paper ground, titles inside the discs
+
+Restyled `/graph` to match the rest of the site. The canvas sits on `--bg-app` instead of
+white — the discs are now the only white on the map — and the full-page view dropped its
+frame and padding so it reads as a room, not a panel. Every page's title is set *inside*
+its node in Cormorant italic, which means the title decides the radius: each is wrapped at
+whichever measure gives the tightest enclosing circle (with a six-em floor, or long titles
+break into one-word lines), and springs and collision both rest at `r + r + gap`, so the
+well-connected middle of the map opens up instead of knotting. Draft status moved from a
+yellow fill to an amber halo on the rim, published pages to an ink hairline, hubs keep a
+second ring; the legend swatches follow. Titles ease out below reading size and back in on
+the way home. Zoom-to-fit now reserves its margins in screen pixels rather than graph
+units, so the outer discs no longer hide under the floating toolbar and legend. README
+section rewritten, including the one limit worth knowing: this link graph is near-complete,
+so on a very wide screen the map stays a centered ball — shaping the springs, repulsion or
+collision clearance to the viewport was measured and made it worse. No schema change, no
+content touched.
