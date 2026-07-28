@@ -250,6 +250,210 @@ main {
   border-bottom-color: var(--text-primary);
 }
 
+/* ------------------------------------------------------------ header search */
+
+.site-search {
+  position: relative;
+  flex: 0 1 300px;
+  margin-top: 2px;
+}
+
+.site-search-input {
+  width: 100%;
+  font-family: var(--font-mono);
+  font-weight: var(--weight-mono);
+  font-size: 12px;
+  line-height: 1;
+  color: var(--text-primary);
+  background: var(--surface);
+  border: var(--stroke-hairline) solid var(--border-subtle);
+  border-radius: var(--radius-xs);
+  padding: 8px 28px 8px 30px;
+  transition: border-color var(--duration-fast) var(--ease-standard);
+}
+
+.site-search-input::placeholder {
+  color: var(--text-muted);
+  font-size: 10px;
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+}
+
+.site-search-input:hover {
+  border-color: var(--border-strong);
+}
+
+.site-search-input:focus,
+.site-search-input:focus-visible {
+  outline: none;
+  border-color: var(--border-strong);
+  box-shadow: 0 0 0 1px var(--border-strong);
+}
+
+.site-search-icon {
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 13px;
+  height: 13px;
+  color: var(--text-muted);
+  pointer-events: none;
+}
+
+.site-search:focus-within .site-search-icon {
+  color: var(--text-primary);
+}
+
+.site-search-kbd {
+  position: absolute;
+  right: 9px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-family: var(--font-mono);
+  font-weight: var(--weight-mono);
+  font-size: 10px;
+  line-height: 16px;
+  color: var(--text-muted);
+  border: var(--stroke-hairline) solid var(--border-faint);
+  border-radius: var(--radius-xs);
+  padding: 0 5px;
+  pointer-events: none;
+}
+
+.site-search:focus-within .site-search-kbd {
+  display: none;
+}
+
+/* Results drop below the input, right-aligned, wider than the box. */
+.site-search-panel {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  width: min(480px, calc(100vw - 2 * var(--gutter-page)));
+  background: var(--surface);
+  border: var(--stroke-hairline) solid var(--border-strong);
+  border-radius: var(--radius-xs);
+  box-shadow: 0 14px 40px rgba(0, 0, 0, 0.1);
+  z-index: 60;
+  overflow: hidden;
+}
+
+.site-search-results {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-height: min(420px, 60vh);
+  overflow-y: auto;
+}
+
+.site-search-option + .site-search-option {
+  border-top: var(--stroke-hairline) solid var(--border-faint);
+}
+
+.site-search-option-active {
+  background: var(--surface-sunken);
+  box-shadow: inset 2px 0 0 var(--text-primary);
+}
+
+.site-search-option-link {
+  display: block;
+  padding: 10px 14px;
+  color: inherit;
+  text-decoration: none;
+}
+
+.site-search-option-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.site-search-option-title {
+  font-family: var(--font-editorial);
+  font-weight: var(--weight-editorial);
+  font-style: italic;
+  font-size: 17px;
+  line-height: 1.2;
+  color: var(--text-primary);
+}
+
+.site-search-flag {
+  font-family: var(--font-mono);
+  font-weight: var(--weight-mono);
+  font-size: 9px;
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+  color: var(--text-muted);
+  border: var(--stroke-hairline) solid var(--border-subtle);
+  border-radius: var(--radius-xs);
+  padding: 1px 5px;
+}
+
+.site-search-option-summary {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  margin-top: 3px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--text-secondary);
+}
+
+/* Matched text — a quiet half-height field in the accent family, no yellow. */
+.site-search mark {
+  background: transparent;
+  color: inherit;
+  box-shadow: inset 0 -0.45em 0 var(--ok-soft-bg);
+}
+
+.site-search-foot {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 6px 14px;
+  border-top: var(--stroke-hairline) solid var(--border-faint);
+  font-family: var(--font-mono);
+  font-weight: var(--weight-mono);
+  font-size: 9px;
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.site-search-empty {
+  margin: 0;
+  padding: 14px;
+  font-size: 14px;
+  color: var(--text-muted);
+}
+
+/* Narrow screens: search drops to its own full-width row above the tabs. */
+@media (max-width: 719px) {
+  .site-header-inner {
+    flex-wrap: wrap;
+  }
+
+  .site-search {
+    flex: 1 1 100%;
+    margin-top: 4px;
+  }
+
+  /* ≥16px stops iOS Safari from zooming the page on focus. */
+  .site-search-input {
+    font-size: 16px;
+    padding-top: 7px;
+    padding-bottom: 7px;
+  }
+
+  .site-search-panel {
+    left: 0;
+    width: auto;
+  }
+}
+
 /* ------------------------------------------------------------ footer */
 
 .site-footer {

@@ -344,3 +344,14 @@ one-hop neighborhood. No schema change and no new dependencies: the data was alr
 there (`links` on every doc), assembled in `lib/graph.ts` and drawn by a small built-in
 force simulation on canvas (`components/graph/graph-view.tsx`). New nav tab and sitemap
 entry; README section added; roadmap item closed.
+
+## [2026-07-28] setup | Search: as-you-type BM25 in the header
+
+Added the roadmap's search feature: an always-available box in the header (`/` or `⌘K`
+to focus) that ranks every visible page as you type — no debounce, no fetch, results
+with the first character. Matching is field-weighted BM25 (title ≫ tags > summary, so
+title hits surface first) with prefix matching on the token being typed, implemented
+dependency-free in `lib/search.ts` — same spirit as the graph's built-in force
+simulation. The index is inlined by the layout from `searchDocs()` in `lib/content.ts`,
+so the draft policy applies unchanged: drafts searchable in dev, absent in production.
+README section added; roadmap item closed. No schema change, no content touched.
