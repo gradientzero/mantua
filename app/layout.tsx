@@ -1,6 +1,8 @@
 import Link from 'next/link'
 import type { Metadata } from 'next'
+import { SiteSearch } from '@/components/search'
 import { SiteNav } from '@/components/site-nav'
+import { searchDocs } from '@/lib/content'
 import { site } from '@/lib/site'
 import './globals.css'
 
@@ -25,6 +27,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               </Link>
               <div className="wordmark-tagline">{site.tagline}</div>
             </div>
+            <SiteSearch docs={searchDocs()} />
           </div>
           <SiteNav />
         </header>

@@ -76,10 +76,12 @@ lib/
   wikilinks.ts        # [[wikilink]] remark plugin + outgoing-link extraction
   content.ts          # THE content access layer: draft filtering, backlinks, tags
   graph.ts            # nodes+links for the graph view, derived from the wikilink structure
+  search.ts           # dependency-free BM25F ranking behind the header search
   site.ts             # site constants + provenance→byline mapping
 components/
   mdx.tsx             # MDX renderer; resolves wikilinks; REGISTER CUSTOM MDX COMPONENTS HERE
   note-list.tsx       # shared list/badge/tag UI
+  search.tsx          # header search bar (as-you-type, client-side)
   graph/              # canvas force-directed graph (/graph + per-note neighborhood)
 app/                  # Next.js routes (article template, tags, hubs, graph, OG images, sitemap)
 next.config.mjs       # runs Velite as part of next dev/build — no separate content build step
@@ -162,6 +164,26 @@ with a small built-in force simulation — no new schema fields, no dependencies
 client-side content fetching. Draft pages appear on the map exactly where drafts appear
 at all: in `npm run dev`, marked amber. `/graph` is a reserved route like `/notes` and
 `/tags` — a hub with the slug `graph` would be shadowed by it.
+
+## Search
+
+The header carries an always-available search box — `/` or `⌘K` focuses it from any
+page. Search is entirely client-side and as-you-type: no debounce, no fetch, no external
+service. The layout inlines a small index of every visible page (title, tags, summary),
+produced by `searchDocs()` in `lib/content.ts` — so the draft policy applies unchanged:
+drafts are searchable in `npm run dev` (amber badge in the results) and absent from
+production.
+
+Ranking is a tiny dependency-free BM25F in `lib/search.ts` (same spirit as the graph's
+built-in force simulation): title matches weigh ~5× summary matches with tags in
+between — that's what puts title hits first — and the token still being typed matches as
+a prefix, so results appear from the first character. There is no stemming; a completed
+word that matches nothing exactly falls back to prefix matching, which covers plurals
+and word endings at this scale. ↑↓ + ↵ navigate the results, esc dismisses.
+
+At the current size the inlined index costs a few KB of page payload. If the wiki grows
+to hundreds of notes, move the docs array to a fetched static JSON (a route handler over
+`searchDocs()`) — the index building and ranking code doesn't change.
 
 ## How to add a note by hand
 
@@ -246,9 +268,6 @@ manual asset work.
 
 - **Scheduling the ingest agent** — the one missing piece of the loop; owner action,
   see `tasks/2026-07-25-schedule-ingest-agent.md`.
-- **Search** — planned: client-side index over the Velite JSON output (flexsearch) or
-  [Pagefind](https://pagefind.app) post-build; no external service. Until then the wiki
-  is small enough for hubs + links to be the index.
 - **RSS/Atom feed** — trivial to add as `app/feed.xml/route.ts` over `allNotes()`.
 - **Self-hosted web fonts** — the three families (Cormorant Garamond, Inter, JetBrains
   Mono) currently load from the Google Fonts CDN via an `@import` at the top of

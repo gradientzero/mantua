@@ -10,6 +10,7 @@
  */
 
 import { hubs, notes, type Hub, type Note } from '#site/content'
+import type { SearchDoc } from './search'
 
 const showDrafts = process.env.NODE_ENV === 'development'
 
@@ -78,6 +79,40 @@ export function backlinksFor(slug: string): ResolvedLink[] {
     }
   }
   return sources.sort((a, b) => a.title.localeCompare(b.title))
+}
+
+// ---------------------------------------------------------------------------
+// Search
+// ---------------------------------------------------------------------------
+
+/**
+ * Everything the header search indexes — one entry per visible page. Going
+ * through `allNotes()`/`allHubs()` keeps the draft policy intact: drafts are
+ * searchable in dev and absent from production, like everywhere else.
+ */
+export function searchDocs(): SearchDoc[] {
+  return [
+    ...allNotes().map(
+      (n): SearchDoc => ({
+        title: n.title,
+        summary: n.summary,
+        tags: n.tags,
+        url: `/notes/${n.slug}`,
+        kind: 'note',
+        status: n.status,
+      }),
+    ),
+    ...allHubs().map(
+      (h): SearchDoc => ({
+        title: h.title,
+        summary: h.summary,
+        tags: [],
+        url: hubUrl(h.slug),
+        kind: 'hub',
+        status: h.status,
+      }),
+    ),
+  ]
 }
 
 // ---------------------------------------------------------------------------
