@@ -11,7 +11,10 @@
  * springs, pairwise repulsion, centering, collision — d3-force's recipe,
  * without the dependency). At notebook scale the O(n²) pair pass is nothing,
  * and with no randomness the layout is identical on every load: nodes start
- * on a phyllotaxis spiral and settle the same way each time.
+ * on a phyllotaxis spiral and settle the same way each time. Edge stiffness is
+ * scaled by a similarity weight so pages that read alike sit closer together;
+ * the weights are computed once at build over the whole graph (lib/graph.ts),
+ * which is what keeps "identical on every load" true.
  *
  * Because the label lives *inside* the disc, the label decides the radius:
  * each title is wrapped at whichever measure gives the tightest enclosing
@@ -408,16 +411,31 @@ export function GraphView({
 
     // Springs rest clear of both discs, and busy pages get a longer leash — the
     // extra length is what opens up the highly connected middle of the map.
+    //
+    // Stiffness is d3's `1 / min(degree)` scaled by the edge's similarity weight
+    // (lib/graph.ts), so pages that read alike pull together harder. The weight
+    // is a build-time constant on the data — never recomputed here, and never in
+    // response to hover or selection, which would put the layout back to
+    // drifting on a plain click.
+    //
+    // The cap is for the one regime that can overshoot. A free spring here stays
+    // stable up to a per-tick gain of 16/9, and every edge on this map sits far
+    // below that — but `collide()` runs twice at gain 0.5 and, unlike the forces,
+    // isn't scaled by alpha, so a linked pair that also overlaps is already near
+    // that bound before any weight applies. Note the spring pass below runs
+    // once: a second pass would compound to `1 - (1 - g)²` and this ceiling
+    // would have to come down with it.
     const links: SimLink[] = active.links.map((l) => {
       const source = byId.get(l.source)!
       const target = byId.get(l.target)!
       const busy = Math.min(source.degree, target.degree)
+      const base = 1 / Math.min(source.degree || 1, target.degree || 1)
       return {
         source,
         target,
         kind: l.kind,
         dist: source.r + target.r + linkGapFor(l.kind, busy),
-        strength: 1 / Math.min(source.degree || 1, target.degree || 1),
+        strength: Math.min(1, base * (l.weight ?? 1)),
       }
     })
 

@@ -77,8 +77,9 @@ interface Token {
 
 const WORD_RE = /[\p{L}\p{N}]+/gu
 
-/** Case/diacritic folding — comparisons happen in this space. */
-const fold = (s: string): string => s.normalize('NFKD').replace(/\p{M}+/gu, '').toLowerCase()
+/** Case/diacritic folding — comparisons happen in this space (also lib/similarity.ts). */
+export const fold = (s: string): string =>
+  s.normalize('NFKD').replace(/\p{M}+/gu, '').toLowerCase()
 
 /** Words with their offsets in the original string (offsets drive highlighting). */
 function tokenize(text: string): Token[] {

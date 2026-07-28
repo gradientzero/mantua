@@ -445,3 +445,40 @@ Owner call: all 23 remaining drafts in `/content/notes` flipped to `status: publ
 The wiki now has no draft pages — 25 notes, all live. No prose touched, no frontmatter
 beyond the one field, no schema change. `npm run build` clean; every note is now a
 prerendered page and appears in the graph, tag pages and sitemap without the draft halo.
+
+## [2026-07-28] setup | Graph edges now carry a similarity weight
+
+Every edge on the map used to pull equally hard: stiffness came from node degree alone, so
+a link between two pages about the same thing was indistinguishable from a link between two
+unrelated ones. Each page-to-page edge now carries a weight from how similar the two pages
+read, and stiffness is scaled by it, so the map clusters by subject as well as by who links
+whom.
+
+The measure is plain tf-idf cosine over the prose — no embeddings, no API key, no model
+download, no cached artifact to invalidate. Because it is a pure function of the content,
+the layout is still identical on every load and every build. It reads body text, not titles
+and summaries: at ~1,300 words a note that is where the signal is, and the thin version
+would mostly have restated tag overlap. Bare `[[wikilink]]` targets are excluded on purpose
+— counting them would let an edge's weight partly restate that same edge.
+
+Edges are ranked against each other rather than scored absolutely (every note here is about
+roughly one subject, so raw cosines bunch into a band whose midpoint means nothing), then
+mapped to ±30% around neutral. Ranking makes the mean weight exactly 1, so nothing tightens
+or loosens on average; the ±30% ceiling is the layout-inflation budget from the graph's
+existing tuning notes, since a weakened spring rests further out and inflation is paid for
+in the zoom the titles are read at. Measured after: mean weight 1.0000, mean of 1/weight
+1.033 (~3% inflation, as designed), and the vertical extent — the axis the fit is bound by —
+came out unchanged, so no zoom was lost. Horizontal extent came in ~5%: the clustering
+compacted the map rather than inflating it.
+
+110 of 196 edges are weighted. Tag edges, edges to unwritten pages, and any pair with no
+prose to compare stay at exactly 1. Top-ranked pairs check out by eye ("Building a
+generator–evaluator harness" with "Generator–evaluator loops"; "The LLM-wiki pattern" with
+"How this notebook works"), as do the bottom ones.
+
+New `lib/similarity.ts`; one derived schema field (`terms`) in `velite.config.ts`; the
+weighting pass and a `weight` field in `lib/graph.ts`; one line of `graph-view.tsx`. This
+adds the first derived field the graph depends on beyond `links`/`tags`/`related`, so the
+README's graph section was corrected — it previously promised "no new schema fields".
+`fold` is now exported from `lib/search.ts` and shared. No content touched, no dependency
+added. `npm run build` clean.
