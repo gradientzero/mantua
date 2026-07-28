@@ -438,3 +438,10 @@ you had just clicked to read. The reheat now waits for the pointer to actually t
 the click threshold, so a click only changes what's lit and the map holds perfectly still;
 drag behaves as before. One file, `components/graph/graph-view.tsx`. No schema change, no
 content touched.
+
+## [2026-07-28] setup | Published every draft note
+
+Owner call: all 23 remaining drafts in `/content/notes` flipped to `status: published`.
+The wiki now has no draft pages — 25 notes, all live. No prose touched, no frontmatter
+beyond the one field, no schema change. `npm run build` clean; every note is now a
+prerendered page and appears in the graph, tag pages and sitemap without the draft halo.
