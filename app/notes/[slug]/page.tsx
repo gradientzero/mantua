@@ -109,7 +109,7 @@ export default async function NotePage({ params }: { params: Promise<{ slug: str
       {neighborhood.nodes.length > 1 && (
         <section className="link-section">
           <h2>Graph</h2>
-          <GraphView data={neighborhood} focus={note.slug} height="320px" showControls={false} />
+          <GraphView data={neighborhood} focus={note.slug} height="420px" showControls={false} />
           <p className="graph-more">
             <Link href="/graph">The whole notebook as a map →</Link>
           </p>

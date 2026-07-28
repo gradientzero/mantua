@@ -2,8 +2,9 @@
 
 /**
  * Force-directed graph of the wiki's link structure, rendered to <canvas> —
- * the Obsidian-style map view. Notes and hubs are ink dots (hubs ringed,
- * radius tracks connection count), tags are hollow circles, "missing" nodes
+ * the notebook as a map. Every page is a paper disc with its title set inside
+ * in the editorial face: a hairline ink ring when published, a soft amber halo
+ * when still a draft. Tags are hollow rings in mono, "missing" nodes
  * (wikilink targets nobody has written yet) are dashed.
  *
  * Self-contained on purpose: a small deterministic force simulation (link
@@ -12,22 +13,34 @@
  * and with no randomness the layout is identical on every load: nodes start
  * on a phyllotaxis spiral and settle the same way each time.
  *
+ * Because the label lives *inside* the disc, the label decides the radius:
+ * each title is wrapped at whichever measure gives the tightest enclosing
+ * circle, and springs and collision both rest at `r + r + gap`, so
+ * well-connected pages earn their room instead of piling into a knot. The
+ * centering force is shaped to the viewport's aspect, so a wide screen gets a
+ * wide map rather than a ball with empty margins.
+ *
  * Interactions: drag nodes; drag the background to pan; wheel/pinch to zoom;
  * hover to spotlight a neighborhood. Click pins a node — the spotlight stays
  * on its neighborhood while the cursor roams — click the background to
- * unpin, double-click (or cmd/ctrl-click) to open the page. Colors are read
- * from the design tokens at runtime so the map stays on the e-ink palette.
- *
- * Labels earn their place instead of all drawing at once: titles wrap to
- * short lines, well-connected pages reveal first as the zoom deepens, and a
- * greedy screen-space pass drops any label that would overlap one already
- * placed (hovered/focused pages always win). Each label eases its alpha so
- * the visible set changes without popping.
+ * unpin, double-click (or cmd/ctrl-click) to open the page. Titles ease out
+ * as you zoom past the point where they'd be legible and back in as you
+ * return. Colors are read from the design tokens at runtime so the map stays
+ * on the e-ink palette.
  */
 
 import { useRouter } from 'next/navigation'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import type { GraphData, GraphLinkKind, GraphNode } from '@/lib/graph'
+
+interface LabelBlock {
+  lines: string[]
+  w: number
+  h: number
+  lineH: number
+  /** True when the title outran `maxLines` and ends in an ellipsis. */
+  clipped: boolean
+}
 
 interface SimNode {
   id: string
@@ -41,9 +54,10 @@ interface SimNode {
   vy: number
   fx: number | null
   fy: number | null
-  /** Zoom level at which this node's label starts to appear. */
-  revealK: number
-  /** Label alpha, eased: current value and this frame's target. */
+  /** The title set inside the disc: graph-space font, wrapped block, eased alpha. */
+  font: string
+  fontSize: number
+  block: LabelBlock
   la: number
   lt: number
 }
@@ -68,38 +82,79 @@ const GOLDEN_ANGLE = Math.PI * (3 - Math.sqrt(5))
 const ALPHA_MIN = 0.002
 const ALPHA_DECAY = 0.023
 const VELOCITY_KEEP = 0.6
-const MAX_REPEL_DIST2 = 380 * 380
-const ZOOM_MIN = 0.2
-const ZOOM_MAX = 5
+const MAX_REPEL_DIST2 = 700 * 700
+const ZOOM_MIN = 0.15
+const ZOOM_MAX = 4
+/** Zoom-to-fit stops here: the label sizes are tuned to read at k ≈ 1. */
+const FIT_MAX_K = 1.15
 const FIT_MS = 180 // --duration-base
 
-const radiusFor = (kind: GraphNode['kind'], degree: number): number => {
-  const grown = Math.sqrt(degree)
-  if (kind === 'tag') return Math.min(3.2 + 1.5 * grown, 12)
-  if (kind === 'missing') return Math.min(3 + grown, 8)
-  return Math.min(4.2 + 2 * grown, 17)
-}
+/**
+ * Breathing room collision keeps between two discs. Wide enough that the
+ * links stay visible between them — packed edge to edge, the discs hide the
+ * very structure the map is drawing.
+ */
+const COLLIDE_GAP = 20
+/**
+ * Candidate measures for wrapping a title, as multiples of its own type size.
+ * The floor matters as much as the tightest fit: narrower than about six ems
+ * and titles break into one-word lines, which is compact and unreadable.
+ */
+const WRAP_EMS = [6, 7.2, 8.6, 10.2, 12, 14]
+/**
+ * How much wider a disc may get to show a title whole rather than cut it. A
+ * circle is a wasteful frame for a wide block, and every extra graph unit here
+ * is paid for by the whole map zooming out — so the slack is bounded.
+ */
+const UNCUT_SLACK = 1.22
 
-const chargeFor = (kind: GraphNode['kind']): number =>
-  kind === 'note' || kind === 'hub' ? -190 : kind === 'tag' ? -120 : -70
+const labelSizeFor = (kind: GraphNode['kind'], degree: number): number =>
+  kind === 'tag' ? 10.5 : kind === 'missing' ? 11.5 : 12.5 + Math.min(3.5, 0.6 * Math.sqrt(degree))
 
-const linkDistFor = (kind: GraphLinkKind): number => (kind === 'tag' ? 72 : 100)
+/** Page titles here run to seventy-odd characters; a circle needs the depth. */
+const maxLinesFor = (kind: GraphNode['kind']): number =>
+  kind === 'tag' ? 3 : kind === 'missing' ? 4 : 7
+
+/** Clearance between the text block and the rim, in graph units. */
+const labelPadFor = (kind: GraphNode['kind']): number =>
+  kind === 'tag' ? 4.5 : kind === 'missing' ? 5 : 7
+
+/** Floor on the disc, so a one-word page still reads as a node and not a dot. */
+const minRadiusFor = (kind: GraphNode['kind'], degree: number): number =>
+  kind === 'tag'
+    ? 9 + 0.9 * Math.sqrt(degree)
+    : kind === 'missing'
+      ? 10
+      : 15 + 1.8 * Math.sqrt(degree)
+
+/** Springs rest clear of both discs; busy pages get a longer leash. */
+const linkGapFor = (kind: GraphLinkKind, busy: number): number =>
+  (kind === 'tag' ? 22 : 34) + Math.min(26, 2.6 * Math.sqrt(busy))
+
+/**
+ * Repulsion grows with the disc, but gently: collision and the spring rest
+ * lengths already guarantee clearance, so charge only has to keep unrelated
+ * pages from crowding. Anything stronger inflates the whole map, and every
+ * unit of inflation is a unit of zoom the titles lose.
+ */
+const chargeFor = (kind: GraphNode['kind'], r: number): number =>
+  -(2.2 * r + 60) * (kind === 'note' || kind === 'hub' ? 1 : 0.8)
 
 /** Deterministic stand-in for the tiny random nudges d3 uses to split overlaps. */
 const jiggle = (i: number): number => ((((i + 1) * 2654435761) % 100000) / 100000 - 0.5) * 1e-3
 
-interface LabelBlock {
-  lines: string[]
-  w: number
-  h: number
-  lineH: number
-}
+/** Radius of the smallest circle that holds a text block plus its padding. */
+const blockRadius = (b: LabelBlock, pad: number): number => Math.hypot(b.w / 2, b.h / 2) + pad
+
+/** Wrap points: whitespace, the dashes, colons and slashes titles are built from. */
+const BREAK_AFTER = new Set([' ', '-', '–', '—', ':', '/'])
 
 /**
- * Greedy word wrap for canvas text, breaking after spaces and hyphens
- * (missing-page labels are hyphenated slugs), with an ellipsis when the
- * title outruns `maxLines`. Cached per (font, width, text) — measureText
- * is not free and the same blocks are needed every frame.
+ * Greedy word wrap for canvas text, breaking after spaces and punctuation
+ * (missing-page labels are hyphenated slugs, titles carry dashes and colons),
+ * with an ellipsis when the title outruns `maxLines`. Cached per
+ * (font, width, text) — measureText is not free and the same titles are
+ * re-measured across toggles.
  */
 function wrapLabel(
   ctx: CanvasRenderingContext2D,
@@ -118,7 +173,7 @@ function wrapLabel(
   const pieces: string[] = []
   let from = 0
   for (let i = 0; i < raw.length; i++) {
-    if (raw[i] === ' ' || raw[i] === '-') {
+    if (BREAK_AFTER.has(raw[i])) {
       pieces.push(raw.slice(from, i + 1))
       from = i + 1
     }
@@ -150,9 +205,49 @@ function wrapLabel(
 
   let w = 1
   for (const l of lines) w = Math.max(w, ctx.measureText(l).width)
-  const block = { lines, w, h: lines.length * lineH, lineH }
+  const block = { lines, w, h: lines.length * lineH, lineH, clipped: overflow }
   cache.set(key, block)
   return block
+}
+
+/**
+ * Wrap at whichever measure encloses most tightly. A long title set on one
+ * wide line needs a huge circle; broken too narrow it needs a tall one — the
+ * squarest block encloses smallest, and small discs are what keep the map
+ * zoomed in far enough to read. Showing a title whole is worth a wider disc,
+ * but only up to `UNCUT_SLACK`; past that the title takes an ellipsis and the
+ * page keeps its full name on hover and in the text listings.
+ */
+function fitLabel(
+  ctx: CanvasRenderingContext2D,
+  cache: Map<string, LabelBlock>,
+  raw: string,
+  font: string,
+  size: number,
+  maxLines: number,
+  lineH: number,
+  pad: number,
+): LabelBlock {
+  let tightest: LabelBlock | null = null
+  let tightestR = Infinity
+  let uncut: LabelBlock | null = null
+  let uncutR = Infinity
+  for (const em of WRAP_EMS) {
+    const maxW = em * size
+    const block = wrapLabel(ctx, cache, raw, font, maxW, maxLines, lineH)
+    const r = blockRadius(block, pad)
+    if (r < tightestR) {
+      tightest = block
+      tightestR = r
+    }
+    if (!block.clipped && r < uncutR) {
+      uncut = block
+      uncutR = r
+    }
+    // Once a title fits on a single line, wider measures only add slack.
+    if (block.lines.length === 1) break
+  }
+  return uncut && uncutR <= tightestR * UNCUT_SLACK ? uncut : tightest!
 }
 
 export interface GraphViewProps {
@@ -216,18 +311,21 @@ export function GraphView({
       surface: token('--surface', '#ffffff'),
       subtle: token('--border-subtle', '#b2b2b2'),
       accent: token('--link', '#1a56db'),
-      draftText: token('--attention-text', '#92400e'),
-      draftBg: token('--attention-bg', '#fef3c7'),
+      draftRing: token('--attention-text', '#92400e'),
+      draftHalo: token('--attention-bg', '#fef3c7'),
     }
-    const fontBody = "'Inter', system-ui, sans-serif"
+    const fontEditorial = "'Cormorant Garamond', Georgia, 'Times New Roman', serif"
     const fontMono = "'JetBrains Mono', ui-monospace, monospace"
     const labelCache = new Map<string, LabelBlock>()
-    const fontFor = (n: SimNode, prime: boolean): string =>
-      n.data.kind === 'tag'
-        ? `400 9px ${fontMono}`
-        : n.data.kind === 'missing'
-          ? `italic 400 10.5px ${fontBody}`
-          : `${prime ? 500 : 400} 10.5px ${fontBody}`
+    // Cormorant is a high-contrast face; at the ten-odd pixels a title is set
+    // at here, it needs the heavier italic to hold its own on paper-toned
+    // ground. Unwritten pages stay lighter — they are placeholders.
+    const fontFor = (kind: GraphNode['kind'], size: number): string =>
+      kind === 'tag'
+        ? `400 ${size}px ${fontMono}`
+        : kind === 'missing'
+          ? `italic 500 ${size}px ${fontEditorial}`
+          : `italic 700 ${size}px ${fontEditorial}`
 
     const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
     const positions = positionsRef.current
@@ -240,24 +338,38 @@ export function GraphView({
       degree.set(l.target, (degree.get(l.target) ?? 0) + 1)
     }
 
+    /** Measure the title, then let it set the disc it has to fit inside. */
+    const layOut = (d: GraphNode, deg: number) => {
+      const size = labelSizeFor(d.kind, deg)
+      const font = fontFor(d.kind, size)
+      const raw = d.kind === 'tag' ? `#${d.label}` : d.label
+      const lineH = size * (d.kind === 'tag' ? 1.3 : 1.18)
+      const pad = labelPadFor(d.kind)
+      const block = fitLabel(ctx, labelCache, raw, font, size, maxLinesFor(d.kind), lineH, pad)
+      return { font, size, block, r: Math.max(blockRadius(block, pad), minRadiusFor(d.kind, deg)) }
+    }
+
     const nodes: SimNode[] = active.nodes.map((d, i) => {
       const seat = positions.get(d.id)
-      const spiralR = 16 * Math.sqrt(0.5 + i)
+      const spiralR = 52 * Math.sqrt(0.5 + i)
       const spiralA = i * GOLDEN_ANGLE
       const deg = degree.get(d.id) ?? 0
+      const { font, size, block, r } = layOut(d, deg)
       return {
         id: d.id,
         data: d,
         degree: deg,
-        r: radiusFor(d.kind, deg),
-        charge: chargeFor(d.kind),
+        r,
+        charge: chargeFor(d.kind, r),
         x: seat?.x ?? Math.cos(spiralA) * spiralR,
         y: seat?.y ?? Math.sin(spiralA) * spiralR,
         vx: 0,
         vy: 0,
         fx: null,
         fy: null,
-        revealK: 0,
+        font,
+        fontSize: size,
+        block,
         la: 0,
         lt: 0,
       }
@@ -269,13 +381,6 @@ export function GraphView({
       selectedRef.current != null ? (byId.get(selectedRef.current) ?? null) : null
     if (!selected) selectedRef.current = null
 
-    // The best-connected pages label first; leaves and tags wait for zoom.
-    let maxDegree = 1
-    for (const n of nodes) maxDegree = Math.max(maxDegree, n.degree)
-    for (const n of nodes) {
-      n.revealK = 0.34 + (1 - n.degree / maxDegree) * 0.42 + (n.data.kind === 'tag' ? 0.12 : 0)
-    }
-
     // Nodes that just toggled into an existing layout start next to a placed
     // neighbor instead of on the spiral, so the map grows rather than convulses.
     const unplaced = new Set(active.nodes.filter((d) => !positions.has(d.id)).map((d) => d.id))
@@ -284,25 +389,28 @@ export function GraphView({
         const a = byId.get(l.source)!
         const b = byId.get(l.target)!
         if (unplaced.has(a.id) && !unplaced.has(b.id)) {
-          a.x = b.x + Math.cos(i * GOLDEN_ANGLE) * 30
-          a.y = b.y + Math.sin(i * GOLDEN_ANGLE) * 30
+          a.x = b.x + Math.cos(i * GOLDEN_ANGLE) * (a.r + b.r + COLLIDE_GAP)
+          a.y = b.y + Math.sin(i * GOLDEN_ANGLE) * (a.r + b.r + COLLIDE_GAP)
           unplaced.delete(a.id)
         } else if (unplaced.has(b.id) && !unplaced.has(a.id)) {
-          b.x = a.x + Math.cos(i * GOLDEN_ANGLE) * 30
-          b.y = a.y + Math.sin(i * GOLDEN_ANGLE) * 30
+          b.x = a.x + Math.cos(i * GOLDEN_ANGLE) * (a.r + b.r + COLLIDE_GAP)
+          b.y = a.y + Math.sin(i * GOLDEN_ANGLE) * (a.r + b.r + COLLIDE_GAP)
           unplaced.delete(b.id)
         }
       })
     }
 
+    // Springs rest clear of both discs, and busy pages get a longer leash — the
+    // extra length is what opens up the highly connected middle of the map.
     const links: SimLink[] = active.links.map((l) => {
       const source = byId.get(l.source)!
       const target = byId.get(l.target)!
+      const busy = Math.min(source.degree, target.degree)
       return {
         source,
         target,
         kind: l.kind,
-        dist: linkDistFor(l.kind),
+        dist: source.r + target.r + linkGapFor(l.kind, busy),
         strength: 1 / Math.min(source.degree || 1, target.degree || 1),
       }
     })
@@ -317,17 +425,25 @@ export function GraphView({
     const inHood = (center: SimNode, n: SimNode): boolean =>
       n === center || (adjacency.get(center.id)?.has(n.id) ?? false)
 
-    // Big nodes first so small ones (and their labels) draw on top.
+    // Big nodes first so small ones (and their titles) draw on top.
     nodes.sort((a, b) => b.r - a.r)
 
     const focusNode = focus ? byId.get(focus) : undefined
-    const centerPull = nodes.length > 60 ? 0.03 : 0.05
+    const centerPull = nodes.length > 60 ? 0.02 : 0.032
 
     let alpha = positions.size > 0 ? 0.65 : 1
     let alphaTarget = 0
 
     function tick() {
       alpha += (alphaTarget - alpha) * ALPHA_DECAY
+
+      // Lean the centering toward the panel's long axis so the map drifts a
+      // little wider on a wide screen. Only the centering is shaped: the wiki's
+      // link graph is close to complete, and springs that dense settle it into
+      // a ball whatever else is done. Shaping the springs, the repulsion or the
+      // collision clearance instead all measured worse — the outline barely
+      // moved and the layout inflated, which costs the zoom titles are read at.
+      const shape = Math.min(Math.max((ch || 1) / (cw || 1), 0.45), 1.6)
 
       for (let i = 0; i < links.length; i++) {
         const { source: s, target: t, dist, strength } = links[i]
@@ -371,20 +487,44 @@ export function GraphView({
       }
 
       for (const n of nodes) {
-        n.vx -= n.x * centerPull * alpha
-        n.vy -= n.y * centerPull * alpha
+        n.vx -= n.x * centerPull * shape * alpha
+        n.vy -= (n.y * centerPull * alpha) / shape
       }
       if (focusNode) {
         focusNode.vx -= focusNode.x * 0.2 * alpha
         focusNode.vy -= focusNode.y * 0.2 * alpha
       }
 
-      // Collision: one relaxation pass is enough at this scale.
+      // Collision. Two relaxation passes: the discs are label-sized now, so one
+      // pass leaves visible overlaps once the springs stop helping.
+      collide()
+      collide()
+
+      for (const n of nodes) {
+        if (n.fx != null) {
+          n.x = n.fx
+          n.vx = 0
+        } else {
+          n.vx *= VELOCITY_KEEP
+          n.x += n.vx
+        }
+        if (n.fy != null) {
+          n.y = n.fy
+          n.vy = 0
+        } else {
+          n.vy *= VELOCITY_KEEP
+          n.y += n.vy
+        }
+      }
+    }
+
+    /** Keep discs from crowding: nudge any too-close pair apart, mass by area. */
+    function collide() {
       for (let i = 0; i < nodes.length; i++) {
         const a = nodes[i]
         for (let j = i + 1; j < nodes.length; j++) {
           const b = nodes[j]
-          const min = a.r + b.r + 4.5
+          const min = a.r + b.r + COLLIDE_GAP
           let dx = b.x - a.x
           let dy = b.y - a.y
           if (Math.abs(dx) >= min || Math.abs(dy) >= min) continue
@@ -402,23 +542,6 @@ export function GraphView({
           a.vy -= dy * push * wa
           b.vx += dx * push * (1 - wa)
           b.vy += dy * push * (1 - wa)
-        }
-      }
-
-      for (const n of nodes) {
-        if (n.fx != null) {
-          n.x = n.fx
-          n.vx = 0
-        } else {
-          n.vx *= VELOCITY_KEEP
-          n.x += n.vx
-        }
-        if (n.fy != null) {
-          n.y = n.fy
-          n.vy = 0
-        } else {
-          n.vy *= VELOCITY_KEEP
-          n.y += n.vy
         }
       }
     }
@@ -449,14 +572,23 @@ export function GraphView({
       let minY = Infinity
       let maxY = -Infinity
       for (const n of nodes) {
-        minX = Math.min(minX, n.x - n.r)
-        maxX = Math.max(maxX, n.x + n.r)
-        minY = Math.min(minY, n.y - n.r)
-        maxY = Math.max(maxY, n.y + n.r)
+        const reach = n.r + (n.data.draft ? 6 : 3)
+        minX = Math.min(minX, n.x - reach)
+        maxX = Math.max(maxX, n.x + reach)
+        minY = Math.min(minY, n.y - reach)
+        maxY = Math.max(maxY, n.y + reach)
       }
-      const pad = 36
+      // Margins are reserved in screen pixels, not graph units — the toolbar
+      // and legend float over the canvas at a fixed size, so the room they
+      // need must not shrink with the zoom it is being solved for.
+      const insetY = showControls ? 34 : 8
+      const insetX = 16
       const k = Math.max(
-        Math.min((cw / (maxX - minX + pad * 2)), ch / (maxY - minY + pad * 2), 1.3),
+        Math.min(
+          (cw - insetX * 2) / Math.max(maxX - minX, 1),
+          (ch - insetY * 2) / Math.max(maxY - minY, 1),
+          FIT_MAX_K,
+        ),
         ZOOM_MIN,
       )
       return { k, tx: cw / 2 - (k * (minX + maxX)) / 2, ty: ch / 2 - (k * (minY + maxY)) / 2 }
@@ -546,7 +678,7 @@ export function GraphView({
         const settling = draw()
         needsDraw = false
         if (settling) {
-          // Label alphas are still easing — keep the loop alive until they land.
+          // Title alphas are still easing — keep the loop alive until they land.
           needsDraw = true
           live = true
         }
@@ -560,8 +692,11 @@ export function GraphView({
       const { k, tx, ty } = view
       // Hover leads, the pinned node holds the spotlight once the cursor moves on.
       const spot = hover ?? dragNode ?? selected
+      const dimmed = (n: SimNode): boolean =>
+        spot != null && !inHood(spot, n) && n !== selected && n !== focusNode
 
-      // Edges, in graph space.
+      // Everything below is drawn in graph space: discs and titles zoom
+      // together, strokes are divided by k to stay hairlines on screen.
       ctx!.setTransform(dpr * k, 0, 0, dpr * k, dpr * tx, dpr * ty)
       ctx!.lineCap = 'round'
       for (const l of links) {
@@ -569,13 +704,13 @@ export function GraphView({
         const dim = spot != null && !lit
         if (l.kind === 'tag') {
           ctx!.setLineDash([2.5 / k, 3.5 / k])
-          ctx!.globalAlpha = dim ? 0.08 : lit ? 0.9 : 0.55
+          ctx!.globalAlpha = dim ? 0.07 : lit ? 0.85 : 0.5
         } else {
           ctx!.setLineDash([])
-          ctx!.globalAlpha = dim ? 0.08 : lit ? 1 : 0.8
+          ctx!.globalAlpha = dim ? 0.08 : lit ? 1 : 0.75
         }
         ctx!.strokeStyle = lit ? color.accent : color.subtle
-        ctx!.lineWidth = (lit ? 1.5 : 0.8) / k
+        ctx!.lineWidth = (lit ? 1.6 : 0.9) / k
         ctx!.beginPath()
         ctx!.moveTo(l.source.x, l.source.y)
         ctx!.lineTo(l.target.x, l.target.y)
@@ -583,114 +718,73 @@ export function GraphView({
       }
       ctx!.setLineDash([])
 
-      // Nodes.
+      // Discs: paper inside, the status on the rim — ink hairline when
+      // published, a soft amber halo while the page is still a draft.
       for (const n of nodes) {
-        ctx!.globalAlpha = spot != null && !inHood(spot, n) && n !== selected ? 0.16 : 1
+        ctx!.globalAlpha = dimmed(n) ? 0.15 : 1
+        const rim = n.data.draft
+          ? color.draftRing
+          : n.data.kind === 'tag'
+            ? color.subtle
+            : n.data.kind === 'missing'
+              ? color.muted
+              : color.ink
+
+        if (n.data.draft) {
+          ctx!.beginPath()
+          ctx!.arc(n.x, n.y, n.r + 2.9 / k, 0, TAU)
+          ctx!.strokeStyle = color.draftHalo
+          ctx!.lineWidth = 5.4 / k
+          ctx!.stroke()
+        }
+
         ctx!.beginPath()
         ctx!.arc(n.x, n.y, n.r, 0, TAU)
-        if (n.data.kind === 'tag') {
-          ctx!.fillStyle = color.surface
-          ctx!.fill()
-          ctx!.strokeStyle = color.secondary
-          ctx!.lineWidth = 1.1 / k
+        ctx!.fillStyle = color.surface
+        ctx!.fill()
+        ctx!.strokeStyle = rim
+        ctx!.lineWidth = (n.data.kind === 'hub' ? 1.5 : n.data.kind === 'missing' ? 1 : 1.2) / k
+        if (n.data.kind === 'missing') ctx!.setLineDash([3 / k, 3 / k])
+        ctx!.stroke()
+        ctx!.setLineDash([])
+
+        // Hubs keep their second ring — the map's index pages.
+        if (n.data.kind === 'hub') {
+          ctx!.beginPath()
+          ctx!.arc(n.x, n.y, n.r + 4 / k, 0, TAU)
+          ctx!.strokeStyle = rim
+          ctx!.lineWidth = 0.9 / k
           ctx!.stroke()
-        } else if (n.data.kind === 'missing') {
-          ctx!.fillStyle = color.surface
-          ctx!.fill()
-          ctx!.strokeStyle = color.muted
-          ctx!.lineWidth = 1 / k
-          ctx!.setLineDash([2 / k, 2.2 / k])
-          ctx!.stroke()
-          ctx!.setLineDash([])
-        } else {
-          ctx!.fillStyle = n.data.draft ? color.draftBg : color.ink
-          ctx!.fill()
-          if (n.data.draft) {
-            ctx!.strokeStyle = color.draftText
-            ctx!.lineWidth = 1.2 / k
-            ctx!.stroke()
-          }
-          if (n.data.kind === 'hub') {
-            ctx!.beginPath()
-            ctx!.arc(n.x, n.y, n.r + 2.5, 0, TAU)
-            ctx!.strokeStyle = n.data.draft ? color.draftText : color.ink
-            ctx!.lineWidth = 1 / k
-            ctx!.stroke()
-          }
         }
+
         if (n === spot || n === focusNode || n === selected) {
           ctx!.beginPath()
-          ctx!.arc(n.x, n.y, n.r + (n.data.kind === 'hub' ? 4.6 : 3.2), 0, TAU)
+          ctx!.arc(n.x, n.y, n.r + (n.data.kind === 'hub' ? 8 : 4.5) / k, 0, TAU)
           ctx!.strokeStyle = color.accent
-          ctx!.lineWidth = 1.6 / k
+          ctx!.lineWidth = 1.8 / k
           ctx!.stroke()
         }
       }
 
-      // Labels, in screen space so they stay crisp and readable at any zoom.
-      // Which labels show is re-decided every frame: nodes reveal by
-      // connectedness as the zoom deepens, then a greedy pass (spotlight >
-      // focus > neighborhood > degree) drops any label that would overlap
-      // one already placed.
-      ctx!.setTransform(dpr, 0, 0, dpr, 0, 0)
+      // Titles, inside their discs — in a second pass so a slight overlap
+      // between two discs can never paint over a neighbour's words. Each one
+      // eases out once the zoom takes it below reading size, and back in on
+      // the way home.
       ctx!.textAlign = 'center'
-      ctx!.textBaseline = 'top'
-      ctx!.lineJoin = 'round'
-
-      const cands: {
-        n: SimNode
-        sx: number
-        sy: number
-        font: string
-        block: LabelBlock
-        tier: number
-      }[] = []
+      ctx!.textBaseline = 'middle'
+      let settling = false
       for (const n of nodes) {
         const sx = n.x * k + tx
-        const sy = (n.y + n.r) * k + ty + 4
-        const hood = spot != null && inHood(spot, n)
-        let a = Math.min(Math.max((k - n.revealK) / 0.22, 0), 1)
-        if (spot != null) a = hood ? 1 : a * 0.1
-        if (n === spot || n === focusNode || n === selected) a = 1
-        if (sx < -110 || sx > cw + 110 || sy < -52 || sy > ch + 6 || (a < 0.03 && n.la < 0.03)) {
+        const sy = n.y * k + ty
+        const reach = n.r * k + 8
+        if (sx < -reach || sx > cw + reach || sy < -reach || sy > ch + reach) {
           n.lt = 0
           n.la = 0
           continue
         }
-        const prime = n === spot || n === focusNode || n === selected
-        const raw = n.data.kind === 'tag' ? `#${n.data.label}` : n.data.label
-        const font = fontFor(n, prime)
-        const block = wrapLabel(
-          ctx!,
-          labelCache,
-          raw,
-          font,
-          prime ? 170 : 120,
-          prime ? 3 : 2,
-          n.data.kind === 'tag' ? 11 : 12.5,
-        )
-        n.lt = a
-        cands.push({ n, sx, sy, font, block, tier: prime ? 2 : hood ? 1 : 0 })
-      }
-
-      cands.sort((p, q) => q.tier - p.tier || q.n.degree - p.n.degree || q.n.r - p.n.r)
-      const placed: { x0: number; y0: number; x1: number; y1: number }[] = []
-      for (const c of cands) {
-        if (c.n.lt < 0.03) continue // already fading out; reserves no space
-        const w2 = c.block.w / 2 + 2
-        const box = { x0: c.sx - w2, y0: c.sy - 2, x1: c.sx + w2, y1: c.sy + c.block.h + 2 }
-        const blocked =
-          c.tier < 2 &&
-          placed.some((p) => box.x0 < p.x1 && box.x1 > p.x0 && box.y0 < p.y1 && box.y1 > p.y0)
-        if (blocked) c.n.lt = 0
-        else placed.push(box)
-      }
-
-      // Ease each label toward its target; draw low tiers first so the
-      // spotlight paints on top.
-      let settling = false
-      for (let i = cands.length - 1; i >= 0; i--) {
-        const { n, sx, sy, font, block } = cands[i]
+        // Fade out below reading size rather than shrinking into noise.
+        n.lt = Math.min(Math.max((n.fontSize * k - 4.4) / 2.6, 0), 1)
+        if (dimmed(n)) n.lt *= 0.16 // match the dimmed disc, or the words shout past it
         if (reducedMotion || Math.abs(n.lt - n.la) <= 0.02) {
           n.la = n.lt
         } else {
@@ -698,21 +792,17 @@ export function GraphView({
           settling = true
         }
         if (n.la < 0.03) continue
-        ctx!.font = font
         ctx!.globalAlpha = n.la
-        ctx!.strokeStyle = color.surface
-        ctx!.lineWidth = 3.5
+        ctx!.font = n.font
         ctx!.fillStyle =
-          n === spot || n === selected
-            ? color.ink
-            : n.data.draft
-              ? color.draftText
-              : n.data.kind === 'tag' || n.data.kind === 'missing'
-                ? color.muted
-                : color.secondary
-        for (let li = 0; li < block.lines.length; li++) {
-          ctx!.strokeText(block.lines[li], sx, sy + li * block.lineH)
-          ctx!.fillText(block.lines[li], sx, sy + li * block.lineH)
+          n.data.kind === 'tag'
+            ? color.secondary
+            : n.data.kind === 'missing'
+              ? color.muted
+              : color.ink
+        const top = n.y - n.block.h / 2 + n.block.lineH / 2
+        for (let li = 0; li < n.block.lines.length; li++) {
+          ctx!.fillText(n.block.lines[li], n.x, top + li * n.block.lineH)
         }
       }
       ctx!.globalAlpha = 1
@@ -731,7 +821,7 @@ export function GraphView({
     function nodeAt(gx: number, gy: number): SimNode | null {
       for (let i = nodes.length - 1; i >= 0; i--) {
         const n = nodes[i]
-        const hit = n.r + 6 / view.k
+        const hit = n.r + 3 / view.k
         const dx = gx - n.x
         const dy = gy - n.y
         if (dx * dx + dy * dy <= hit * hit) return n
@@ -920,14 +1010,31 @@ export function GraphView({
     })
     ro.observe(wrap)
 
-    // Redraw once webfonts land so labels don't stay in the fallback face.
+    // Titles were measured against the fallback face until the webfonts land;
+    // re-lay them out once Cormorant and JetBrains Mono are actually here,
+    // since the wrap — and with it every disc radius — depends on the metrics.
     let disposed = false
     document.fonts?.ready.then(() => {
-      if (!disposed) {
-        labelCache.clear() // wrap widths measured against the fallback face are stale now
-        needsDraw = true
-        schedule()
+      if (disposed) return
+      labelCache.clear()
+      for (const n of nodes) {
+        const { font, size, block, r } = layOut(n.data, n.degree)
+        n.font = font
+        n.fontSize = size
+        n.block = block
+        n.r = r
+        n.charge = chargeFor(n.data.kind, r)
       }
+      for (const l of links) {
+        const busy = Math.min(l.source.degree, l.target.degree)
+        l.dist = l.source.r + l.target.r + linkGapFor(l.kind, busy)
+      }
+      nodes.sort((a, b) => b.r - a.r)
+      // Let the layout breathe out to the new radii rather than snap.
+      if (alpha < 0.35) alpha = 0.35
+      if (reducedMotion) settleNow()
+      needsDraw = true
+      schedule()
     })
 
     if (reducedMotion) {
@@ -952,7 +1059,7 @@ export function GraphView({
       viewRef.current = view
       fitRef.current = () => {}
     }
-  }, [active, focus, router])
+  }, [active, focus, router, showControls])
 
   if (data.nodes.length === 0) return <p className="muted">Nothing to map yet.</p>
 
@@ -1019,7 +1126,7 @@ export function GraphView({
               </span>
             )}
             <span className="graph-legend-hint">
-              click pins a page · double-click opens · zoom for labels
+              click pins a page · double-click opens · scroll to zoom
             </span>
           </div>
         )}

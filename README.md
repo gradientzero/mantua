@@ -151,24 +151,38 @@ up front).
 
 ## The graph view
 
-`/graph` draws the whole wiki as a force-directed map, Obsidian-style: notes and hubs as
-ink dots (hubs ringed; size = number of connections), tags as hollow circles, and dashed
-"unwritten" nodes for wikilink targets that don't exist yet — the same to-do list the
-build warnings print. Every note page ends with the same map reduced to its one-hop
-neighborhood. `/graph` fills the viewport below the header, toolbar and legend floating
-on the map. Hover spotlights a node's connections; click pins that spotlight so the
-graph can be explored from the node (a background click releases it); double-click or
-cmd/ctrl-click opens the page; drag/scroll pans and zooms; tag and unwritten nodes can
-be toggled off. Labels never overlap: titles wrap to short lines, the best-connected
-pages label first, and the rest fill in as you zoom (a greedy screen-space collision
-pass drops what doesn't fit).
+`/graph` draws the whole wiki as a force-directed map: every page is a paper disc with
+its title set inside it in the editorial face, tags are hollow rings in mono, and dashed
+"unwritten" nodes stand for wikilink targets that don't exist yet — the same to-do list
+the build warnings print. Colour lives on the rim, never in the fill: a hairline ink ring
+for a published page, a second ring for a hub, a soft amber halo while a page is still a
+draft. The map sits on the same paper tone as the rest of the site, so the discs are the
+only white on it. Every note page ends with the same map reduced to its one-hop
+neighborhood.
+
+`/graph` fills the viewport below the header, toolbar and legend floating on the map.
+Hover spotlights a node's connections; click pins that spotlight so the graph can be
+explored from the node (a background click releases it); double-click or cmd/ctrl-click
+opens the page; drag/scroll pans and zooms; tag and unwritten nodes can be toggled off.
+Because the title lives inside the disc, the title decides the radius — each one is
+wrapped at whichever measure gives the tightest enclosing circle (with a floor, or long
+titles break into one-word lines), and both the springs and the collision pass rest at
+`r + r + gap`, so well-connected pages earn their room instead of piling into a knot.
+Titles ease out once the zoom takes them below reading size and back in on the way home.
 
 Everything derives at build time from data that already exists (`links`, `tags`,
 `related`), assembled in `lib/graph.ts` and drawn by `components/graph/graph-view.tsx`
 with a small built-in force simulation — no new schema fields, no dependencies, no
 client-side content fetching. Draft pages appear on the map exactly where drafts appear
-at all: in `npm run dev`, marked amber. `/graph` is a reserved route like `/notes` and
+at all: in `npm run dev`, haloed amber. `/graph` is a reserved route like `/notes` and
 `/tags` — a hub with the slug `graph` would be shadowed by it.
+
+One known limit: the notebook's link graph is close to complete, and springs that dense
+settle into a ball, so on a very wide screen the map is a centered ball with empty
+margins either side. Shaping the springs, the repulsion or the collision clearance to the
+viewport's aspect was measured and rejected — the outline barely moves and the layout
+inflates, which costs the zoom the titles are read at. Only the centering force is
+shaped, which helps for free.
 
 ## Search
 
