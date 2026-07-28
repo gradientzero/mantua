@@ -153,8 +153,13 @@ up front).
 ink dots (hubs ringed; size = number of connections), tags as hollow circles, and dashed
 "unwritten" nodes for wikilink targets that don't exist yet — the same to-do list the
 build warnings print. Every note page ends with the same map reduced to its one-hop
-neighborhood. Hover spotlights a node's connections, click opens the page, drag/scroll
-pans and zooms; tag and unwritten nodes can be toggled off.
+neighborhood. `/graph` fills the viewport below the header, toolbar and legend floating
+on the map. Hover spotlights a node's connections; click pins that spotlight so the
+graph can be explored from the node (a background click releases it); double-click or
+cmd/ctrl-click opens the page; drag/scroll pans and zooms; tag and unwritten nodes can
+be toggled off. Labels never overlap: titles wrap to short lines, the best-connected
+pages label first, and the rest fill in as you zoom (a greedy screen-space collision
+pass drops what doesn't fit).
 
 Everything derives at build time from data that already exists (`links`, `tags`,
 `related`), assembled in `lib/graph.ts` and drawn by `components/graph/graph-view.tsx`
