@@ -1,0 +1,152 @@
+---
+title: "Command over tokens"
+status: draft
+tags: [agentic-engineering, harness-design, evaluation]
+created: 2026-07-29
+updated: 2026-07-29
+summary: Nobody I know exhausts a weekly token allowance, so the limit is not the limit — throughput that means something is a skill. What that skill consists of, and the four decisions that actually make up a harness.
+origin: mixed
+author: Wolfgang Gross
+related: [the-harness-is-a-skill-issue, skill-issue-karpathy-on-code-agents, harness-design-for-long-running-coding-agents]
+---
+
+It is easy to say: if only I had limitless token expenditure, like inside one of the frontier
+labs, I would be able to do so much more.
+
+In practice I rarely see anyone exhaust their weekly limit on a pro subscription while
+coding — let alone on knowledge work. It does happen at the session level, especially with
+high reasoning effort and several sessions at once, but not across a whole week.
+
+And having a high token throughput that is actually *meaningful* is a skill in itself.
+[[skill-issue-karpathy-on-code-agents|Karpathy talks about exactly this]] as a skill issue.
+
+So you read the examples from
+[[harness-design-for-long-running-coding-agents|Anthropic]] and
+[[harness-engineering-agent-first-repositories|OpenAI]] about long-running agents, and you
+wonder whether something like [[auto-research|Auto Research]] already exists — whether you can
+formulate a wish, a specification, and have it run for hours or days until the task is done.
+Technically that is possible, but not in the way you think. It is a skill issue.
+
+And nobody outside the labs knows what they really run. What is published is what they chose to
+publish; the experiments themselves are months old by the time we read them, and now and then
+something leaks out that suggests there is more.
+
+So we are left to our own devices, which is also very empowering. Nobody knows exactly how to
+use these tools yet. It is always a play between model capability and the harness. And with
+good skills and good harness design you can let an agent do some magical things for you.
+
+## Why the allowance is not the constraint
+
+Two things sit behind the observation above, and they pull in the same direction.
+
+The first is that an idle subscription is a diagnosis, not a saving. Karpathy's version is
+that unspent quota means he failed to maximise throughput, the way idle GPUs used to mean a
+PhD student was wasting flops. The binding constraint moved from the compute to the operator.
+
+The second is that spend on its own says nothing about return. DoorDash burned about 20× more
+in June than in January and then had to
+[[benchmarking-your-own-agent-spend|build a benchmark over their own tasks]] to find out what
+it bought. Volume was never the achievement. What you want is not more tokens spent but more
+tokens spent on work you can verify — which is exactly what a harness is for.
+
+So the practical question is not how to get a larger allowance. It is: what would I have to
+build so that a week's worth of tokens could actually be consumed on something I trust?
+
+## Four decisions that make a harness
+
+Everything below is a decision, not a component. A harness is the set of things you decided
+the model cannot do alone yet — and Anthropic's own framing is the test to keep:
+
+> every component in a harness encodes an assumption about what the model can't do on its own,
+> and those assumptions are worth stress testing
+
+They are worth stress testing because they may be wrong, and because they go stale on the next
+model release. When you take one out, take out one at a time — their radical one-shot
+simplification failed and left them unable to tell which pieces had been load-bearing.
+
+### 1. Decide what the agent can see
+
+An agent's world is what it can reach in-context while running. OpenAI's line for it is that
+anything it cannot access effectively does not exist: Slack threads and shared docs are
+invisible, repository-local versioned artifacts are the whole world. That turns "write it
+down" from hygiene into a capability decision.
+
+Concretely, and cheapest first: a short entry-point document that is a table of contents
+rather than a manual, the docs it points at kept current by a recurring gardening pass, and
+the app or the build made runnable by the agent itself so it can check its own change. A
+hundred lines that route attention beat a thousand that crowd the context out.
+
+### 2. Decide what "done" means before anything runs
+
+This is where throughput is actually won or lost, because an unverifiable run has to be
+reviewed by hand, and hand review is the thing that does not scale with tokens.
+
+Make the criteria measurable. "Does it look visually pleasing" is not concrete and models
+struggle with it. "Is the colour scheme one of these", "is the spacing appropriate — nothing
+too narrow or too wide", "does it scale across window sizes", "are all the buttons clickable"
+can be verified. The Anthropic harness goes one step further and has the generator and the
+evaluator negotiate a contract for the chunk of work — what will be built, and how success
+gets checked — before any code is written. One of their sprint contracts had 27 test criteria.
+
+Then decide who fetches the evidence. A grader that reads the transcript is marking the
+generator's homework: the verdict is independent, the evidence is not. A grader that drives
+the running app itself, or reads the logs and metrics, is the version that catches
+display-only features. [[keeping-an-agent-running|`/goal`]] is the free, weaker form of this,
+and useful precisely where the end state is mechanical — a clean build, no new warnings.
+
+### 3. Decide what is enforced mechanically
+
+The separate evaluator exists because agents are generous about their own work. But a rubric
+is not the only place to put a standard, and it is the most expensive one — it costs a model
+call and a round trip.
+
+Anything that can be a lint should be a lint. OpenAI enforces layering and dependency
+direction, structured logging, naming, file-size limits with agent-written linters, and the
+detail worth copying is that the *error messages carry the remediation instructions* — the
+guardrail teaches the agent in the moment it trips.
+[[linting-as-agent-guardrail|Linting as agent guardrail]] has the mechanics. Here, `npm run
+build` is the test and `/lint` is the health check, which is a small version of the same idea.
+
+Their other observation is the one to plan for: agents replicate whatever patterns exist in
+the repo, including the bad ones, so drift is structural rather than occasional. Friday
+cleanup did not scale; a scheduled pass that opens small refactor PRs did.
+
+### 4. Decide what starts the next turn, and what stops the sequence
+
+The smallest part of a harness, the one that ships with the tool, and the cheapest place to
+start: `/goal` restarts on a finished turn and stops on a model's verdict, `/loop` on an
+interval, a Stop hook on your own script, a scheduled run on a clock with no session open in
+between. [[keeping-an-agent-running]] is the table.
+
+This is also where the parallelism decision lives. Karpathy's own practice is not one long
+unattended run but many short ones — tasks sized to roughly twenty minutes at high effort,
+several in flight, review proportional to how much you care about that particular code. Both
+regimes are real and they are not the same workflow: one asks for good task decomposition, the
+other for a grader you trust.
+
+## How to get there without pretending
+
+Two habits, and they are the same two I would give anyone starting.
+
+**Run the loops by hand first.** Be the evaluator yourself for a few rounds before you write
+one. You cannot specify a rubric for a judgement you have not made.
+
+**Then read what the evaluator produces.** Out of the box the model is a poor QA agent — it
+finds real issues and rationalises approving them, and it tests shallowly. If it is not
+finding anything you would not have found easily yourself, it is not worth running yet, and
+the fix is to read its logs, find where its judgement diverged from yours, and patch the
+prompt. Several rounds of that.
+
+And one thing not to do: **don't watch the agent work.** Let it run and come back on your own
+terms. Watching breaks the deep work cycle and turns the session into a dopamine trigger. That
+is not just hygiene — sitting in front of one run is the single most reliable way to keep your
+throughput at one run.
+
+## What this is really about
+
+The wish is for a bigger allowance. The constraint is a harness good enough that the tokens
+could be spent on work you would trust unwatched. Those are not the same problem, and only one
+of them is mine to solve.
+
+Which is the encouraging part. [[the-harness-is-a-skill-issue|It is a skill issue]] — and a
+skill issue is a thing you can practise.

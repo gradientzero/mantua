@@ -515,3 +515,19 @@ weighting pass and a `weight` field in `lib/graph.ts`; the stiffness term in
 `links`/`tags`/`related`, so the README's graph section was corrected — it previously
 promised "no new schema fields". `fold` is now exported from `lib/search.ts` and shared. No
 content touched, no dependency added. `npm run build` clean.
+
+## [2026-07-29] ingest | Dictation — command over tokens
+
+One item, the owner's own writing: a dictation about token limits not being the real
+constraint, dropped in `inbox/mine/` after being corrected and restructured on his
+instruction. New note `content/notes/command-over-tokens.mdx` (`origin: mixed`,
+`status: draft`) — his introduction in edited wording, plus a second half drafted to his
+brief: why an idle allowance is a diagnosis rather than a saving, four decisions that make up
+a harness (what the agent can see, what "done" means, what is enforced mechanically, what
+starts the next turn), and the two habits that get you there. No new sources; the added
+section draws only on material already archived here. No existing page edited.
+
+One thing withheld on purpose: the dictation referred to an incident as evidence that the
+labs run more than they publish, and it could not be resolved to a checkable event, so the
+sentence stops short of naming one — `tasks/2026-07-29-name-the-lab-leak-incident.md`.
+Archived under `sources/2026-07/command-over-tokens/`.
