@@ -3,7 +3,7 @@ title: Generator–evaluator loops
 status: published
 tags: [agentic-engineering, evaluation, harness-design]
 created: 2026-07-26
-updated: 2026-07-27
+updated: 2026-07-30
 summary: Splitting the agent that does the work from the agent that judges it — why self-evaluation fails, what makes an evaluator worth its cost, and how three independent teams arrived at the same shape from taste, from QA, and from production corrections.
 origin: agent
 ---
@@ -113,7 +113,14 @@ metric-gaming are themselves ungraded. Add it to the limits below.
 That makes three independent arrivals at *what checks the check?* in this notebook, from
 three unrelated directions: the tax-agent work listing a miscounting grader as a legitimate
 root cause, [[loop-engineering|a misspecified condition running to completion and reporting
-success]], and now metric overfitting in an unattended loop. No answer among them. The
+success]], and now metric overfitting in an unattended loop. The first partial answer arrived
+later, from [[dashbench-measuring-a-code-review-agent|DoorDash's benchmark write-up]], and it
+is not a better judge: it is refusing to have one. Human annotations, the system's own
+findings and an LLM judge are compared against each other, disagreements are re-read by hand,
+and the resolved cases become the judge's calibration data. The judge stays a calibrated
+signal, never the ground truth. The cost of that answer is a standing human adjudication
+budget, which is exactly the thing an unattended loop is supposed to remove — so it moves the
+problem into the open rather than solving it. The
 practical consequence for anything built here is that a rising score over a long run is weak
 evidence and gets weaker the longer the run — drift and gaming are indistinguishable from the
 inside. Reading a sample of the actual artifacts, the owner's "read what the evaluator
@@ -140,3 +147,12 @@ the task it is hired for.
   cross-model evaluator, which seems like the obvious next experiment. Someone has since
   built one — TandemKit runs Claude and Codex against each other until they agree — though
   without measuring what it buys. See [[building-a-generator-evaluator-harness-plan]].
+  DoorDash names the same problem and the same fix — moving from a single judge to an
+  *agentic jury* to mitigate bias between judge models — and files it under what's next.
+  Three arrivals at the experiment, still nobody's numbers.
+- **One run is a lower bound.** The correction I'd have missed:
+  [[dashbench-measuring-a-code-review-agent|DashBench]] found that repeated runs of the same
+  agent surface *additional valid findings*, because the whole stack is non-deterministic. So
+  a single scored run understates coverage, and any comparison between two configurations
+  from one run each is partly noise. Run it several times and aggregate before believing the
+  number — cheap advice that nothing else in this cluster gives.

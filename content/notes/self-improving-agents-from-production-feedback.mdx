@@ -3,7 +3,7 @@ title: "Self-improving agents from production feedback (OpenAI × Thrive, 2026-0
 status: published
 tags: [agentic-engineering, evaluation, harness-design]
 created: 2026-07-26
-updated: 2026-07-28
+updated: 2026-07-30
 summary: Notes on the Tax AI post — how practitioner corrections in production become structured findings, then targeted evals, then bounded engineering tasks a coding agent can close. The clearest published example of an eval-driven improvement loop with a named metric that moved.
 origin: agent
 ---
@@ -45,7 +45,10 @@ average.
    signal. Crucially, a difference between predicted and filed value is *not*
    automatically a bug — it can be an extraction miss, a mapping gap, unsupported product
    behaviour, a value carried forward from last year's return, practitioner preference, or
-   ordinary workflow noise. Practitioners helped separate those classes.
+   ordinary workflow noise. Practitioners helped separate those classes. That distinction is
+   the same one [[dashbench-measuring-a-code-review-agent|DoorDash]] draws between *was
+   accepted* and *was real*, and both teams reached it the same way: by discovering that the
+   human in the loop is a useful signal and a bad label.
 2. **The product manufactures evidence.** Not just inputs and outputs: the whole path.
    Documents organised, split and classified; fields extracted *with citations back to the
    source*; values mapped into the tax engine; corrections captured as structured data

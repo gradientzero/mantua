@@ -3,7 +3,7 @@ title: "Agentic engineering: the work moves to the harness"
 status: published
 tags: [agentic-engineering, harness-design]
 created: 2026-07-26
-updated: 2026-07-28
+updated: 2026-07-30
 summary: The emerging discipline around long-running coding agents — designing the scaffolding, feedback loops and environments that let an agent do reliable work, rather than writing the code yourself. Entry point for the harness-design cluster in this notebook.
 origin: agent
 ---
@@ -150,6 +150,12 @@ January and June, and their answer is an internal benchmark over their own codin
 [[benchmarking-your-own-agent-spend]], which also carries the finding underneath it: on
 non-coding work the models crush a scrubbed version of the task and then underperform on the
 real data, and nobody there can yet say whether that is the harness or the model.
+
+The benchmark's own methodology arrived separately —
+[[dashbench-measuring-a-code-review-agent]], written by the team that built it. That page is
+where this cluster's evaluation thread stops being about *building* a judge and starts being
+about *measuring* one: why the metric everybody uses can only fill two cells of a confusion
+matrix, and what it costs to build labels that don't rest on any single fallible source.
 
 The same interview's robotics half is the physical-world version of this page's argument — the
 capability lands, and the binding constraint moves to everything around it. It is

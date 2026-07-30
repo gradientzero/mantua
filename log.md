@@ -531,3 +531,32 @@ One thing withheld on purpose: the dictation referred to an incident as evidence
 labs run more than they publish, and it could not be resolved to a checkable event, so the
 sentence stops short of naming one — `tasks/2026-07-29-name-the-lab-leak-incident.md`.
 Archived under `sources/2026-07/command-over-tokens/`.
+
+## [2026-07-30] ingest | How we learned to trust our AI code reviewer at DoorDash
+
+One item, captured external material: the DoorDash engineering post (6 July 2026) describing
+DashBench, the measurement layer behind their production code review agent. Archived under
+`sources/2026-07/how-we-learned-to-trust-our-ai-code-reviewer-at-doordash/` — the clip is
+complete including the appendix tables; the five figures are remote URLs and were not
+downloaded, since everything they show is also tabulated.
+
+New note `content/notes/dashbench-measuring-a-code-review-agent.mdx` (`origin: agent`,
+`status: draft`): why acceptance rate can only ever populate two cells of a confusion matrix,
+labels triangulated across three disagreeing sources with human adjudication feeding judge
+calibration, the scout/reviewer split as a clean evaluation surface, the model-mix and
+severity tables, and four limits — recall measured against the union of what the pool found,
+the judge calibrated on the same case set it grades, no error bars under a "variance is a
+feature" lesson, and no accounting of what building it cost.
+
+It closes a gap this notebook had recorded explicitly. `benchmarking-your-own-agent-spend`
+said "Dashbench is named, not described"; it now is, and the description corrects one thing —
+DashBench measures a **code reviewer** on replayed PRs, not coding tasks in general. That
+correction was carried to `doordash-on-agentic-commerce-and-dot` as well.
+`generator-evaluator-loops` gained the first partial answer to its recurring *what checks the
+check?* question (refuse to have a single ground truth; pay for adjudication) plus a new
+limit: one run understates coverage, because the whole measurement stack is stochastic.
+Smaller cross-references added to `agentic-engineering` and
+`self-improving-agents-from-production-feedback`, where the *was accepted* vs *was real*
+distinction matches the tax-agent post's classes of practitioner correction.
+
+`npm run build` clean.

@@ -3,7 +3,7 @@ title: "DoorDash on agentic commerce and DOT (NoPriors)"
 status: published
 tags: [agentic-commerce, robotics, evaluation]
 created: 2026-07-28
-updated: 2026-07-28
+updated: 2026-07-30
 summary: Notes on the NoPriors interview with DoorDash's two co-founders — a natural-language ordering surface that half the time sends people to a merchant they have never used, a delivery robot built to a use case rather than to a capability, and an internal benchmark built to work out what a 20× rise in model spend actually bought.
 origin: agent
 ---
@@ -116,6 +116,12 @@ one, and he does not resolve it.
 Both halves are [[benchmarking-your-own-agent-spend|their own page]]: the ROI question a buyer
 has to answer, and why the scrubbed-versus-real gap is the same boundary
 [[jaggedness-and-what-rl-optimises|jaggedness]] draws from the training side.
+
+Since ingesting this, the benchmark itself has been described in public — see
+[[dashbench-measuring-a-code-review-agent]], published two days before the earliest date this
+recording can have. It narrows one claim above: DashBench scores a **code reviewer** on
+replayed pull requests, not coding tasks in general, and coding agents on real tasks are named
+there as future work. The "models and harnesses together" reading holds up.
 
 Two smaller things from the same stretch. They acquired a company (transcribed as **Metis**)
 last year explicitly to import AI-native working habits, on the diagnosis that a

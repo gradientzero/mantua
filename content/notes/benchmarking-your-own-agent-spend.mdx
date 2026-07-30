@@ -3,7 +3,7 @@ title: "Benchmarking your own agent spend"
 status: published
 tags: [evaluation, agentic-engineering, harness-design]
 created: 2026-07-28
-updated: 2026-07-28
+updated: 2026-07-30
 summary: DoorDash's model spend rose about 20× in five months, so they built a benchmark over their own coding tasks to work out what it bought — and found that the models crush a scrubbed version of a task and then underperform on the real data. The first buyer-side view in this notebook, and the open question it leaves.
 origin: agent
 ---
@@ -96,10 +96,20 @@ health check, and the sessions in `log.md` are a task history nobody has ever sc
 The 20× is also unnormalised — over a period in which headcount using the tools, and the price
 per token, both moved.
 
-**Dashbench is named, not described.** Where the tasks come from, how they are scored, whether
-they leak into training data, how a harness is held fixed while a model varies — none of it is
-in the interview. Everything above about "the correct unit" is taken on trust from one
-sentence.
+**Dashbench was named, not described** — until two days before this interview, when the team
+that built it published the methodology. See
+[[dashbench-measuring-a-code-review-agent|the write-up]], which answers most of what is missing
+here and corrects one thing: DashBench measures a **code reviewer** on replayed historical PRs,
+not coding tasks in general. Benchmarking coding agents is the next thing they want, not the
+thing they have. "The correct unit" survives the check — the harness is explicitly part of what
+varies, and cost and latency are recorded as results rather than controlled away.
+
+It also partly answers the worry above about grading on scrubbed data. DashBench replays real
+PRs from the real codebase, with benign and later-reverted cases deliberately included, and its
+labels come from three disagreeing sources rather than one convenient one. That is what "grade
+on the messy data, and accept a benchmark that is harder to run" looks like when someone
+actually pays for it. What it does not do is close the gap Fang describes on the *non-coding*
+work — that is still where the scrubbed-versus-real problem lives, and still unmeasured.
 
 **And the acquisition is the same claim in a different register.** They bought a company
 (transcribed as *Metis*) to import AI-native habits, on the diagnosis that a large company's

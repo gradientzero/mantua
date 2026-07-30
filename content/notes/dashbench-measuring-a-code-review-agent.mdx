@@ -1,0 +1,188 @@
+---
+title: "DashBench: measuring a code review agent"
+status: draft
+tags: [evaluation, agentic-engineering, harness-design, code-review]
+created: 2026-07-30
+updated: 2026-07-30
+summary: DoorDash's write-up of the benchmark behind its code review agent — why acceptance rate can only ever fill two cells of a confusion matrix, how they built labels that don't rest on any single fallible source, and the model-mix table where no configuration wins.
+origin: agent
+---
+
+Source: [How we learned to trust our AI code reviewer at DoorDash](https://careersatdoordash.com/blog/how-we-learned-to-trust-our-ai-code-reviewer-at-doordash/),
+Saketh Dhulipalla, Vasily Vlasov, Marcus Yearwood and Adam Yarger, 6 July 2026. Archived
+under `sources/2026-07/how-we-learned-to-trust-our-ai-code-reviewer-at-doordash/`.
+
+This is the description that [[benchmarking-your-own-agent-spend|the interview]] didn't give.
+Two days before Andy Fang described DashBench on NoPriors as a benchmark that scores models
+and harnesses together, the team that built it published how. It is the most detailed public
+account in this notebook of *measuring* an agent rather than building one, and the part worth
+keeping is the methodology, not the leaderboard.
+
+One correction to fold in first: the interview left the impression of a benchmark over
+coding tasks generally. It isn't. DashBench measures a **code reviewer**, on replayed
+historical pull requests. Benchmarking coding *agents* on real tasks is named at the end of
+the post as the next thing, not something they have.
+
+## Why acceptance rate lies
+
+The argument that makes the post worth reading, and it generalises past code review.
+
+The obvious metric — did the author accept the comment, did they act on it — is the main
+metric most review tools use. Put it in a confusion matrix and it fills exactly two cells.
+Accepted books a true positive; rejected books a false positive. **False negatives and true
+negatives are structurally unobservable**: acceptance telemetry cannot record the bug the
+reviewer never mentioned, and it cannot record the clean file where silence was the correct
+answer. So the metric tells you something happened. It cannot tell you whether the review
+was right, or what it missed.
+
+And the two cells it does fill are booked against a label that assumes the author is ground
+truth. They are not. Authors accept and reject for product and workflow reasons — timing,
+urgency, ownership, how invasive the fix is, whether the issue was already handled another
+way — and in DoorDash's own disagreement audits both the humans and the agentic verifier
+were caught making mistakes. Their formulation: acceptance is valuable **product telemetry
+and a weak benchmark label**, and the job is to separate *was accepted* from *was real*.
+
+That is the same failure this notebook has already recorded one level up. "Yeah, it works
+okay" from the team using the tool is [[benchmarking-your-own-agent-spend|not a measurement]];
+an agent asked to grade its own output [[generator-evaluator-loops|praises it]]. Here the
+generator's seat is occupied by the engineer whose PR is being reviewed, and the result is
+the same shape: the most available signal is the one with a stake in the answer.
+
+## Labels that don't rest on one source
+
+The fix is not a better single metric. It is triangulation across several flawed ones, with
+none promoted to ground truth:
+
+- the engineers who wrote the PRs annotate candidate findings by hand;
+- the original candidate findings from the review run;
+- an LLM judge.
+
+Where the three disagree, a human re-reads the evidence and resolves it, and **the resolved
+disagreements become calibration data for the judge**. The judge stays in the loop as a
+calibrated signal rather than an oracle. Missed real clusters are booked as false negatives
+after adjudication — which is how the two cells acceptance can't reach get filled at all.
+
+The case selection is designed against specific failure modes rather than for coverage:
+historical PRs with real findings and enough context to replay faithfully; **benign PRs with
+close to zero real findings**, because a reviewer that is loud on clean code is its own
+failure mode and nothing else in the pipeline would catch it; and PRs that were later
+reverted or hotfixed, to test whether genuine regressions get caught before merge. Roughly
+1,000 raw candidates narrowed to a 105-case valid report.
+
+This is the most direct answer anyone in this notebook has given to *what checks the check?*
+— the question [[generator-evaluator-loops]] raises three separate times and leaves open. The
+answer is not a better judge. It is refusing to have one, plus a standing budget of human
+adjudication to keep the judge honest. Expensive, and the post doesn't say how expensive.
+
+## The staged architecture, and why it's a clean eval surface
+
+The production reviewer separates *noticing* from *verifying*: a lead scout reads the change
+and flags suspicious areas, deep reviewers investigate the strongest leads and drop the
+claims that don't survive. That is the generator–evaluator split applied to review itself,
+with the twist that the second stage exists to **kill** findings rather than to grade an
+artifact — precision-over-recall by construction.
+
+The reason it matters for measurement is incidental and useful: because the workflow is
+model-agnostic, every component is a variable that can be held fixed or moved on its own —
+scout model, reviewer model, context policy, tool policy, runtime budget. So the question
+stops being "which model is best" and becomes: at this architecture, context policy, tool
+policy and budget, what tradeoff between coverage, precision, cost and latency do we get,
+and where does it fail. Their line: best is meaningless until you say best *at what*, on
+*which* cases, at *what* cost.
+
+Note what they refuse to hold constant. The harness is part of what is being measured, so
+profiles differ in runner kind, tool surface, context mechanics and provider limits, and
+cost, latency, timeouts and retries are **recorded as results rather than controlled away**.
+The unit is the model *and* its scaffolding — the unit [[agentic-engineering|this cluster]]
+argues for, here with the tables to go with it.
+
+## The numbers
+
+Staging buys coverage and the price is visible. On the 105-case report:
+
+| System | Real findings | Weighted precision | Weighted recall | Cost / PR | Latency / PR |
+|---|---|---|---|---|---|
+| Production (Sonnet 4.6 high scout + Opus 4.8 high reviewer) | 504 | 87.0% | 53.6% | $3.91 | 725s |
+| No scout + GPT 5.5 high | 164 | 84.1% | 30.7% | $0.75 | 170s |
+| No scout + Opus 4.8 high | 115 | 89.8% | 20.2% | $0.65 | 113s |
+
+Weighting is by severity — critical 4, high 2, medium 1, low 0.5 — which is the decision that
+makes the headline number mean anything, and it is the same move as
+[[self-improving-agents-from-production-feedback|the tax agents' threshold buckets]]: score
+the thing the user actually cares about, not the mean.
+
+The model-mix table is the more interesting artifact, because nothing dominates. Best
+weighted recall and F1: Kimi K2.6 scout + Fable 5 reviewer, 65.2% / 75.3% at $3.81. Best
+weighted precision: Composer 2.5 scout + GPT 5.5 medium, 92.2% — at 18.0% recall. Cheapest:
+no-scout Opus 4.8 at $0.65, giving up most of the coverage. Their own production
+configuration comes **second** on recall and F1, which is a small mark of credibility: they
+published a table their own system doesn't top.
+
+Severity splits it again. Kimi + Fable leads critical (80.0% vs 62.5%), high and medium;
+the production pair covers more of the low tail. The cheap single-pass GPT 5.5 row is weak
+overall — 4.2% recall on low — and still respectable on high/critical, which is a genuinely
+useful thing to know if you are routing by cost. Configurations that look close on one
+number miss entirely different kinds of issue.
+
+## Four lessons, and the one I'd keep
+
+Their own summary, compressed:
+
+**Trust must be earned** — no single signal is ground truth, and each of the three was wrong
+often enough that leaning on any one would have quietly poisoned the scores.
+
+**Humans don't scale** — labeller attention degrades fast on complex tasks, even when the
+labeller wrote the PR. AI judging is what makes the scale tractable at all.
+
+**Variance is a feature.** The one I'd keep. LLMs are non-deterministic, so repeated runs of
+the same agent surface *additional valid findings* — which means **a single run understates
+an agent's coverage**, and honest scoring requires running repeatedly and aggregating. Same
+for the judge: deterministic matching is stable and misses semantic equivalence; an LLM judge
+reasons better and needs calibration, audit sets and stable rubrics. The whole measurement
+stack is stochastic and the work is designing for that rather than pretending it away. This
+is a concrete, cheap correction to anything I build — a rubric run once is a lower bound, and
+I would not have known to say so.
+
+**When one metric can't work, look to many.** Weighted precision, recall, F1, not-real
+findings, high/critical recall, latency and cost all move independently.
+
+## Where it thins out
+
+**Recall is measured against what the pool found.** The severity denominator is the *union
+of adjudicated real clusters* across configurations — 40 critical, 136 high, 271 medium, 385
+low. A bug that no configuration in the pool surfaced, and that no annotator noticed, is not
+a false negative for anybody; it is invisible. So these recall figures are recall against
+collective discovery, not against the true defect population. The post is clear about the
+construction and does not draw attention to what it implies.
+
+**The judge grades the judge's students.** Calibrated on resolved disagreements from the
+same case set, then used to score systems on it. That is the honest version of the loop, but
+it is still a loop, and the audit budget is the only thing outside it. Their answer for the
+bias half — moving from a single judge to an **agentic jury** — is listed under what's next,
+which is also the cross-model evaluator experiment that
+[[building-a-generator-evaluator-harness-plan|TandemKit asserts and nobody has measured]].
+
+**No spread, no repetition count.** Given that "variance is a feature" is one of their own
+four lessons, the tables carry no error bars and no statement of how many runs each
+configuration got. A 105-case cut with severity tiers down to 40 critical clusters is small
+enough that the gap between two adjacent rows may be noise.
+
+**Nothing about what it cost to build.** Roughly 1,000 candidate PRs curated, engineers
+annotating their own PRs by hand, a standing disagreement-adjudication pass. That is the
+part a one-person setup has to price and the post does not price it.
+
+## What transfers
+
+Not the benchmark. The sequence: the reviewer had to exist and be used before there was
+anything to measure, and the measurement layer was built *after* the product metric turned
+out to point at the wrong target. Three things scale down to a notebook or a single
+repository —
+
+- **Name the cells you cannot observe.** Before trusting any metric, draw the confusion
+  matrix and ask which quadrants it can populate. `npm run build` here fills exactly one:
+  it catches schema violations, and it is silent about every note that is wrong in a way the
+  schema permits.
+- **Keep benign cases in the set.** Restraint is measurable only if some cases are clean.
+  The equivalent for [[linting-as-agent-guardrail|/lint here]] would be pages known to be
+  fine, to catch a lint pass that manufactures findings to look useful.
+- **Run it more than once.** Aggregate across runs before believing a coverage number.
