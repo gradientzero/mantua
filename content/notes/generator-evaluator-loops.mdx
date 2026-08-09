@@ -3,7 +3,7 @@ title: Generator–evaluator loops
 status: published
 tags: [agentic-engineering, evaluation, harness-design]
 created: 2026-07-26
-updated: 2026-07-30
+updated: 2026-08-09
 summary: Splitting the agent that does the work from the agent that judges it — why self-evaluation fails, what makes an evaluator worth its cost, and how three independent teams arrived at the same shape from taste, from QA, and from production corrections.
 origin: agent
 ---
@@ -30,6 +30,15 @@ separation buys is *tractability* — you can tune a dedicated evaluator toward 
 with prompts and calibration examples, and you cannot easily make a generator critical of
 work it just committed to. Once external feedback exists at all, the generator has
 something concrete to iterate against.
+
+A fourth arrival at the same split, from outside the field entirely and with a century more
+practice behind it: writers describing their own craft reach for it too — draft badly on
+purpose, judge at a boundary, revise as a separate activity. The structure matches closely
+enough to be worth reading, and the *reason* is inverted — their self-evaluation problem is
+that the internal critic is too harsh and runs too early, not too lenient. What that does and
+doesn't carry over is in [[separating-drafting-from-judging]]; the one detail worth taking
+from it here is that they get useful separation out of *time* alone, one person judging later,
+which is cheaper than a second agent and is not something this cluster has tested.
 
 ## What makes an evaluator actually work
 

@@ -560,3 +560,56 @@ Smaller cross-references added to `agentic-engineering` and
 distinction matches the tax-agent post's classes of practitioner correction.
 
 `npm run build` clean.
+
+## [2026-08-09] ingest | The Tim Ferriss Show #878 — writers on the craft
+
+One item, captured external material: the published transcript of a Tim Ferriss compilation
+episode (7 August 2026) in which Elizabeth Gilbert, Anne Lamott, Joyce Carol Oates, Jerry
+Seinfeld, Mary Karr, Brandon Sanderson and Seth Godin answer the same four questions about
+writing practice — choosing a project and staying with it, beginning without inspiration,
+building a practice that produces pages, and continuing when the pages are bad. Archived under
+`sources/2026-08/tim-ferriss-878-writing-craft-compilation/`, complete including the rights
+notice; no images. First source in the notebook outside the agentic-engineering cluster, and
+the first test of the README's claim that this is open in topic.
+
+New note `content/notes/writers-on-starting-finishing-and-bad-drafts.mdx` (`origin: agent`,
+`status: draft`): the four questions as the spine, then two sections the episode itself does
+not provide. **Where they disagree** — Sanderson's gardener/architect split (King says never
+outline, Card says an outline is vital) plus three more contradictions the edit passes over:
+Seinfeld's bounded hour against Asimov's six, Sanderson's daily word count against Karr taking
+five or six years and discarding 1,200 finished pages, and Gilbert's rule never to abandon a
+project against Karr's turning point being an abandonment. **What a compilation can't tell
+you** — seven writers selected on the outcome describing the practice that preceded it, which
+Sanderson is the only one to name, about himself.
+
+New note `content/notes/separating-drafting-from-judging.mdx` (`origin: agent`,
+`status: draft`): the one idea that reaches the rest of the notebook. Five of the seven
+independently separate producing from judging — Lamott reassigning the inner critic to a job
+it is fetched for, Godin's bad writing and Asimov's end-of-shift review, Oates on mood as an
+output rather than a precondition, Karr's revision budget, Sanderson's longhand trick — which
+is the same split as `generator-evaluator-loops`, arrived at from a field with no connection to
+it. Three correspondences hold (judgement at a decided boundary; done defined before the work;
+the judge needs its own access to the artifact) and three break, which is the substance of the
+page: the failure modes are **inverted** (an LLM praises its own output, a person savages their
+own draft), the writers separate in time rather than identity, and neither side has a ground
+truth though only one admits it. It ends by refusing the obvious over-reading — most of the
+episode does not transfer, and treating every source as a harness metaphor is a way of learning
+nothing from it.
+
+One existing page edited: `generator-evaluator-loops.mdx` gains a paragraph recording the
+fourth independent arrival at the split, the inversion, and the cheap experiment it implies —
+one model, two passes, an enforced boundary, no second agent — which nothing in this cluster
+has tested. Nothing else was touched; the connections to `keeping-an-agent-running`,
+`command-over-tokens` and `jaggedness-and-what-rl-optimises` are made as outbound links from
+the new notes, so they surface as backlinks without editing pages the material doesn't really
+change.
+
+Both new notes are drafts, so the published `generator-evaluator-loops` now links to one —
+one inert link in production, and the same decision as the DashBench note in July, plus a
+larger editorial one: publishing these makes the "not about a single topic" claim true in
+public for the first time. `tasks/2026-08-09-publish-writing-craft-notes.md`.
+
+The source's own limitation is recorded in its `SOURCE.md` and constrains everything above:
+the compilation carries no dates or episode numbers for its constituent interviews, so nothing
+in it can be dated or sequenced. Three claims it makes were left unverified and kept out of the
+wiki, including Godin's aside about the origin of "Just do it". `npm run build` clean.
