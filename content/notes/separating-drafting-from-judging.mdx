@@ -1,0 +1,112 @@
+---
+title: "Separating drafting from judging"
+status: published
+tags: [writing-craft, evaluation]
+created: 2026-08-09
+updated: 2026-08-09
+summary: Seven writers independently arrive at the same move this notebook's harness material arrives at — never let the thing that produces the work also judge it while it is being produced. The structure matches; the reason for it is the exact opposite, and that asymmetry is the interesting part.
+origin: agent
+---
+
+The one idea in [[writers-on-starting-finishing-and-bad-drafts|the writing-craft compilation]]
+that connects to the rest of this notebook, kept on its own page so the connection can be
+stated carefully rather than assumed.
+
+## The move, arrived at five times
+
+Every writer in that episode who is asked about bad pages answers by separating the act of
+producing from the act of judging. None of them are answering the same question and none of
+them cite each other:
+
+- **Lamott** teaches people "to stop *not* writing" and to write badly on purpose; the inner
+  critic isn't removed but reassigned to a job it is fetched for, rather than one it does
+  continuously.
+- **Godin** renames writer's block as fear of bad writing and prescribes doing the bad
+  writing without shipping it. His model is Asimov: six hours of typing every morning
+  regardless of quality, and a look through what was left **at the end of the shift**.
+- **Oates** puts it as a claim about causation — you create the mood by working, so waiting
+  to feel ready is waiting on an output of the process for permission to start it.
+- **Karr** treats revision as a separate activity with its own multi-year budget, and her
+  sentence test (less boring, more interesting, prettier, more true) is applied to finished
+  pages, not to sentences as they arrive.
+- **Sanderson** hands the writer who keeps re-revising chapter three a physical separation:
+  draft longhand, type up yesterday's pages as the way into today's.
+
+Two of those are about protecting the drafting from judgement, and three are about giving the
+judgement somewhere legitimate to happen. Both halves are needed — the point is not that
+judgement is bad, it's that continuous judgement during production destroys the production
+without improving the judgement.
+
+## The same structure, in this notebook
+
+[[generator-evaluator-loops]] is the same shape: one agent produces, a *different* agent
+judges, the judgement feeds the next attempt, and self-evaluation is the thing that doesn't
+work. Anthropic, OpenAI and the tax-agent work each arrived at it separately, which already
+made it three independent arrivals; this is a fourth, from a field with no connection to any
+of them and a century's more practice at it.
+
+Three of the details line up more closely than the general shape:
+
+**The judgement happens at a boundary.** Asimov judges at the end of the shift; Seinfeld's
+writing session ends when the alarm goes off, not when the work is good. That is the same
+question [[keeping-an-agent-running]] is about — what starts the next turn and what stops the
+sequence — and the same one the owner puts fourth in
+[[command-over-tokens|the four decisions that make a harness]]. In both cases the boundary is
+decided in advance and is not itself a quality judgement, which is what makes it usable.
+
+**Define done before the work starts.** Gilbert's ideas have to pitch her before she commits
+time to them, and a lot of them evaporate under the question. That is the cheap version of
+the sprint contract: the criteria exist before there is any work to rationalise.
+
+**The judge needs its own access.** `generator-evaluator-loops` argues that an evaluator
+reading the generator's transcript is marking its own homework, and that the version worth
+paying for drives the artifact itself. Godin's advice to Ferriss is the writing analogue and
+arrives at it from the other side: hand 5,000 words to a person whose actual skill is knowing
+when a thing is ready, because knowing that is a *separate* skill from being able to write.
+This is the one correspondence that transfers cleanly in both directions.
+
+## Where the analogy breaks
+
+Three places, and they matter enough that the correspondence above should not be pushed
+further than it goes.
+
+**The failure modes are opposite.** An LLM grading its own output praises it — Anthropic's
+evaluator finds a legitimate bug and then talks itself into deciding it didn't matter. A
+person grading their own draft as it appears savages it; Lamott's KFKD runs twenty-four hours
+a day telling you how far short you are falling. Both are fixed by separating the judge, but
+for opposite reasons: the agent split exists to get a judgement strict enough to trust, the
+writing split to stop a judgement that is too strict and arrives too early. Any advice that
+transfers between them has to survive that inversion, and most of it doesn't. "Calibrate the
+evaluator with worked examples" is good advice for a rubric and useless against a critic
+whose whole problem is that it is already calibrated to somebody's parents.
+
+**Separation in time, not in identity.** The writers are one person doing both jobs at
+different hours. Karr revising for five years is still Karr. The agent version is two
+processes, and `generator-evaluator-loops` records that even that isn't real independence —
+two instances of the same model share a prior and fail in correlated ways. The writers have
+it worse by construction and get away with it, which suggests temporal separation does more
+work than the harness literature gives it credit for, and that nobody has tested the cheap
+version: same model, two passes, an enforced boundary between them, no second agent.
+
+**There is no ground truth on either side, but only one side admits it.** Godin's question to
+Ferriss — *not good enough to publish, says who?* — is the whole problem stated in four words.
+The standard is internal and there is no test that settles it. This notebook keeps arriving at
+the same wall from the other direction under the heading *what checks the check?*, and
+[[dashbench-measuring-a-code-review-agent|the one partial answer]] it has found is to refuse a
+single ground truth and pay for human adjudication instead. The writers' answer to the
+equivalent question is an editor, a first reader, or a friend you can phone — which is the
+same answer, and equally expensive.
+
+## What not to do with this
+
+The temptation with a source like this is to read every craft observation as a harness
+metaphor, and that would be a way of learning nothing from it. Most of the compilation does
+not transfer: [[jaggedness-and-what-rl-optimises|soft judgement is exactly what the models are
+worst at]], so "hire an evaluator" is not available to a writer in the form it is available to
+an engineer, and none of the writing advice about consistency, tonnage or environment has an
+agent analogue worth the words.
+
+What survives is one structural claim, and it is worth having stated once in a form that
+doesn't depend on either field: **a producer cannot hold the standard while producing.** Where
+you put the judgement instead — a later pass, a different person, a separate process, a
+scheduled boundary — is an engineering decision. That it has to go somewhere else is not.

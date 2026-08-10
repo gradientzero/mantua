@@ -560,3 +560,85 @@ Smaller cross-references added to `agentic-engineering` and
 distinction matches the tax-agent post's classes of practitioner correction.
 
 `npm run build` clean.
+
+## [2026-08-09] ingest | The Tim Ferriss Show #878 — writers on the craft
+
+One item, captured external material: the published transcript of a Tim Ferriss compilation
+episode (7 August 2026) in which Elizabeth Gilbert, Anne Lamott, Joyce Carol Oates, Jerry
+Seinfeld, Mary Karr, Brandon Sanderson and Seth Godin answer the same four questions about
+writing practice — choosing a project and staying with it, beginning without inspiration,
+building a practice that produces pages, and continuing when the pages are bad. Archived under
+`sources/2026-08/tim-ferriss-878-writing-craft-compilation/`, complete including the rights
+notice; no images. First source in the notebook outside the agentic-engineering cluster, and
+the first test of the README's claim that this is open in topic.
+
+New note `content/notes/writers-on-starting-finishing-and-bad-drafts.mdx` (`origin: agent`,
+`status: draft`): the four questions as the spine, then two sections the episode itself does
+not provide. **Where they disagree** — Sanderson's gardener/architect split (King says never
+outline, Card says an outline is vital) plus three more contradictions the edit passes over:
+Seinfeld's bounded hour against Asimov's six, Sanderson's daily word count against Karr taking
+five or six years and discarding 1,200 finished pages, and Gilbert's rule never to abandon a
+project against Karr's turning point being an abandonment. **What a compilation can't tell
+you** — seven writers selected on the outcome describing the practice that preceded it, which
+Sanderson is the only one to name, about himself.
+
+New note `content/notes/separating-drafting-from-judging.mdx` (`origin: agent`,
+`status: draft`): the one idea that reaches the rest of the notebook. Five of the seven
+independently separate producing from judging — Lamott reassigning the inner critic to a job
+it is fetched for, Godin's bad writing and Asimov's end-of-shift review, Oates on mood as an
+output rather than a precondition, Karr's revision budget, Sanderson's longhand trick — which
+is the same split as `generator-evaluator-loops`, arrived at from a field with no connection to
+it. Three correspondences hold (judgement at a decided boundary; done defined before the work;
+the judge needs its own access to the artifact) and three break, which is the substance of the
+page: the failure modes are **inverted** (an LLM praises its own output, a person savages their
+own draft), the writers separate in time rather than identity, and neither side has a ground
+truth though only one admits it. It ends by refusing the obvious over-reading — most of the
+episode does not transfer, and treating every source as a harness metaphor is a way of learning
+nothing from it.
+
+One existing page edited: `generator-evaluator-loops.mdx` gains a paragraph recording the
+fourth independent arrival at the split, the inversion, and the cheap experiment it implies —
+one model, two passes, an enforced boundary, no second agent — which nothing in this cluster
+has tested. Nothing else was touched; the connections to `keeping-an-agent-running`,
+`command-over-tokens` and `jaggedness-and-what-rl-optimises` are made as outbound links from
+the new notes, so they surface as backlinks without editing pages the material doesn't really
+change.
+
+Both new notes are drafts, so the published `generator-evaluator-loops` now links to one —
+one inert link in production, and the same decision as the DashBench note in July, plus a
+larger editorial one: publishing these makes the "not about a single topic" claim true in
+public for the first time. `tasks/2026-08-09-publish-writing-craft-notes.md`.
+
+The source's own limitation is recorded in its `SOURCE.md` and constrains everything above:
+the compilation carries no dates or episode numbers for its constituent interviews, so nothing
+in it can be dated or sequenced. Three claims it makes were left unverified and kept out of the
+wiki, including Godin's aside about the origin of "Just do it". `npm run build` clean.
+
+## [2026-08-10] setup | Published the two writing-craft notes
+
+Owner call on `tasks/2026-08-09-publish-writing-craft-notes.md`: both notes from yesterday's
+Tim Ferriss ingest flipped to `status: published` —
+`writers-on-starting-finishing-and-bad-drafts` and `separating-drafting-from-judging`. One
+field each, no prose touched, `updated` left alone (same convention as the 2026-07-28 bulk
+publish).
+
+The consequence worth recording is editorial rather than mechanical. Until now every published
+page in this notebook was agentic engineering, so the README's "not about any single topic" and
+the home page's "topics emerge from what accumulates" were true of the repository but not of
+the public site. They are now true of both. The `generator-evaluator-loops` link into
+`separating-drafting-from-judging` resolves instead of rendering as an inert span, so no page
+is left pointing at nothing.
+
+The wiki is 29 notes, 27 of them published. One new tag page goes live, `writing-craft` (17
+tags now), and `evaluation` gains its first entry that isn't about agents. Task closed with the
+reasoning kept as the precedent for the next source from an unfamiliar subject; a dated
+addendum on the source record notes that its "both notes are drafts" line no longer holds.
+`npm run build` clean, 54 prerendered pages, no new wikilink warnings.
+
+One thing this publish creates, in the same shape as the problem it solved: the now-published
+`separating-drafting-from-judging` cites `dashbench-measuring-a-code-review-agent`, which is
+still a draft, so that link renders inert in production. The sentence stands without it — it
+states the answer (refuse a single ground truth, pay for adjudication) before it points
+anywhere — but it is a sixth caller for a note that was already recommended for publishing, and
+it has been added to `tasks/2026-07-30-publish-dashbench-note.md`. The other remaining draft is
+`command-over-tokens`, whose publish decision has always been the owner's.
