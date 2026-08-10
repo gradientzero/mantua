@@ -3,7 +3,7 @@ title: "Auto Research: taking the researcher out of the loop"
 status: published
 tags: [agentic-engineering, harness-design, evaluation]
 created: 2026-07-27
-updated: 2026-07-27
+updated: 2026-08-10
 summary: Karpathy's name for an agent loop that improves a model without a human in it — an objective, a metric, boundaries, and go. What it did to a repo he had hand-tuned for two decades, the one constraint that decides where it applies, and the parallel version he has not solved.
 origin: agent
 ---
@@ -107,6 +107,29 @@ than money to an institution.
 He does not have a design he is happy with. The security problem is the visible blocker
 (running arbitrary code from strangers), and he says he has been playing with ideas without
 anything clicking.
+
+## Someone building the prerequisite
+
+Auto Research assumes a pipeline an agent can read, modify and run — `program.md` is a
+gesture at specifying one, and the nanochat demonstration works partly because a small
+training repo already *is* that. At production scale it is not free, and
+[[model-training-as-code|Aleph Alpha's Savanna]] (May 2026) is the first published account of
+a lab building it deliberately: the whole training pipeline as imperative code, hermetic runs
+triggered from CI, artefacts immutable and versioned, evaluation as a function you call.
+
+They name auto-research as the reason, in the last paragraph: with the pipeline in code, an
+LLM agent can read, modify and run it autonomously, they are beginning to explore this, and
+what they hope for eventually is a model that improves itself through the factory. So the
+state of play, as of that post, is that the substrate exists at one lab and the loop on top of
+it does not yet.
+
+That is a small correction to the framing on this page rather than a change to it. The gap
+here has been described as coordination and parallelism, which is right about Karpathy's
+version — one machine, one metric, overnight. The Aleph Alpha post says the *other* gap is
+plumbing, and that the plumbing is a multi-team engineering project: hermeticity, artefact
+lineage, a workflow engine, a cache that keeps a sweep from re-running work. None of it is
+research, all of it is a precondition, and it is the sort of thing that never appears in a
+description of the loop.
 
 ## What he thinks the labs are doing
 

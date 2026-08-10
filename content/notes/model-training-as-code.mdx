@@ -1,0 +1,211 @@
+---
+title: "Model Training as Code: Aleph Alpha's Savanna"
+status: draft
+tags: [agentic-engineering, harness-design, evaluation, fine-tuning]
+created: 2026-08-10
+updated: 2026-08-10
+summary: A lab put its entire training pipeline — pre-training, SFT, RL, evaluation — into imperative code, with CI as the entry point and one-click hermetic runs. The first source in this notebook where the harness is built for training a model rather than for writing software, and the argument is organisational rather than technical.
+origin: agent
+---
+
+Source: *Model Training as Code*, Michael Barlow, [Aleph Alpha](https://aleph-alpha.com)
+Research, 22 May 2026. Captured as a PDF-to-markdown conversion with its figures; archived
+under `sources/2026-08/model-training-as-code-aleph-alpha/`. Figures on this page are the
+article's own.
+
+Every other source in [[agentic-engineering|the harness-design cluster]] is about getting an
+agent to write software. This one is about getting a lab to train a model, and it arrives at
+the same instruction from the far side: **put the procedure in the repository, because
+anything that lives only in people's heads doesn't survive contact with scale.** Their name
+for it is Model Training as Code (MTaC); the implementation is a system they call Savanna.
+
+## The problem they name
+
+Training a good model is not one pass. It is a compute-bound iteration over data mix,
+architecture and recipe, guided by evaluation, run twice — once for pre-training and once for
+post-training — with each arrow costing a different amount of GPU time:
+
+<figure>
+  <img src="/images/model-training-as-code/training-pipeline.jpeg" alt="Two loops side by side. In pre-training, evaluation feeds back into data, recipe and architecture, which produce a development model via small pre-training runs, repeated n times, before one large pre-training run produces the base model. In post-training the same loop runs over data, recipe and rewards, repeated m times, before post-training produces the final model." />
+  <figcaption>The iteration the pipeline has to support, ×n and ×m. Figure from the Aleph Alpha article.</figcaption>
+</figure>
+
+Three costs of running that manually, and the third is the one the post is actually about.
+
+**Every manual step is a chance to get it wrong.** Their illustration: a data mix handed over
+as a database path in Slack, a multi-week run that dies two weeks in on a full storage quota,
+nobody willing to delete the 30TB dataset with `do_not_delete` in its name, GPUs idle while
+this is resolved, and a relaunch reconstructed from memory and Slack threads.
+
+**The team forgets what it learned.** No durable record of why a hyperparameter has its
+current value, no formal link from a data mix to its constituent datasets, no attribution
+from a model back to the recipe that produced it. Their example is an SFT team re-running a
+sweep it had already run months earlier against a different checkpoint, without realising.
+
+**Infrequent manual handoffs fragment ownership.** SFT hands a checkpoint to RL, the final
+model underperforms, and two weeks go into deciding whose stage is at fault. Neither team can
+run the other's, so each optimises its own slice rather than the model at the end.
+
+The root cause they give is one sentence, and it is the same claim the OpenAI post makes about
+application code:
+
+> the pipeline lives in the minds of the team rather than in a shared, durable artefact
+
+## What lifting it into code buys
+
+Savanna implements the pipeline and the processes around it as ordinary imperative code —
+`post_train` is a function that awaits `sft`, spawns an evaluation, awaits `rl`, spawns
+another, and returns both. Three named gains:
+
+- **Composability.** Manual steps become functions with typed inputs and outputs, so they
+  compose into an end-to-end run that launches with one click, repetitive work becomes a
+  `for` loop, and testing means running a subset or a downscaled parametrisation of the real
+  thing.
+- **Consensus.** `main` is the team's current best understanding of how to train a model.
+  The recipe is in the code, so there is no setup to reconstruct and no flag to forget.
+- **Provenance.** Comments and commit history carry the reasoning; a past run is reproducible
+  because the commit that produced it can be checked out and rerun.
+
+The organisational consequence is the part I'd not have predicted. Labs scaling up normally
+decompose training *temporally* — one team per stage. If any team can launch the whole
+pipeline, you can decompose by *capability* instead: a team owns a model behaviour end to end.
+Theirs owns multilinguality, and builds the SFT datasets, RL environments and evaluation
+suites that German language and culture require.
+
+They are explicit that this only works with trunk-based development — small changes landing on
+`main` as early as possible. Long-lived branches pay the same integration debt as the manual
+handoffs did.
+
+## How it runs
+
+Savanna lives in GitHub and **CI is the entry point for training**. Push a branch, or launch
+from the GitHub UI; training their best model is triggering CI on `main`. Two gates sit around
+that:
+
+- Every PR runs a small-scale end-to-end training run in **under five minutes**, so
+  contributing never feels slow.
+- Every night, a larger end-to-end run asserts that the resulting model achieves a measurable
+  improvement on the evaluation suite — a semantic regression test for the training logic
+  itself.
+
+Runs are hermetic. Non-code artefacts — data, models, tokenisers — are immutable and versioned
+in a registry, and a run links its referenced artefacts, logs, metrics and evaluation results
+to the resulting checkpoint. Their line for what that replaces: to find which models were
+trained on a given dataset you query the lineage graph, not Slack search.
+
+Because the pipeline is a function, a sweep is a nested loop over parametrisations. The
+workflow engine deduplicates the redundant work — four `post_train` calls varying SFT and RL
+learning rates only run SFT twice, since two of them share their inputs and can read the
+other's output from cache once it lands:
+
+<figure>
+  <img src="/images/model-training-as-code/sweep-workflow-dag.jpeg" alt="A workflow DAG: one start node fans out to four boxed post_train subgraphs, each running sft, then rl, with an evaluate task after each, converging on a create_report task and a single end node. Two of the four sft nodes are outlined in blue for running, two in orange for awaiting cache." />
+  <figcaption>Four post_train calls, two SFT runs. Blue is running, orange is awaiting cache. Figure from the Aleph Alpha article.</figcaption>
+</figure>
+
+Underneath: Flyte on Kubernetes for durable execution, sequencing, parallelism, retries,
+caching and the UI above; artefacts in an on-prem object store with versions tracked in
+Weights & Biases; data streamed to the GPU clusters; metrics to monitoring with alerts. Long
+runs emit and evaluate intermediate checkpoints as they go, and a finished run is
+automatically benchmarked, written up as a report, and posted to a leaderboard on a screen in
+the Heidelberg office.
+
+<figure>
+  <img src="/images/model-training-as-code/leaderboard-screen.jpeg" alt="A large dashboard screen on a stand in an otherwise empty white office room, showing training metrics, charts and a results table." />
+  <figcaption>The leaderboard, in the office. Figure from the Aleph Alpha article.</figcaption>
+</figure>
+
+## What it changed, by their account
+
+Day to day: most of their work is small-scale experiments and sweeps, and the launching and
+evaluating is now automatic, so the effort moves to analysing results and designing the next
+experiment.
+
+The claim I find most concrete is about the single large run. During their most recent
+pre-training run they stopped and resumed several times to tune the setup as the automated
+intermediate evals taught them how the model was behaving. Each relaunch was quick and
+low-risk because there was no setup to reconstruct — and therefore **it did not have to be the
+same person twice.** Whoever was on hand could pick it up. That is the clearest statement I
+have read of what "consensus in version control" is actually worth: it converts a person into
+a role.
+
+## Where I'd push back
+
+**There is not a single before/after number.** "We iterate faster", "our learning rate as an
+organisation has significantly increased" — no measurement of either, no cost for the factory
+itself, and no figure for what the nightly full-pipeline test burns in GPU hours. The one
+number in the post is the five-minute PR check. Every other source in this cluster gets the
+same complaint, and this one has the least excuse: they built the artefact-lineage system that
+would let them answer it.
+
+**The before-picture is the author's own composite.** The Slack handoff, the `do_not_delete`
+dataset and the re-run sweep are told as a narrative of how a manual lab works, unattributed
+and undated. Probably drawn from life — it is too specific not to be — but it means the
+argument for MTaC rests on a story rather than on a comparison, and there is no version of the
+counterfactual where the same team kept working the old way.
+
+**A downscaled run passing is not the full-scale run passing.** They don't claim otherwise, and
+the nightly semantic-regression test is the right idea. But the failures that cost thousands of
+GPU hours are mostly the ones that only appear at scale, and the post doesn't say whether the
+gates ever caught one.
+
+**The gate is a metric, and the metric is theirs.** "Asserts a measurable improvement on our
+evaluation suite" is a merge condition tied to a score the same organisation maintains.
+[[auto-research|Karpathy's warning]] applies directly — a loop run against a metric for long
+enough will overfit it — and the more of the pipeline you automate against that assertion, the
+more of your model's direction it silently sets. Nothing here checks the check; see
+[[generator-evaluator-loops]].
+
+None of that undoes the main thing, which is that this is a lab describing infrastructure it
+runs in production rather than an experiment it ran once.
+
+## Where it connects
+
+**It is the same claim as the OpenAI post, from a different industry.** "What the agent can't
+access in-context doesn't exist" and "the pipeline lives in the minds of the team" are the same
+observation about durable artefacts, reached once from an agent's context budget and once from
+an org chart — see [[harness-engineering-agent-first-repositories]]. Both answer it with
+version-controlled text, mechanical CI gates and trunk-based development. The convergence is
+worth something precisely because Aleph Alpha is not writing about agents at all until the last
+paragraph.
+
+**It supplies the substrate Auto Research assumes.** Karpathy's version of the autonomous
+research loop needs a pipeline an agent can read, modify and run, and his `program.md` is a
+gesture at specifying one. Aleph Alpha closes the post by naming exactly that as the payoff —
+with the pipeline in code, an LLM agent can read, modify and run it autonomously, they are
+beginning to explore this, and the ambition they state is a model that self-improves via
+Savanna. So the honest reading is that they built the prerequisite and are at the start of the
+thing itself, which is one more datapoint for the shape [[auto-research]] describes: the loop
+is not the hard part, the surroundings are.
+
+**It puts a second answer under the "where does this run" question.**
+[[keeping-an-agent-running]] collects the mechanisms that start the next turn on a developer's
+machine; this is the industrial version — CI as the trigger, a workflow engine with durable
+execution and retries, a cluster that stays up. Nothing about it is agent-specific, which is
+the point: the hosting problem for long autonomous runs was solved for batch compute a decade
+ago.
+
+**Capability teams are speciation at the org level.**
+[[model-speciation-and-touching-the-weights|Karpathy expects specialised models and doesn't
+see them]], and gives a lab-side reason: a lab serving everybody can't know what will be asked
+next. A capability-oriented post-training team owning German language and culture is a
+partial counter-example — the specialisation is real and it is organisational before it is
+architectural, which is a route to it his framing doesn't consider.
+
+**And the tooling gap it half-fills.** His other claim was that we have no primitives for
+working with models other than the context window, and that touching weights is still a
+developing science. Savanna is a factory for touching weights, so the primitives exist
+*somewhere*. What the post doesn't claim is the part he was talking about — nothing here makes
+a fine-tune predictable or capability loss avoidable; it makes the process repeatable and
+attributable. Better bookkeeping around an unsolved problem is real progress and is not the
+same as solving it. See [[llm-customization-and-fine-tuning-notes]] for the continuum this
+would sit on.
+
+## The loose end I'd rather flag than stretch
+
+This repository is the same move for a notebook — the operations are markdown files in
+`.claude/commands/`, sources are immutable, every run is logged, and *provenance* is its
+central rule — and the three gains MTaC claims map onto it almost term for term. That
+correspondence is real but cheap: there are no GPUs here, no metric, and nothing that costs
+thousands of dollars when it goes wrong, which is what made any of this worth building for
+them. Worth noticing once; not worth building a page on. See [[llm-wiki-pattern]].

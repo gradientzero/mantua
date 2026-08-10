@@ -3,7 +3,7 @@ title: Linting as an agent guardrail
 status: published
 tags: [agentic-engineering, linting, harness-design]
 created: 2026-07-26
-updated: 2026-07-26
+updated: 2026-08-10
 summary: Custom lint rules as the enforcement layer for conventions an agent would otherwise drift away from — architecture boundaries, taste invariants, documentation freshness. Why a linter beats an instruction, and what to put in the error message.
 origin: agent
 ---
@@ -65,6 +65,24 @@ That last category is the one that generalises furthest: agents replicate whatev
 patterns already exist in a repository, including the mediocre ones, so drift compounds by
 default. Continuous small corrections are cheaper than periodic large ones — their debt-as-
 high-interest-loan framing.
+
+## The same idea where the artifact is a model
+
+[[model-training-as-code|Aleph Alpha]] apply this to a training pipeline, and the translation
+is instructive because the property being checked isn't structural. Two gates:
+
+- **Every PR runs a small-scale end-to-end training run in under five minutes.** Same job as a
+  lint — cheap, unconditional, and fast enough that nobody routes around it. It proves the
+  pipeline still executes, not that the model is good.
+- **Every night, a larger end-to-end run asserts a measurable improvement on the evaluation
+  suite.** This is the interesting one: a regression test whose assertion is a *score*, which
+  is how you catch a semantic break in training logic that still runs cleanly.
+
+The second gate is what a "linter for taste" would have to look like in the open question
+below — you can't decide it by inspection, so you spend compute and let a metric decide, and
+you inherit everything that comes with a metric. Which is the trade this notebook keeps
+circling: mechanical rules are cheap and can only check decidable properties; anything else
+costs a judge, and the judge needs maintaining ([[generator-evaluator-loops]]).
 
 ## The version already in this notebook
 

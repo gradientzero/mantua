@@ -3,7 +3,7 @@ title: "Speciation, and why we only ever touch the context window"
 status: published
 tags: [fine-tuning, deployment, inference]
 created: 2026-07-27
-updated: 2026-07-28
+updated: 2026-08-10
 summary: Karpathy expects specialised models and does not see them arriving, and his explanation is that adjusting weights without losing capability is still an underdeveloped science while context windows just work. Plus where he puts the open-weight models — six to eight months behind, and better off there.
 origin: agent
 ---
@@ -56,6 +56,24 @@ support with numbers. It is a hypothesis to test against the LoRA work, not a fi
 overrides it. The place it would show up concretely is a capability-regression check either
 side of a fine-tune — which is the same eval harness the notebook already needs for
 [[slm-evaluation-harness|other reasons]].
+
+**A partial counter-example, and a partial confirmation.**
+[[model-training-as-code|Aleph Alpha's account of their training factory]] (May 2026) reports
+something his framing doesn't have a slot for: once any team can launch the entire pipeline,
+the lab reorganised from teams owning *stages* of training to teams owning *capabilities*
+end-to-end — theirs owns multilinguality, building the SFT datasets, RL environments and
+evaluation suites that German language and culture need. That is specialisation arriving
+organisationally before it arrives architecturally, and it is a route to the speciation he
+expects that doesn't require anyone to ship a separate model.
+
+It also puts his "we lack the primitives" claim in a more specific place. Savanna is a
+production factory for touching weights, so the industrial primitives exist somewhere: hermetic
+runs, versioned artefacts, lineage from checkpoint back to recipe, evaluation as a function you
+call. What that post does *not* claim is the thing he was actually complaining about — nothing
+in it makes a fine-tune predictable or capability loss avoidable. It makes the process
+repeatable and attributable, which is the bookkeeping around the unsolved problem rather than
+the solution to it. Both of which are the sort of thing a lab builds and does not publish, so
+the absence of public primitives is weaker evidence than it looks.
 
 ## Does the compute crunch force specialisation?
 

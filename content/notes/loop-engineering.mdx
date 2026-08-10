@@ -3,7 +3,7 @@ title: "Loop engineering: from writing prompts to writing loops"
 status: published
 tags: [agentic-engineering, harness-design]
 created: 2026-07-27
-updated: 2026-07-27
+updated: 2026-08-10
 summary: The claim that the unit of work is shifting from the prompt to the loop — Cherny, Osmani and Guzman all saying a version of it — and why the interesting question is not how to keep an agent running but who decides what "done" means.
 origin: agent
 ---
@@ -106,3 +106,9 @@ is a training run with a validation loss, the friendliest metric that exists.
   one [[agentic-engineering]] flags in the harness posts: no published failures.
 - If the loop writes the prompts, what reviews the loop? A misspecified condition runs to
   completion and reports success. There is no equivalent of a failing test for a rubric.
+  The nearest thing to an answer in the notebook is [[model-training-as-code|Aleph Alpha's]]:
+  keep the loop in version control as ordinary code, so it reviews like code — a pull request,
+  a five-minute downscaled end-to-end run on every change, a nightly full run that asserts the
+  output still improves on the eval suite. That covers the loop *breaking*. It does not cover
+  the loop being wrong about what "better" means, because the nightly assertion is itself a
+  metric nobody grades. The half that has a test is the half that was never the hard one.

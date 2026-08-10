@@ -3,7 +3,7 @@ title: "Agentic engineering: the work moves to the harness"
 status: published
 tags: [agentic-engineering, harness-design]
 created: 2026-07-26
-updated: 2026-07-30
+updated: 2026-08-10
 summary: The emerging discipline around long-running coding agents — designing the scaffolding, feedback loops and environments that let an agent do reliable work, rather than writing the code yourself. Entry point for the harness-design cluster in this notebook.
 origin: agent
 ---
@@ -106,7 +106,9 @@ same machinery that decides whether an agent's sprint passed.
   by any of the three posts, all of which quietly assume a machine that stays up. Partly
   overtaken since: Managed Agents and scheduled cloud runs are both hosts that aren't the
   laptop (see [[keeping-an-agent-running]]), though nobody has published what a six-hour
-  run costs on either.
+  run costs on either. [[model-training-as-code|Aleph Alpha's answer]] is the industrial
+  one and is not agent-specific at all — CI triggers a workflow engine on Kubernetes, with
+  durable execution and retries, on a cluster that stays up.
 - What carries across sessions? Anthropic uses handoff artifacts and (in the older
   harness) context resets; OpenAI uses execution plans checked into the repo. Both are
   memory systems built out of files. Is there anything better than files yet? Karpathy
@@ -161,6 +163,27 @@ The same interview's robotics half is the physical-world version of this page's 
 capability lands, and the binding constraint moves to everything around it. It is
 [[the-last-hundred-feet]], and it is worth reading next to the harness posts precisely because
 the domain is different and the shape is not.
+
+## The same argument, from a lab that trains models
+
+Everything above is about getting an agent to write software. [[model-training-as-code]]
+(Aleph Alpha, May 2026, ingested 2026-08-10) reaches the same conclusion about a job with no
+agent in it at all: their entire training pipeline — pre-training, SFT, RL, evaluation — is
+imperative code in GitHub, CI is the entry point, and a full run is hermetic and launches with
+one click. The diagnosis they give for the manual alternative is this page's third idea in
+different words: the pipeline lived in the team's heads rather than in a durable artefact, so
+it could not be handed over, repeated, or reasoned about.
+
+Three things it adds that no source here had. It is **production infrastructure rather than an
+experiment**, described by the people running it. It reports the concrete payoff of putting the
+recipe in version control — a large pre-training run stopped and resumed several times, each
+relaunch cheap enough that *it did not have to be the same person twice*. And it shows the
+organisational move that follows: once anyone can launch the whole pipeline, teams can own a
+model *behaviour* end to end instead of a stage of the pipeline.
+
+It also inherits this cluster's standing weakness. No before/after numbers, no cost for the
+factory itself, and — for the fifth source running — not one reported case of the scaffolding
+making things worse.
 
 ## The mechanics, one level down
 

@@ -642,3 +642,60 @@ states the answer (refuse a single ground truth, pay for adjudication) before it
 anywhere — but it is a sixth caller for a note that was already recommended for publishing, and
 it has been added to `tasks/2026-07-30-publish-dashbench-note.md`. The other remaining draft is
 `command-over-tokens`, whose publish decision has always been the owner's.
+
+## [2026-08-10] ingest | Model Training as Code (Aleph Alpha)
+
+One item: a PDF-to-markdown capture of Aleph Alpha Research's *Model Training as Code* by
+Michael Barlow (22 May 2026), with seven extracted images. It arrived in `inbox/mine/`, which
+would mark it as the owner's own writing — it is a named external author's article with a
+copyright line, so the folder hint was **overridden** and it was processed as captured
+external material. Filing it `origin: human` would have put Barlow's article under Wolfgang's
+byline, the one violation the README calls unforgivable. Recorded in the source record and in
+`tasks/2026-08-10-inbox-mine-misfiled-item.md`, which proposes the general rule: evidence
+inside the item beats the folder, and the override may only ever run *away* from
+`origin: human`, never toward it.
+
+New note `content/notes/model-training-as-code.mdx` (`origin: agent`, `status: draft`). The
+substance: a lab put its entire training pipeline — pre-training, SFT, RL, evaluation — into
+imperative code, with GitHub CI as the entry point, hermetic one-click runs, immutable
+versioned artefacts and a lineage graph from checkpoint back to recipe. Their diagnosis of the
+manual alternative is this cluster's own claim with humans in the place of the agent: the
+pipeline lived in the team's heads rather than in a durable artefact. Two gates worth keeping:
+a downscaled end-to-end training run on every PR in under five minutes, and a nightly larger
+run that asserts a measurable improvement on the eval suite. The payoff they report most
+concretely is that a large pre-training run could be stopped and resumed by whoever was on
+hand, because there was no setup to reconstruct — consensus in version control converting a
+person into a role. Pushback recorded: not one before/after number in the whole post, the
+manual-lab before-picture is the author's own unattributed composite, and the nightly gate is
+a metric the same organisation maintains.
+
+Six published pages edited, which is what made this item worth its length — it is the first
+source here where the harness exists to train a model rather than to write software, so it
+lands on the cluster from an angle none of the others share. `agentic-engineering` gains a
+section and an answer to its "where do these agents run" open question (a workflow engine on
+Kubernetes, triggered from CI — not agent-specific, which is the point). `auto-research` gains
+the substrate the loop assumes, and the correction that follows: the gap is not only
+coordination, it is also plumbing, and Aleph Alpha name auto-research as their reason for
+building it. `harness-engineering-agent-first-repositories` gains the strongest available
+evidence that "what the agent can't see doesn't exist" is a general claim — two teams reaching
+identical conventions from context budget and from organisational memory.
+`model-speciation-and-touching-the-weights` gains a partial counter-example (capability teams
+owning a model behaviour end-to-end are speciation arriving organisationally) and a narrowing
+of the missing-primitives claim (a factory for touching weights exists; it makes the process
+repeatable, not the outcome predictable). `linting-as-agent-guardrail` gains the two CI gates
+as the version of this idea where the artifact is a model. `loop-engineering` gains a partial
+answer to "what reviews the loop?" — keep it in version control and it reviews like code,
+which covers the loop breaking and not the loop being wrong.
+
+Three of the seven images were copied to `public/images/model-training-as-code/` and are
+referenced as figures with attribution: the pipeline diagram, the sweep DAG, and the office
+leaderboard photo. The other four are branding and were left in the archive. This is the first
+time anything sits under `public/images/`, and the images are Aleph Alpha's — so publishing the
+note would set a precedent rather than follow one. That decision, and the six inert wikilinks
+the draft currently leaves in production, are in
+`tasks/2026-08-10-publish-model-training-as-code.md` with three options ranked.
+
+The capture has two defects that constrain what could be taken from it, both recorded in
+`SOURCE.md`: PDF conversion dropped inter-word spaces in ~30 places (`ratherthan`, `forthree`),
+repaired silently in anything quoted; and both code listings are truncated at the right margin,
+so the note describes what the code does instead of reproducing it. `npm run build` clean.
