@@ -613,3 +613,32 @@ The source's own limitation is recorded in its `SOURCE.md` and constrains everyt
 the compilation carries no dates or episode numbers for its constituent interviews, so nothing
 in it can be dated or sequenced. Three claims it makes were left unverified and kept out of the
 wiki, including Godin's aside about the origin of "Just do it". `npm run build` clean.
+
+## [2026-08-10] setup | Published the two writing-craft notes
+
+Owner call on `tasks/2026-08-09-publish-writing-craft-notes.md`: both notes from yesterday's
+Tim Ferriss ingest flipped to `status: published` —
+`writers-on-starting-finishing-and-bad-drafts` and `separating-drafting-from-judging`. One
+field each, no prose touched, `updated` left alone (same convention as the 2026-07-28 bulk
+publish).
+
+The consequence worth recording is editorial rather than mechanical. Until now every published
+page in this notebook was agentic engineering, so the README's "not about any single topic" and
+the home page's "topics emerge from what accumulates" were true of the repository but not of
+the public site. They are now true of both. The `generator-evaluator-loops` link into
+`separating-drafting-from-judging` resolves instead of rendering as an inert span, so no page
+is left pointing at nothing.
+
+The wiki is 29 notes, 27 of them published. One new tag page goes live, `writing-craft` (17
+tags now), and `evaluation` gains its first entry that isn't about agents. Task closed with the
+reasoning kept as the precedent for the next source from an unfamiliar subject; a dated
+addendum on the source record notes that its "both notes are drafts" line no longer holds.
+`npm run build` clean, 54 prerendered pages, no new wikilink warnings.
+
+One thing this publish creates, in the same shape as the problem it solved: the now-published
+`separating-drafting-from-judging` cites `dashbench-measuring-a-code-review-agent`, which is
+still a draft, so that link renders inert in production. The sentence stands without it — it
+states the answer (refuse a single ground truth, pay for adjudication) before it points
+anywhere — but it is a sixth caller for a note that was already recommended for publishing, and
+it has been added to `tasks/2026-07-30-publish-dashbench-note.md`. The other remaining draft is
+`command-over-tokens`, whose publish decision has always been the owner's.

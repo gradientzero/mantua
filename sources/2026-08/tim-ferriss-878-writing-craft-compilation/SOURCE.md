@@ -95,3 +95,11 @@ open in topic. It introduces one new tag, `writing-craft`.
 Both new notes are `status: draft`, the default for ingested material. That leaves one inert
 link in production, since the published `generator-evaluator-loops` now points at a draft —
 tracked in `tasks/2026-08-09-publish-writing-craft-notes.md`.
+
+## Addendum — 2026-08-10
+
+The record above stands unedited. One thing in it is now out of date: both notes were
+published on 2026-08-10 on the owner's call, so they are no longer drafts and the link from
+`generator-evaluator-loops` resolves rather than rendering inert. The publishing question in
+`tasks/2026-08-09-publish-writing-craft-notes.md` is closed — the notebook is open in topic in
+public, not just in the README.

@@ -2,9 +2,14 @@
 title: Publish the two writing-craft notes, or soften the one link into them
 date: 2026-08-09
 priority: medium
-status: open
+status: done
 area: content
 ---
+
+> **Resolved 2026-08-10.** Owner call: publish both. Question (2) below is answered — the
+> notebook is publicly open in topic, and the README's claim now holds in public. The
+> `generator-evaluator-loops` link resolves, so nothing renders inert. Kept as a record
+> because the reasoning is the precedent for the next source from a new subject.
 
 # Publish the writing-craft notes, or soften the link into them
 

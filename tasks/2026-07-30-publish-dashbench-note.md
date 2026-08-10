@@ -11,6 +11,9 @@ belonged on pages that are already published, so five of them now link to it:
 - `doordash-on-agentic-commerce-and-dot.mdx`
 - `agentic-engineering.mdx`
 - `self-improving-agents-from-production-feedback.mdx`
+- `separating-drafting-from-judging.mdx` — added 2026-08-10, when the writing-craft notes were
+  published; it cites this note as the cluster's one partial answer to *what checks the check?*
+  The sentence states the answer before it points anywhere, so it stands without the link
 
 Until the new note is published, all of those render in production as muted dashed-underline
 spans (the draft policy in `README.md`). Nothing breaks and the sentences still parse, but
