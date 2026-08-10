@@ -2,9 +2,18 @@
 title: Publish the Model Training as Code note — and decide on the three Aleph Alpha figures
 date: 2026-08-10
 priority: medium
-status: open
+status: done
 area: content
 ---
+
+> **Resolved 2026-08-10, same day.** Owner call: publish. Both decisions answered together —
+> the note goes live and the three figures go with it, which is option (1) below. The six
+> inert links now resolve. Kept as a record because question (2) is the precedent: this is the
+> first third-party imagery on mantua.io, and the terms it went up under — substantive figures
+> only, attribution in every `figcaption`, branding left in the archive — are the terms the
+> next source with images should be held to. Option (3), redrawing the pipeline diagram as an
+> SVG figure component, stays available and would be an improvement on its own merits, not a
+> correction.
 
 # Publish `model-training-as-code`, and decide about its figures
 
