@@ -699,3 +699,33 @@ The capture has two defects that constrain what could be taken from it, both rec
 `SOURCE.md`: PDF conversion dropped inter-word spaces in ~30 places (`ratherthan`, `forthree`),
 repaired silently in anything quoted; and both code listings are truncated at the right margin,
 so the note describes what the code does instead of reproducing it. `npm run build` clean.
+
+## [2026-08-10] setup | Published the Model Training as Code note
+
+Owner call on `tasks/2026-08-10-publish-model-training-as-code.md`, taken the same day the
+note was ingested: publish. One field changed on
+`content/notes/model-training-as-code.mdx`, no prose touched, `updated` left alone — it was
+already today's date (same convention as the two publishes before this one).
+
+The mechanical consequence is the largest this notebook has had from a single publish. Six
+published pages were pointing at a draft, so six wikilinks were rendering as inert spans in
+production — `agentic-engineering` twice, `auto-research`,
+`harness-engineering-agent-first-repositories`, `model-speciation-and-touching-the-weights`,
+`linting-as-agent-guardrail` and `loop-engineering`. All of them now resolve, and the new page
+carries all six as backlinks. No new tag page: all four of its tags already had one, and
+`fine-tuning` gains its first entry that is about infrastructure rather than about a technique.
+The wiki is 30 notes, 28 published; the two remaining drafts are unchanged
+(`dashbench-measuring-a-code-review-agent`, `command-over-tokens`).
+
+The decision worth recording is the second one in that task, which the publish settled
+implicitly: **this is the first third-party imagery on mantua.io.** Nothing sat under
+`public/images/` before today. Three of Aleph Alpha's figures are now on a public page — the
+pipeline diagram, the sweep DAG, the office leaderboard — each attributed in its `figcaption`,
+with the wordmark, hero image and product tile deliberately left in the archive. The terms
+that went with it are the precedent for the next source that arrives with images: substantive
+figures only, attribution on each, branding never. Redrawing the pipeline diagram as an SVG
+figure component (the repo has three already) remains worth doing on its own merits and is no
+longer a way of avoiding the question.
+
+Both tasks from this morning's ingest are now closed or answered. `npm run build` clean, 55
+prerendered pages, no new wikilink warnings.
