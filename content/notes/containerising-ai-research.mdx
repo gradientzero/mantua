@@ -1,0 +1,147 @@
+---
+title: "Containerising AI research"
+status: published
+tags: [recursive-self-improvement, evaluation, agentic-engineering, harness-design]
+created: 2026-08-13
+updated: 2026-08-13
+summary: What it would concretely take to train a model to do AI research — the environments, the three scales they run at, and the one part of the job Greenblatt thinks stays unverifiable. Plus the argument that algorithms rather than bought human judgment have been driving progress, which is what makes the whole thing work.
+origin: agent
+---
+
+From [[recursive-self-improvement-greenblatt|the Greenblatt interview]]. This page is the first
+of Dwarkesh's three claims: that enough of AI research fits in a container with a score attached
+that you can train a model to do it. It is the same constraint
+[[auto-research|Karpathy states in one line]] — if you can't evaluate it you can't automate it —
+applied to the job of building the next model, and the interesting thing is how much of the job
+turns out to fit.
+
+## The environments
+
+Not a taxonomy, just the list the two of them build in conversation, because the concreteness is
+the point:
+
+- **Train a small model well.** A container where the model trains something GPT-2-sized and is
+  scored on the result, in the shape of the descendants of Karpathy's nanoGPT speedrun: change the
+  optimiser, the hyperparameters, the architecture, get to a fixed training loss as fast as
+  possible.
+- **The same across modalities.** Image classification, image generation, video generation —
+  arbitrarily many variants of "train an increasingly good model of this kind".
+- **Implement a stated direction.** Here is a specific idea for an algorithm; go build it. This is
+  the one that most resembles ordinary agentic coding work, and the easiest to grade.
+- **Reach a capability, mechanism unspecified.** Dwarkesh's example is the good one: train a model
+  that gets better at a video game as it replays it, i.e. do online-learning research, and *we
+  don't care how* — neuralese, a vector memory, better long context, whatever. The environment
+  scores the capability and leaves the approach open.
+- **Find the bug.** Introduce a subtle defect into a training recipe, train the model to point at
+  it, grade whether it found the right one. Greenblatt expects this to be one of the *easier*
+  things to train, on two grounds: most such bugs can be demonstrated without much compute, and
+  pointing out one class of bug seems to transfer to others. He would not be surprised if this
+  environment already exists at labs.
+
+## Three scales, not one
+
+The part that makes it a training programme rather than a toy, and the detail most likely to be
+missed: you do not only run pretrains of small models.
+
+1. **Full pretrains at small scale** — cheap, unlimited, and unlike the real job in the way that
+   matters most (the artefact is not near-frontier).
+2. **Small post-training, mid-training or fine-tuning runs on a near-frontier model** — the
+   artefact is the real thing, the intervention is small enough to iterate on.
+3. **A small number of genuinely frontier-scale experiments**, with a bit of online training on
+   top.
+
+Then the move that closes the loop, which is the one worth sitting with. The model being trained
+is already running experiments at various scales that are *on the critical path* for real AI
+research. So you take those: convert the experiment it just ran into an environment based on that
+production data, or skip the conversion and train directly on the rollouts that found the answer.
+The distinction between "training environment" and "work" stops holding, which is
+[[learning-from-deployment|its own subject]] and its own problem.
+
+## The part that stays hard
+
+Asked directly for the least verifiable part of AI research, he answers **making calls on large
+experiments**. You get few tries; the one big run needs someone to decide exactly what goes into
+it; and historically progress has come from near-frontier-scale experiments, which is precisely
+the regime where you cannot iterate.
+
+Two mitigations he offers, and one is more interesting than it looks:
+
+- **Better science of prediction** — get good enough at forecasting what a run will do that the
+  call becomes a calculation.
+- **Shrink the frontier.** Deliberately scale your frontier-scale runs down to a size you *can*
+  study aggressively, and eat a one-time hit to compute cost in exchange for more cycles.
+
+That second one is not hypothetical, and it comes with a piece of evidence attached: he thinks
+part of why cost per token has risen so little — a frontier model priced not far above GPT-4, per
+million tokens, despite three years of scaling — is that labs are already trading final
+performance for iteration speed, alongside RL's preference for smaller models and a few large runs
+that busted (GPT-4.5 named, the rest rumour). Which is a claim this notebook can appreciate from
+the other end: **more cycles beats a better single attempt** is the same trade
+[[generator-evaluator-loops|an evaluator loop]] makes, and the same one
+[[dashbench-measuring-a-code-review-agent|DashBench]] discovered by finding that repeated runs of
+the same agent surface additional valid findings. Nobody in either place calls it the same trade.
+
+The residual after both mitigations is what he expects the models to be worst at, and it is not
+what you would guess: not insight, but **taste about in-the-weeds experiments** — which
+de-risking experiment to run, how to orient it, how to pick the things that are analogous to
+hyperparameters when you are uncertain. See
+[[recursive-self-improvement-greenblatt|the source note]] for why he thinks ML is a shallow domain
+and that this is where the difficulty actually lives.
+
+## Why this doesn't need a data industry
+
+The claim underneath the whole argument, and the one Dwarkesh pushes hardest on: that the progress
+of the last few years has not been bought with expert human judgment, so automating research
+doesn't require reproducing an industry that sells it.
+
+**Dwarkesh's case.** A decabillion-dollar data industry now exists that systematically collects
+and codifies expert judgment across disciplines into RL environments and SFT traces. That is why
+models got good at coding. The market prices it seriously — he cites a report of Google paying
+close to $2bn for Mechanize — and if you had tried in 2022 to make GPT-3.5 good at coding without
+human experts, it would have been very hard. His analogy for why the spend split doesn't settle
+it: oil is about 1.5% of GDP and the economy stops immediately without it.
+
+**Greenblatt's case.** The binding constraint on RL environments was never the supply of human
+experts — it was *knowing which environments to build and how to structure them*, plus, latterly,
+using enormous amounts of AI labour to build them. He puts compute-to-data spend somewhere around
+10:1 or 20:1 and notes that a high market price tells you what something costs, not what is
+driving the progress. On pre-training specifically he is stronger: the reason the 2026 data mix
+beats the 2019 one is science about which data is good, not people typing. An improvement of the
+OpenWebText-to-FineWeb kind is better described as an **algorithmic** improvement — the sort of
+thing you study with experiments and no human expert data at all. He allows that a more populated
+internet helps, and expects that effect to be much smaller than better curation, scraping and
+processing.
+
+Neither of them can settle it in conversation, and both propose the same kind of experiment,
+which is the useful residue:
+
+- **Dwarkesh's**, already running with a collaborator: cross the best training recipe from each
+  year 2019→2026 against the best data pile from each year, and read the two multipliers off the
+  grid separately.
+- **Greenblatt's**: build two post-training pipelines — current methods with almost no human
+  experts, versus 2024 methods with a great many — and see which wins. He flags the confound
+  himself: it matters a lot which model is doing the post-training.
+
+That is a rare thing in this notebook — a disagreement between two people who both know how to
+falsify it, with the experiment described. Whatever it returns, it prices this page's premise
+directly. And it bears on something much smaller and closer to home: the reason
+[[self-improving-agents-from-production-feedback|the tax-agent loop]] worked is that thousands of
+practitioners produced labelled corrections as a by-product of their jobs, and the open question
+this notebook left there was what the equivalent is when the only user is you. Greenblatt's
+answer, transposed, is that the labels may be less of the value than they look.
+
+## What this leaves standing
+
+Two things that don't get resolved and shouldn't be smoothed over.
+
+The whole programme assumes the substrate — a pipeline an agent can read, modify and run at three
+different scales, hermetically, with artefacts it can compare. [[model-training-as-code|Aleph
+Alpha's account]] is the only published description of a lab building that deliberately, and it
+describes it as a multi-team engineering project that is not research and never appears in
+descriptions of the loop. Nothing in this interview costs it.
+
+And the environments above are all graded, which means every one of them inherits the standing
+problem: an autonomous loop over a metric will overfit the metric, and the metrics that would
+catch that are themselves ungraded. Greenblatt's version of that concern is not a footnote about
+research quality — it is [[training-against-your-own-monitor|the mechanism by which the whole
+thing goes wrong]].

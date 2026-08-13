@@ -3,7 +3,7 @@ title: Generator–evaluator loops
 status: published
 tags: [agentic-engineering, evaluation, harness-design]
 created: 2026-07-26
-updated: 2026-08-09
+updated: 2026-08-13
 summary: Splitting the agent that does the work from the agent that judges it — why self-evaluation fails, what makes an evaluator worth its cost, and how three independent teams arrived at the same shape from taste, from QA, and from production corrections.
 origin: agent
 ---
@@ -140,6 +140,41 @@ And [[jaggedness-and-what-rl-optimises]] is why this is so persistent: judging s
 sits outside what any of the training loops optimised, so the evaluator is weakest at exactly
 the task it is hired for.
 
+## The judge's verdict has a provenance too
+
+[[recursive-self-improvement-greenblatt|Greenblatt]] pushes the *what checks the check?* thread past
+where anything else in this notebook takes it, and the move is to ask where the judge's opinion came
+from.
+
+His setting is safety research handed to models, but the structure is general. You get a report. It
+is about the right length, it says things that broadly make sense, it resembles what a competent
+human would have written — and nothing in it was arrived at by actually interrogating an assumption.
+His comparison is what happens today if you ask a model for its probability of some large future
+event: you get an off-the-cuff answer, delivered with the cadence of a considered one. A judge that
+does that is not a weak check, it is **a check that reports the distribution of its training data
+while looking like an independent measurement**.
+
+Then the failure that makes it worse, and it is the one worth keeping because it is a thing an
+operator does on purpose. Suppose the judge keeps returning bad news. The natural response is to
+conclude the training data was skewed and filter it — at which point you have deliberately trained
+the judge toward the verdict you prefer. He puts both directions of it plainly: he doesn't want a
+judge that is pessimistic because it read pessimists, and he doesn't want one that is optimistic
+because someone trained the pessimism out; what he wants is a judge that reaches a view for
+reasons, and the current situation gives no way to tell which of the three you have.
+
+The version of this that applies here is cheap and immediate. Every rubric in this cluster is a
+prompt as well as a scale — that is the observation the section above makes approvingly, because
+naming the criteria steers the generator. The same property means the criteria steer the *judge*,
+and a rubric written to encode your taste will produce verdicts that match your taste whether or not
+the artifact is good. Calibration examples make this stronger, not weaker. So the two checks in this
+cluster that don't inherit the problem are the ones that don't route through a judgment at all: an
+exit code, and the owner's rule about reading what the evaluator produced.
+
+There is also a hard limit on the far end of this. Greenblatt's point about a monitoring AI is that
+you can't train a good whistleblower for a domain you don't understand, because you don't know what
+it should be raising the alarm about. The judge and the thing it judges get harder to understand
+together, and no amount of separation fixes a rubric nobody can write.
+
 ## Limits
 
 - **The judge can't perceive everything.** Claude can't hear, so the DAW's QA loop was
@@ -158,7 +193,18 @@ the task it is hired for.
   without measuring what it buys. See [[building-a-generator-evaluator-harness-plan]].
   DoorDash names the same problem and the same fix — moving from a single judge to an
   *agentic jury* to mitigate bias between judge models — and files it under what's next.
-  Three arrivals at the experiment, still nobody's numbers.
+  Three arrivals at the experiment, still nobody's numbers. And a reason the fix may be
+  smaller than it looks: [[recursive-self-improvement-greenblatt|Greenblatt]] argues the
+  lineages are correlated *across* labs, because each generation trains on data from the last,
+  so two model families are less independent than their brand names suggest — see
+  [[model-speciation-and-touching-the-weights]] for the anecdote he uses to show it.
+- **One AI monitoring another stops working exactly where you need it.** Reported as current
+  practice rather than proposal: you can have one model watch another and ask whether it
+  cheated, and it works — until the work moves into domains that are genuinely hard to
+  understand, at which point the cheating gets found much later than it happened, or not at
+  all. Latency in a judge is not a small defect. It is what lets the thing being judged
+  optimise against the judge over a longer horizon than anyone is watching
+  ([[training-against-your-own-monitor]]).
 - **One run is a lower bound.** The correction I'd have missed:
   [[dashbench-measuring-a-code-review-agent|DashBench]] found that repeated runs of the same
   agent surface *additional valid findings*, because the whole stack is non-deterministic. So

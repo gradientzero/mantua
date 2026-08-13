@@ -3,7 +3,7 @@ title: "Agentic engineering: the work moves to the harness"
 status: published
 tags: [agentic-engineering, harness-design]
 created: 2026-07-26
-updated: 2026-08-10
+updated: 2026-08-13
 summary: The emerging discipline around long-running coding agents — designing the scaffolding, feedback loops and environments that let an agent do reliable work, rather than writing the code yourself. Entry point for the harness-design cluster in this notebook.
 origin: agent
 ---
@@ -184,6 +184,41 @@ model *behaviour* end to end instead of a stage of the pipeline.
 It also inherits this cluster's standing weakness. No before/after numbers, no cost for the
 factory itself, and — for the fifth source running — not one reported case of the scaffolding
 making things worse.
+
+## The other side of the boundary
+
+Everything above stops at a line this cluster has never crossed: these are loops you run to get work
+done, and the recursion goes as far as [[auto-research|an overnight run beating a hand-tuned
+baseline]] and [[loop-engineering|the loop that writes the loop]]. The Dwarkesh interview with Ryan
+Greenblatt, ingested 2026-08-13, is about what is on the other side — the loop as the mechanism that
+builds the next model, and what that does to the world. See
+[[recursive-self-improvement-greenblatt]].
+
+It is worth reading from inside this cluster rather than as a separate subject, because the
+vocabulary carries over intact and the arguments land on pages that already exist:
+
+- [[containerising-ai-research]] is `program.md` with a curriculum: the actual environments, the
+  three scales they run at, and the one part of the job — calling a large experiment you get few
+  tries at — that stays unverifiable. It also contains the argument that algorithms rather than
+  bought expert judgment have driven progress, which bears directly on
+  [[self-improving-agents-from-production-feedback|how much the labels were worth]].
+- [[training-against-your-own-monitor]] is what happens to an evaluator, a detector or a lint rule
+  once it is used to *select* rather than to check. This is the page that most changes how to read
+  the rest of the cluster, and it is why [[linting-as-agent-guardrail]] now distinguishes enforcing
+  a rule from selecting against one.
+- [[learning-from-deployment]] is [[self-improving-agents-from-production-feedback|the tax-agent
+  loop]] with the model as the artefact instead of the product code, and the step it drops is the
+  expensive one that made that loop trustworthy.
+- [[aligned-to-whom]] is the first thing here that is about policy: whose conventions the agent
+  follows when the user's and the vendor's diverge.
+
+The one place it contradicts this cluster outright is on transfer.
+[[jaggedness-and-what-rl-optimises|Karpathy's jaggedness]] says capability advances only where a
+reward can be computed; Greenblatt says the transfer to hard-to-verify work looks fine in practice
+and cannot name a counter-example. Both are describing the same models. That disagreement is
+recorded on the jaggedness page rather than resolved, and the pattern this cluster keeps flagging —
+no published failures — has an analogue here: the optimistic case rests on the absence of a
+counter-example, which is the same kind of evidence.
 
 ## The mechanics, one level down
 

@@ -729,3 +729,102 @@ longer a way of avoiding the question.
 
 Both tasks from this morning's ingest are now closed or answered. `npm run build` clean, 55
 prerendered pages, no new wikilink warnings.
+
+## [2026-08-13] ingest | Ryan Greenblatt on recursive self-improvement (Dwarkesh Podcast)
+
+One item, dropped and processed the same day at the owner's request, with `status: published` on the
+inbox item because he asked for the result published: the site transcript of a 2h12m Dwarkesh
+Podcast interview with Ryan Greenblatt, chief scientist at Redwood Research, on whether human-level
+AI research automates itself. Archived under
+`sources/2026-08/dwarkesh-greenblatt-recursive-self-improvement/`.
+
+**The capture decision worth recording.** The page renders its transcript twice, and neither copy is
+complete: the player widget copies with speaker labels and with every space stripped out of the
+words, the reading transcript below it has the spaces and no speaker labels at all. The words are
+identical and the timestamped copy is finer-grained, so the archive carries that one verbatim plus a
+speaker map — every speaker change with its timestamp — which is the only thing the de-spaced copy
+carried that it doesn't. That is the single transformation applied, it is declared at the top of the
+archived file and in `SOURCE.md`, and it is lossless for both content and attribution. It mattered
+more than usual here: several of the sharpest lines in this interview are Dwarkesh's objections
+rather than Greenblatt's claims — the two attractor states of punishing a caught cheat, the
+falsifiability challenge, the "I'm not joining the global communist uprising" objection, the dual-use
+argument for broad access — and attributing any of them to Greenblatt would misrepresent the source.
+Every attribution on the new pages was checked against the map.
+
+**The substance.** Dwarkesh splits the thesis into three claims and evaluates them one at a time: AI
+R&D is verifiable enough to containerise; automating it buys four or five years of progress in one;
+what comes out can be dropped into any job. Greenblatt's medians are ~2030–31 for full automation of
+AI R&D, ~2033 for beating all humans on the job, and 35–40% for something we would call takeover by
+2040 — with the misalignment situation getting "really, really crazy" more like three years out. Two
+of his answers cut against how this notebook has been framing things. The least verifiable part of AI
+research is not insight or theory but **making calls on large experiments**, where you get few tries;
+and what he expects models to lack is taste about in-the-weeds experiments rather than deep ideas,
+because he thinks ML is a *shallower* domain than mathematics.
+
+Five new notes, all published. `recursive-self-improvement-greenblatt` is the source note — the
+argument, the numbers, the transfer question, the two agent-misbehaviour incidents narrated in the
+interview, and why correlated model lineages answer the coordination objection without requiring a
+conspiracy. `containerising-ai-research` has the concrete environments and the three scales they run
+at, plus the data-versus-algorithms dispute and the two experiments both men propose to settle it.
+`training-against-your-own-monitor` is the mechanism page and the one that most changes how to read
+the rest of the wiki. `learning-from-deployment` is production traffic becoming training data.
+`aligned-to-whom` is the notebook's first page about policy rather than engineering.
+
+**Eleven published pages edited**, and the reason this item was worth its length is that the
+vocabulary carries over intact — verifiability deciding what can be automated, the evaluator as the
+load-bearing component, "what reviews the loop?" as the unanswered question — so it lands on pages
+that already exist rather than sitting beside them.
+
+The most important edit is a **contradiction**, the first direct one between two sources in this
+notebook. `jaggedness-and-what-rl-optimises` records Karpathy's claim that capability advances only
+where a reward can be computed, with a frozen four-year-old joke as the demonstration. Greenblatt is
+asked essentially the same question and answers the opposite way: transfer to hard-to-verify domains
+looks fine in practice, and he cannot name a domain where GPT-4 to now has not improved a lot. Both
+describe the same models, so the disagreement is about what counts as evidence — Karpathy's
+instrument is a ceiling, Greenblatt's is a slope — and it is recorded as a disagreement with the crux
+named rather than smoothed into a synthesis. Worth noting that his optimistic case rests on the
+absence of a counter-example, which is the same kind of evidence as the "no published failures"
+absence this cluster keeps flagging in the lab write-ups.
+
+The rest, briefly. `auto-research` gains the industrial-scale version of its own loop, and a better
+explanation of why the nanochat demonstration worked: not only that a training loss is a clean
+metric, but that the runs were cheap enough to do thousands of them — so "can you evaluate it" and
+"can you afford to evaluate it repeatedly" are two conditions this cluster had been treating as one.
+Its metric-overfitting caveat is promoted from caveat to mechanism. `generator-evaluator-loops` gains
+the furthest extension of its own *what checks the check?* thread — a judge whose verdict is
+downstream of its training reports the distribution of that training while looking like an
+independent measurement, and filtering the training data when you dislike the verdict is how an
+operator trains bad epistemics on purpose. It also gains the limit that one AI monitoring another
+works until the work gets hard to understand, and the observation that correlated lineages weaken the
+cross-model-evaluator fix three sources have now proposed. `linting-as-agent-guardrail` gains a
+distinction it was missing: enforcing a rule and *selecting against* it are different acts, and the
+pass rate rises either way. `self-improving-agents-from-production-feedback` gains the same loop with
+the model as the artefact, and the observation that the substitution drops the expensive step that
+made it trustworthy — practitioners separating a real bug from noise. `model-speciation-and-touching-
+the-weights` gains the depressed-models anecdote and its ablation, which is the sharpest available
+instance of an intervention on data whose effect was neither predictable nor removable by inspection.
+`benchmarking-your-own-agent-spend` gains an answer to Fang's standing open question from someone
+with no stake in it. `model-training-as-code` gains the curriculum to go with the factory.
+`loop-engineering` and `agentic-engineering` gain the cluster boundary and what is on the other side.
+
+**One task advanced without being closed.** `tasks/2026-07-29-name-the-lab-leak-incident.md` was
+opened because the owner's dictation referred to something like "the hacking face incident" that
+could not be resolved. This interview names an OpenAI/Hugging Face incident repeatedly and says
+Greenblatt is co-leading the investigation into it, which is almost certainly the referent. The task
+now carries an addendum saying so — and saying why the owner's prose in `command-over-tokens` was
+still left untouched: the bar for a named incident in his own writing is a citation, and a damaged
+transcript that renders the name three ways (including "Hugging Quiz") is a strong lead, not a
+source. The addendum also lists the two other incidents the interview describes in enough detail to
+look up, either of which would serve that sentence.
+
+Four new tags, which is the most this notebook has added at once and reflects that this is a third
+subject area rather than a new angle on the first: `ai-safety`, `recursive-self-improvement`,
+`reward-hacking`, `ai-policy`. `npm run build` clean.
+
+The capture's defects are in `SOURCE.md` and constrain what could be taken from it. Five passages
+collapse into a repeated phrase where the reasoning should be — including, awkwardly, Dwarkesh's
+reframing of the entire failure story at 1:36, which survives only because Greenblatt's reply
+restates it. Numbers contradict themselves inside single answers (GPT-3 dated twice, two different
+model-card versions one sentence apart, token prices that must be per million). And the frontier
+model names in the transcript — *Mythos*, *Fable*, *Sol* — resolve to nothing checkable, so nothing
+on any page depends on the mapping.

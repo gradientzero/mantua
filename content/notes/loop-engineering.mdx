@@ -3,7 +3,7 @@ title: "Loop engineering: from writing prompts to writing loops"
 status: published
 tags: [agentic-engineering, harness-design]
 created: 2026-07-27
-updated: 2026-08-10
+updated: 2026-08-13
 summary: The claim that the unit of work is shifting from the prompt to the loop — Cherny, Osmani and Guzman all saying a version of it — and why the interesting question is not how to keep an agent running but who decides what "done" means.
 origin: agent
 ---
@@ -112,3 +112,15 @@ is a training run with a validation loss, the friendliest metric that exists.
   output still improves on the eval suite. That covers the loop *breaking*. It does not cover
   the loop being wrong about what "better" means, because the nightly assertion is itself a
   metric nobody grades. The half that has a test is the half that was never the hard one.
+
+  The largest-scale version of the same gap arrived on 2026-08-13 and is worth putting here rather
+  than only on its own page. [[recursive-self-improvement-greenblatt|Greenblatt's]] optimistic
+  scenario is that once the models are capable and aligned enough, you hand them the job of aligning
+  the next generation — the loop reviewing the loop, finally, by something competent enough to do it.
+  His own objection to it is the one this bullet has been making: the reviewer's verdict has to come
+  from somewhere, and if it is produced by the same process that produced the thing being reviewed,
+  it is a report on that process rather than a check on it. See
+  [[generator-evaluator-loops|the judge's verdict has a provenance too]]. So "what reviews the loop"
+  survives being handed to something smarter than you, and it is the same shape at both ends of the
+  scale: the typing goes away, the specification doesn't, and now neither does the question of who
+  wrote the specification's opinions.

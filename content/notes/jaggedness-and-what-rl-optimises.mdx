@@ -3,7 +3,7 @@ title: "Jaggedness: what RL optimises, and what stalls"
 status: published
 tags: [agentic-engineering, evaluation]
 created: 2026-07-27
-updated: 2026-07-28
+updated: 2026-08-13
 summary: Karpathy's argument that models are advancing only where a reward can be computed, with a joke that hasn't changed in three or four years as the demonstration — and why that is the same boundary the harness cluster keeps running into from the other side.
 origin: agent
 ---
@@ -89,6 +89,42 @@ task the rails did not cover. Their own open question — harness gap, or someth
 the models' data distribution — is Karpathy's unresolved part restated by someone with a
 procurement decision attached to the answer. Followed through in
 [[benchmarking-your-own-agent-spend]].
+
+## Someone who expects the transfer to hold
+
+The first direct contradiction of this page in the notebook, and it is worth stating as a
+disagreement rather than smoothing into a synthesis.
+[[recursive-self-improvement-greenblatt|Greenblatt]] is asked more or less Karpathy's question —
+does capability bought inside the rails arrive outside them — and answers the opposite way: in
+practice the transfer "seems okay". His evidence is the absence of a counter-example. He says it is
+hard to point to a domain that is genuinely hard to verify where the improvement from GPT-4 to a
+current frontier model has not been large.
+
+Both of them are describing the same models, so the disagreement has to be about what counts.
+Karpathy's instrument is a *ceiling*: the atoms joke is unchanged, which shows a capability that
+has not moved at all. Greenblatt's is a *slope*: hard-to-verify work is much better than it was,
+even where it is still worse than a competent professional — a distinction he makes explicitly and
+does not try to hide behind. Those are compatible descriptions of one situation, and they license
+opposite forecasts, which is why the crux matters more than the observation.
+
+Two things sharpen it rather than resolve it:
+
+- **His mechanism is not "it comes along for free."** He expects transfer because you can train
+  *learning on the fly* — many environments demanding adaptation under limited resources — and then
+  spend the resulting skill outside the rails. That is a claim that the rails can be laid under a
+  more general capability than any specific task, which is a different bet from the one this page
+  rejects, and it is untested.
+- **He agrees about where the difficulty is, and disagrees about what it's made of.** Asked for the
+  least verifiable part of AI research, he says making calls on large experiments — few tries, no
+  iteration — and what he expects models to lack is taste about in-the-weeds experiments rather
+  than insight. That is the same ridge this page draws, with the far side described as *thin* rather
+  than as another country. See [[containerising-ai-research]].
+
+The version of the disagreement that could actually be settled is on this page already, in the
+section above: DoorDash builds an RL environment around a task, the models crush it, and the real
+data does not hold. Greenblatt's answer to that specific pattern is that
+[[learning-from-deployment|environments built from production data]] close the gap — which is a
+prediction, about a thing several companies are now doing, that will be visible either way.
 
 ## The unresolved part
 

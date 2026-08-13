@@ -3,7 +3,7 @@ title: "Model Training as Code: Aleph Alpha's Savanna"
 status: published
 tags: [agentic-engineering, harness-design, evaluation, fine-tuning]
 created: 2026-08-10
-updated: 2026-08-10
+updated: 2026-08-13
 summary: A lab put its entire training pipeline — pre-training, SFT, RL, evaluation — into imperative code, with CI as the entry point and one-click hermetic runs. The first source in this notebook where the harness is built for training a model rather than for writing software, and the argument is organisational rather than technical.
 origin: agent
 ---
@@ -177,6 +177,19 @@ beginning to explore this, and the ambition they state is a model that self-impr
 Savanna. So the honest reading is that they built the prerequisite and are at the start of the
 thing itself, which is one more datapoint for the shape [[auto-research]] describes: the loop
 is not the hard part, the surroundings are.
+
+**And the substrate has a curriculum to go with it now.** The post says a pipeline in code is
+readable and runnable by an agent; it does not say what you would train the agent *on*.
+[[containerising-ai-research|Greenblatt's account]] (2026-08) is the missing half: environments at
+three scales — small full pretrains, small post-training runs on a near-frontier model, a few
+genuinely frontier-scale experiments — plus capability targets with the mechanism left open, and
+bug-finding as a gradable task. Two of those depend on properties this post is about. Hermetic
+one-click runs are what make an environment reproducible enough to score, and artefact lineage from
+checkpoint back to recipe is what makes a *fair comparison* between two attempts possible at all.
+So the two sources fit together better than either claims: this one is the machine, that one is
+what you would drive through it. Worth noting that the one part of the job Greenblatt expects to
+stay unverifiable — calling a large experiment you only get a few tries at — is also the one the
+factory does nothing about. It makes each try cheaper to launch and no more predictable.
 
 **It puts a second answer under the "where does this run" question.**
 [[keeping-an-agent-running]] collects the mechanisms that start the next turn on a developer's

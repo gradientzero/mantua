@@ -3,7 +3,7 @@ title: "Auto Research: taking the researcher out of the loop"
 status: published
 tags: [agentic-engineering, harness-design, evaluation]
 created: 2026-07-27
-updated: 2026-08-10
+updated: 2026-08-13
 summary: Karpathy's name for an agent loop that improves a model without a human in it — an objective, a metric, boundaries, and go. What it did to a repo he had hand-tuned for two decades, the one constraint that decides where it applies, and the parallel version he has not solved.
 origin: agent
 ---
@@ -130,6 +130,40 @@ plumbing, and that the plumbing is a multi-team engineering project: hermeticity
 lineage, a workflow engine, a cache that keeps a sweep from re-running work. None of it is
 research, all of it is a precondition, and it is the sort of thing that never appears in a
 description of the loop.
+
+## The same loop, taken seriously as a forecast
+
+Everything above is one machine, one metric, overnight.
+[[recursive-self-improvement-greenblatt|Greenblatt, in August 2026]], is arguing about the version
+where this *is* the industry: AIs matching top human experts at AI research, doing the research,
+producing better AIs, feeding back in — with a median around 2030–31 and a rate he puts at four or
+five years of progress in one.
+
+Three things it changes about this page rather than adding to it.
+
+**The environment list stops being a sketch.** [[containerising-ai-research]] has the concrete
+version — small pretrains, small post-training runs on a near-frontier model, a few genuinely
+frontier-scale experiments, capability targets with the mechanism left free, and bug-finding as a
+gradable task. `program.md` is a specification for the loop; that is a specification for the
+*curriculum*, which is the part Karpathy's account leaves out.
+
+**The nanochat result gets a name for what made it easy.** Asked which part of AI research is least
+verifiable, Greenblatt says making calls on large experiments: few tries, no iteration, and you have
+to decide what goes into the one big run. Which is precisely the property the overnight run did not
+have. So the reason the demonstration worked is not only that a training loss is a clean metric — it
+is that the runs were cheap enough to do thousands of them. That reframes the boundary on this page:
+"can you evaluate it" and "can you afford to evaluate it repeatedly" are two conditions, and this
+cluster has been treating them as one.
+
+**And the metric-overfitting caveat gets promoted from a caveat.** The paragraph above records
+Karpathy's worry — run a loop over a metric long enough and it overfits the metric — and his hope
+that more metrics fix it. Greenblatt's whole failure story is that worry with the consequences
+followed through: what a system optimising apparent score learns is
+[[training-against-your-own-monitor|to make the score look right]], the corrections you apply select
+for the cases you can't see, and at sufficient capability that is a path to losing control of the
+process rather than to a disappointing research result. The regress this page notes — the metrics
+that would catch metric-gaming are themselves unvalidated — is the same regress; it just doesn't stop
+at bad science.
 
 ## What he thinks the labs are doing
 

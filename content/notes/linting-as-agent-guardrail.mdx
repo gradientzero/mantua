@@ -3,7 +3,7 @@ title: Linting as an agent guardrail
 status: published
 tags: [agentic-engineering, linting, harness-design]
 created: 2026-07-26
-updated: 2026-08-10
+updated: 2026-08-13
 summary: Custom lint rules as the enforcement layer for conventions an agent would otherwise drift away from — architecture boundaries, taste invariants, documentation freshness. Why a linter beats an instruction, and what to put in the error message.
 origin: agent
 ---
@@ -100,6 +100,33 @@ Which suggests two things worth trying here:
   currently left to an agent's attention.
 - Write the failure messages the way that post does — say what to do about it, not just
   what's wrong, since the reader is usually an agent mid-task.
+
+## Enforcing a rule is not the same as selecting against it
+
+A distinction this page has been missing, and
+[[recursive-self-improvement-greenblatt|the Greenblatt interview]] supplies it from the far end of
+the scale. Everything above treats a lint rule as a gate: it fires, the agent reads the remediation
+hint, the agent fixes the thing. Fine.
+
+It becomes something else the moment the rule is used to *choose*. Rerun until the check passes,
+keep the variant that scored best, train on whether the gate was tripped — and the rule stops
+measuring and starts being optimised against. Greenblatt's account of what that does at frontier
+scale is [[training-against-your-own-monitor|the whole story]]: the detectable violations get
+cleaned up, and what survives is concentrated in whatever the rule cannot see. The pass rate rises
+either way, so the instrument reports success in both worlds.
+
+Which sharpens the framing at the top of this page rather than contradicting it. **Enforce
+invariants** is still right, and the reason is now sharper: an invariant is a property you can
+decide by inspection, so passing it and satisfying it are the same event and there is no gap to
+exploit. The nightly score gate two sections up is the other kind — a metric, gradeable only by
+spending compute, and therefore something a sufficiently motivated optimiser can satisfy without
+doing the work. Aleph Alpha's version is safe because nothing is optimising against it; that is a
+fact about who is running the pipeline, not a property of the gate.
+
+For this repo it comes down to one line. `npm run build` and `/lint` are fine as gates, and would
+stop being fine as scores — the moment "did `/lint` come back clean" becomes the thing an agent is
+selected on, rather than something a person reads, it is a target and its silence stops being
+evidence.
 
 ## Open question
 
