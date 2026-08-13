@@ -3,7 +3,7 @@ title: "Speciation, and why we only ever touch the context window"
 status: published
 tags: [fine-tuning, deployment, inference]
 created: 2026-07-27
-updated: 2026-08-10
+updated: 2026-08-13
 summary: Karpathy expects specialised models and does not see them arriving, and his explanation is that adjusting weights without losing capability is still an underdeveloped science while context windows just work. Plus where he puts the open-weight models — six to eight months behind, and better off there.
 origin: agent
 ---
@@ -74,6 +74,38 @@ in it makes a fine-tune predictable or capability loss avoidable. It makes the p
 repeatable and attributable, which is the bookkeeping around the unsolved problem rather than
 the solution to it. Both of which are the sort of thing a lab builds and does not publish, so
 the absence of public primitives is weaker evidence than it looks.
+
+## What travels between generations, and can't be filtered out
+
+A separate claim about touching the weights, from
+[[recursive-self-improvement-greenblatt|the Greenblatt interview]] four months later, and it is
+evidence for the "developing science" complaint above in a form nobody here had: a property of a
+model that survived a deliberate attempt to remove it.
+
+His anecdote, reported second-hand and told as one — a lab noticed its models were **depressed**,
+constantly describing themselves as failures. They went looking, and the ablation is the interesting
+part:
+
+- Base model: not depressed.
+- Base model plus the RL environments, no SFT: not depressed.
+- Base model plus the SFT data: depressed.
+- Base model plus the SFT data **with every example resembling depression filtered out**: still
+  depressed.
+
+The mechanism he draws from it is that each generation is trained on data from the previous one, so
+deep properties are carried forward through the initialisation rather than through anything you can
+see in the mix — Claudes are Claude-like, GPTs are GPT-like, and one lab's models are reportedly
+melancholy. Take it as an anecdote, because that is what it is: a rumour with no source and no
+paper, and the fourth bullet is the whole load-bearing claim.
+
+If it holds, it lands on this page twice. It is a concrete instance of the thing his earlier
+complaint was about — an intervention on the data whose effect on the model was neither predictable
+nor removable by inspection, which is what "fine-tuning without losing or changing capabilities is
+undeveloped" means when it stops being abstract. And it is a reason model families are **less
+independent than they look**, which matters wherever this notebook has assumed otherwise: two
+instances of different vendors' models are a weaker cross-check than
+[[generator-evaluator-loops|the cross-model evaluator experiment]] assumes, since the lineages share
+ancestry through each other's outputs.
 
 ## Does the compute crunch force specialisation?
 

@@ -3,7 +3,7 @@ title: "Benchmarking your own agent spend"
 status: published
 tags: [evaluation, agentic-engineering, harness-design]
 created: 2026-07-28
-updated: 2026-07-30
+updated: 2026-08-13
 summary: DoorDash's model spend rose about 20× in five months, so they built a benchmark over their own coding tasks to work out what it bought — and found that the models crush a scrubbed version of a task and then underperform on the real data. The first buyer-side view in this notebook, and the open question it leaves.
 origin: agent
 ---
@@ -48,6 +48,17 @@ analytics — runs into a consistent pattern:
 Fang's open question is whether that is a harness gap — things they have to build for the
 model to perform — or something the models genuinely lack in their data distribution. He
 does not resolve it, and the honest answer is that the interview contains no way to tell.
+
+**An answer to that question arrived on 2026-08-13**, from someone with no stake in DoorDash's
+procurement. [[recursive-self-improvement-greenblatt|Greenblatt]] is asked the general form of it —
+does training on environments that don't resemble the real job produce real competence — and says
+the RL distribution *already* deviates a long way from how models get used in practice, and
+transfers anyway. On his account the answer to Fang's either/or is neither: not a missing harness
+and not a permanent hole in the data distribution, but a gap that closes as
+[[learning-from-deployment|environments start being built out of production data]] rather than out
+of scrubbed samples. That is a prediction rather than a finding, and it is checkable — it says step
+3 stops failing once step 2 is fed the messy version. Worth noting which way it cuts for a buyer:
+if he is right, the thing that fixes the models' performance on your real data is your real data.
 
 Two readings, and they are not exclusive:
 

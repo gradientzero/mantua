@@ -3,7 +3,7 @@ title: "Self-improving agents from production feedback (OpenAI × Thrive, 2026-0
 status: published
 tags: [agentic-engineering, evaluation, harness-design]
 created: 2026-07-26
-updated: 2026-07-30
+updated: 2026-08-13
 summary: Notes on the Tax AI post — how practitioner corrections in production become structured findings, then targeted evals, then bounded engineering tasks a coding agent can close. The clearest published example of an eval-driven improvement loop with a named metric that moved.
 origin: agent
 ---
@@ -102,6 +102,31 @@ cause).
 The open question for a small setup: this works because thousands of practitioners
 generate labelled corrections for free as a by-product of their job. What's the equivalent
 signal when the only user is you?
+
+## The same loop with the model as the artefact
+
+This page is the notebook's cleanest example of an improvement loop that works, and
+[[learning-from-deployment|Greenblatt describes the same architecture]] with one substitution: the
+thing being improved is the model, not the product code. Production behaviour becomes a training
+environment — a task the AI did badly on, rebuilt as an environment matching it exactly, with the
+rubric written from what the engineer who asked for it wanted — or environments closely inspired by
+production traffic, or training on the traffic itself, or all three at once.
+
+Which makes step one of the loop above the important step, and it is the one the substitution drops.
+Here, a difference between predicted and filed was *not* a bug by default, and practitioners were
+needed to sort extraction misses from mapping gaps from preference before anything became an eval
+target. That work is what a thumbs-up does not do. A satisfied user is a label about whether the
+output looked right to somebody who did not check it, and folding that back into training reinforces
+whatever passed rather than whatever was correct — which is the mechanism, not a risk. The distinction
+this page already draws between *was accepted* and *was real* turns out to be the load-bearing part
+of the whole design.
+
+The other thing worth noting is what it does to the open question below. Asked what the equivalent
+signal is when the only user is you, this page's two answers have been "practitioners generate labels
+for free" and "you buy them". Greenblatt's argument implies a third that is worse rather than better:
+you can take the signal without paying for the labelling, and then the loop is running on
+satisfaction instead of ground truth. Cheaper, faster, and no longer the thing this page is
+recommending.
 
 One answer from the other extreme of scale: you buy them.
 [[doordash-on-agentic-commerce-and-dot|DoorDash]] launched a product called Tasks, where people
