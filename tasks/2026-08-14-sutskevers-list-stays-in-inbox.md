@@ -38,7 +38,8 @@ beats the folder, away from your byline only —
 `tasks/2026-08-10-inbox-mine-misfiled-item.md`, still open). If you want the human page too,
 it is a separate file and the agent page should be linked from it rather than merged into it.
 
-**2. Four new draft pages want a publish decision.** All `status: draft`:
+**2. ~~Four new draft pages want a publish decision.~~ Decided the same day — all four
+published** at the owner's instruction:
 
 - `sutskevers-list-notes` — the running summary, ch. 1–2.
 - `too-dangerous-to-release` — GPT-2's withholding, and the argument structure it established.

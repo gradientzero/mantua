@@ -904,3 +904,24 @@ history — which also means the eventual `sources/` archive for this book is a 
 deliberately rather than a step to perform.
 
 `npm run build` clean.
+
+## [2026-08-14] setup | Published the four Sutskever's List pages
+
+At the owner's instruction, same day as the ingest: `sutskevers-list-notes`,
+`too-dangerous-to-release`, `data-versus-architecture` and `optimising-for-the-benchmark` all move
+from `draft` to `published`. Nothing else changed — no prose edits, no frontmatter beyond `status`.
+
+What that does to the production build, since it is the point of publishing rather than a side
+effect: the six pages edited during the ingest carry wikilinks into all four, and until now those
+rendered as inert "missing" spans in production. They resolve now, which means
+`training-against-your-own-monitor` has its hard-negative-mining precedent visible on the public
+site, and `agentic-engineering`'s admission about the missing no-harness baseline points somewhere.
+
+The notebook gains its first historical material in public and its first two pages tagged
+`deep-learning-history` and `scaling`. `sutskevers-list-notes` is a *running* page — the book is two
+chapters read out of nine and stays in `inbox/mine/` — so a published page here will be extended by
+later ingests rather than finished, which is a first for this notebook. Item 2 of
+`tasks/2026-08-14-sutskevers-list-stays-in-inbox.md` is closed; the other two (the owner's own
+reading notes, and the figures) stay open.
+
+`npm run build` clean.
