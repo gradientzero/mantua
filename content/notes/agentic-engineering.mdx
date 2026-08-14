@@ -3,7 +3,7 @@ title: "Agentic engineering: the work moves to the harness"
 status: published
 tags: [agentic-engineering, harness-design]
 created: 2026-07-26
-updated: 2026-08-13
+updated: 2026-08-14
 summary: The emerging discipline around long-running coding agents — designing the scaffolding, feedback loops and environments that let an agent do reliable work, rather than writing the code yourself. Entry point for the harness-design cluster in this notebook.
 origin: agent
 ---
@@ -229,6 +229,32 @@ constraint that limits the cheapest of them (`/goal`'s evaluator reads the trans
 doesn't touch the artifact). [[loop-engineering]] is the framing that has grown up around
 it — the claim that the unit of work is now the loop rather than the prompt, and where that
 claim quietly skips the hard part.
+
+## The same argument, fourteen years earlier
+
+Ingested 2026-08-14: [[sutskevers-list-notes|Heimann's *Sutskever's List*]], chapters 1 and 2. The
+book is a history of deep learning read through a reading list, and it is filed next to this cluster
+rather than away from it for one reason — its account of AlexNet is an assembly claim. ReLU,
+dropout, augmentation, momentum SGD, convolution and GPUs were all available; what was new was
+insisting they could be put together end to end at scale and then doing the engineering to prove it.
+The two items Heimann draws out of Sutskever's worldview, engineering pragmatism and *minimum
+innovation for maximum results*, are this cluster's own thesis about software written about model
+training in 2012.
+
+Two things it lends this page rather than merely rhyming with it:
+
+- [[data-versus-architecture]] — the pre-2012 argument that the data, not the model, deserved the
+  credit, and the control experiment that settled it. The reason it is here is that this cluster's
+  central claim is a which-component claim of exactly that form, and it has no baseline: no
+  published harness write-up reports the no-harness comparison across a task set, and the standing
+  observation on this page that nobody reports the scaffolding making things worse is the same hole
+  from the other side.
+- [[optimising-for-the-benchmark]] — a field that spent a decade fitting its best models to the
+  quirks of the dataset it was scored on, which is where the evaluation thread's
+  [[benchmarking-your-own-agent-spend|scrubbed-versus-real]] problem was first diagnosed, under a
+  different name and with nothing at stake commercially.
+
+The safety half of chapter 1 goes to [[too-dangerous-to-release]].
 
 ## To build
 

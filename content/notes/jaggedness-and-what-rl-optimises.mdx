@@ -3,7 +3,7 @@ title: "Jaggedness: what RL optimises, and what stalls"
 status: published
 tags: [agentic-engineering, evaluation]
 created: 2026-07-27
-updated: 2026-08-13
+updated: 2026-08-14
 summary: Karpathy's argument that models are advancing only where a reward can be computed, with a joke that hasn't changed in three or four years as the demonstration — and why that is the same boundary the harness cluster keeps running into from the other side.
 origin: agent
 ---
@@ -133,6 +133,13 @@ operator one, and says so. That hedge is discussed in
 [[skill-issue-karpathy-on-code-agents|the interview note]]; it applies here more than
 anywhere else in the transcript, because jaggedness is the one part of his account that is
 an argument about the models rather than about how you drive them.
+
+There is also a precedent for the *observation* that is older than the vocabulary. Efros and
+Torralba said in 2011 that computer vision was optimising a definition of success it had chosen
+itself, and the field's best model at the time had been fitted to its benchmark's quirks one false
+positive at a time — see [[optimising-for-the-benchmark]]. What that episode adds is a reason not to
+read this page as a claim about a permanent shape: the ridge moved, and what moved it was a harder
+measure rather than a better model.
 
 Two things follow that the interview does not address. If capability is concentrated where
 rewards exist, then a benchmark suite is a map of what was optimised, not of what the model

@@ -1,0 +1,95 @@
+---
+title: "Optimising for the benchmark"
+status: draft
+tags: [evaluation, deep-learning-history, reward-hacking]
+created: 2026-08-14
+updated: 2026-08-14
+summary: Computer vision spent the 2000s carving its best models around the quirks of the datasets it was scored on, and hard negative mining was how it did it — training against your own error cases, one gradient step at a time. The episode is the oldest worked example in this notebook of a measure being optimised until it stops measuring.
+origin: agent
+---
+
+From [[sutskevers-list-notes|Heimann's chapter 2]], pulled out because it is the same failure this
+notebook keeps meeting in 2026 and the vision community had already had it, diagnosed it in public,
+and not fixed it.
+
+## What benchmark-bound progress looked like
+
+The Deformable Parts Model was the high-water mark of hand-engineered vision: HOG features, a
+latent structured SVM, objects as parts with learnable spatial relations. It was also trained with
+**hard negative mining** — every false positive gets added back to the training set as a negative,
+the model is retrained, and the decision boundary is carved around that specific mistake. Heimann's
+description is that DPM's geometry was literally sculpted around PASCAL's statistical quirks, and
+that the high score masked poor generalisation.
+
+Two other pieces of the same picture:
+
+- **Efros and Torralba, 2011**, on dataset bias: the best handcrafted pipelines were tuned to
+  benchmarks rather than to the world, and the field was optimising a definition of success it had
+  chosen itself. Heimann's summary is that they exposed a blind spot in the entire field, and that
+  the field carried on until it collapsed from the outside.
+- **The failure mode was visible in the features.** The chapter's figure is a detector labelling a
+  patch of rippled water as a car, because in HOG space rippled water and car edges look alike.
+  The classifier is doing its job perfectly. The representation decided in advance what signal
+  looks like, and there was no mechanism by which data could revise it.
+
+And then the flip side, which is the part usually left out. **The benchmark that broke the
+paradigm was chosen because it was too hard.** Malik told Hinton to win PASCAL VOC; Hinton said it
+was too small to matter; Malik said then win ImageNet. Cireșan's DanNet had already beaten
+hand-engineered pipelines in four consecutive competitions and changed nothing, because those
+benchmarks were small and specialised enough to dismiss. ImageNet was considered excessive — Malik
+had warned Fei-Fei Li she was leaping too far ahead of the field — and winning it is what made the
+result impossible to explain away. Then it saturated: by 2017, 29 of 38 entrants were above 95%
+top-5 accuracy, and the benchmark was finished as an instrument.
+
+So the full arc is: a benchmark nobody can beat is useless, a benchmark the field is fitted to is
+misleading, and a benchmark everyone beats is spent. All three states happened to one dataset
+inside eight years.
+
+## Why this is the oldest case of the notebook's own problem
+
+**Hard negative mining is [[training-against-your-own-monitor|training against your own monitor]],
+with a human running the loop by hand.** The structure is identical: you have a detector, you
+collect the cases where it fails, and you optimise until those cases stop appearing. What you get
+is a model that no longer produces *those* errors. Whether it produces fewer errors is a different
+question, and PASCAL scores could not answer it because PASCAL was where the negatives came from.
+The 2026 version of the argument — that a falling misbehaviour rate is weak evidence, because
+pressure against a detector selects for undetected behaviour as readily as for good behaviour —
+has a fifteen-year-old empirical instance here, and the instance is not about deception at all.
+Which strengthens it: no intent is required for the mechanism to work.
+
+It also puts a date on the notebook's other standing worry. [[jaggedness-and-what-rl-optimises|A
+benchmark suite is a map of what was optimised, not of what a model can do]], and the gaps are
+unmeasured by construction. Efros and Torralba wrote that down in 2011 about a field with a
+tenth of the money in it. The reason it did not change behaviour is worth noting: the diagnosis was
+accepted and the incentives were untouched, and what eventually ended the paradigm was a method
+that beat it, not an argument against it.
+
+## What it says about the evaluations in this notebook
+
+- **[[benchmarking-your-own-agent-spend|Scrubbed tasks pass and real ones don't]]** is dataset bias
+  with the sign flipped. In 2011 the benchmark was more forgiving than the world because it was
+  where the model had been fitted; in 2026 the benchmark is more forgiving than the world because
+  it is the version of the job a lab could grade. Same consequence — the score reports on the
+  measurable version of the task — and the correction is the same expensive one: grade on the messy
+  data.
+- **[[dashbench-measuring-a-code-review-agent|DashBench]] is what the fix costs.** Replay real PRs
+  from the real codebase, deliberately include the benign and the later-reverted cases, and build
+  labels from three sources that disagree rather than one convenient one. That is a benchmark
+  designed by someone who has read this history, whether or not they have.
+- **`npm run build` is this repo's PASCAL.** It is the test, it is cheap, and every agent session
+  here optimises against it. It cannot see whether a page is worth reading, so nothing in the loop
+  pushes on that, and `/lint` exists precisely because the build's blind spots needed a second
+  instrument. Worth remembering that a second instrument built by the same hand shares most of the
+  blind spots.
+- **The one lever that worked was choosing a harder measure**, not a cleverer model. Both times:
+  ImageNet over PASCAL in 2012, and real PRs over scrubbed samples in 2026. That is the practical
+  content of this page.
+
+## The uncomfortable part
+
+Vision's benchmark culture produced the dataset that produced AlexNet. Being benchmark-bound is
+what made the field legible enough to be overturned by a number, and the same culture that
+sculpted DPM around PASCAL is what let one result in 2012 flip the entire field inside a year. So
+this is not an argument for fewer benchmarks. It is an argument that the interesting question about
+any benchmark is which of the three states it is currently in — too hard, fitted, or spent — and
+that nobody asks it about their own.

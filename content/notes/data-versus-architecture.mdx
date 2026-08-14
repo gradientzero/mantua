@@ -1,0 +1,92 @@
+---
+title: "Data or architecture: the control experiment nobody runs"
+status: draft
+tags: [deep-learning-history, scaling, evaluation, agentic-engineering]
+created: 2026-08-14
+updated: 2026-08-14
+summary: Before AlexNet the field's best argument against neural networks was that the data was doing the lifting — and Efros had the control experiment to prove it. AlexNet settled that case on the same data everyone else had. The reason to keep the episode is that the modern version of the argument is running now, with the control missing.
+origin: agent
+---
+
+From [[sutskevers-list-notes|Heimann's chapter 2]]. The pre-2012 case against neural networks was
+not that they couldn't work. It was that when they did, something else was responsible.
+
+## The strongest version of the sceptical case
+
+Two pieces, and they support each other.
+
+**Efros's control experiment**, around 2008. Reviewing a paper in which a neural network beat his
+own earlier work on image localisation, Alexei Efros suspected the gain came from the larger
+dataset rather than the model, and asked the authors to run a nearest-neighbour baseline on the
+same data. It matched the network. His conclusion as he tells it: in that setting the data was
+doing the main lifting. Note what makes this good practice rather than sniping — he named the
+confound, proposed the cheapest possible test of it, and the test was run.
+
+**"The Unreasonable Effectiveness of Data"** (Halevy, Norvig, Pereira, Google, 2009). For many
+language problems the binding constraint is coverage, not modelling: scale up the corpus, even
+noisy and unannotated, and you buy the tail events a curated corpus doesn't contain. Its blunt
+line — simple models and a lot of data beating elaborate models on less data — became the field's
+default. The paper's examples are n-gram models. It does not mention neural networks at all.
+
+Heimann puts a folktale next to it that is worth stealing. **Stone soup**: the traveller boils
+water with stones, remarks that it would be better with carrots, then barley, then chicken, and
+the village supplies the entire meal while marvelling at the stones. The modern retelling is a
+system praised as the source of intelligence after the world poured images, text, human feedback
+and careful prompting into the pot. The retelling is *largely right*, which is why the episode
+isn't a story about sceptics being wrong.
+
+## What AlexNet actually settled
+
+Not "data doesn't matter" — the opposite of the popular reading. The decisive detail is that
+**the data was held constant and the scores had stalled**. ImageNet's training set was already
+about 100× PASCAL VOC's, two ILSVRC competitions had been won by SIFT-plus-SVM pipelines with
+incremental gains, and Fei-Fei Li's bet that more data would produce better performance had so far
+not paid. Then one entrant — the only neural network in the 2012 field — cut top-5 error from
+about 26% to 15% on the same images everyone else had.
+
+So the finding is narrower and more useful than either slogan:
+
+- Data was underrated, and the coverage argument was correct.
+- Data is **not** an equaliser. Some architectures benefit disproportionately from scale, and the
+  scaling behaviour of a method is a property of the method.
+- Which means "we got a better score with more data" and "we got a better score with a better
+  model" are not competing explanations you can pick between by inspection. You have to hold one
+  fixed.
+
+The corollary the chapter states and the field forgot: nearest neighbour on ImageNet-scale data
+does not win. The baseline that beat a neural network in 2008 lost badly four years later, on more
+data. A control experiment is a measurement at one scale, not a law.
+
+## The same argument, running now, without the control
+
+This is why the episode is in this notebook rather than in a history of computer vision.
+
+[[benchmarking-your-own-agent-spend|DoorDash's open question]] is a data-versus-architecture
+question in modern clothes: their non-coding tasks get scrubbed, a lab builds an RL environment
+around them, the models crush it, and the real data doesn't hold — and Fang cannot say whether
+that is a harness gap or something the models lack. Restated in 2009 vocabulary: is the
+performance a property of the model or of the corpus it was fitted to? Nobody has run Efros's
+move. The cheap version exists — hold the model fixed and vary the harness, or hold the harness
+fixed and vary the model, and report both — and
+[[dashbench-measuring-a-code-review-agent|DashBench]] is the closest thing here to someone doing
+it, because it varies the harness deliberately and reports cost and latency as results.
+
+The harness cluster has the same hole in the other direction, and this notebook has flagged it
+five times without naming what it is: none of the published harness write-ups reports the
+**no-harness baseline** across a task set, and none reports a case where the scaffolding made the
+output worse. [[agentic-engineering|Anthropic's one-sentence-prompt comparison]] — solo run
+produces a broken app, harnessed run produces a working one — is the field's only published
+control, on n=1. The 2008 lesson applies exactly: a claim about which component is responsible is
+worth what its baseline is worth.
+
+And [[recursive-self-improvement-greenblatt|Greenblatt's]] argument that training environments
+already don't resemble real use and transfer anyway is the *architecture* side of this argument
+being asserted about RL environments, on the evidence that no counter-example comes to mind. The
+2009 side of it would say: hold the environment realism constant and see what the model buys you.
+Neither experiment is being published.
+
+## Where it leads in the book
+
+Chapter 6 is the scaling canon — Kaplan, Chinchilla, and the compute/data/parameters trade — which
+is what the field built once it accepted that both halves matter and started measuring the
+exchange rate between them. Unread; the notes are in [[sutskevers-list-notes]].

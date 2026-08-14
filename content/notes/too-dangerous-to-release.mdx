@@ -1,0 +1,106 @@
+---
+title: "Too dangerous to release: the GPT-2 precedent"
+status: draft
+tags: [ai-safety, ai-policy, deep-learning-history]
+created: 2026-08-14
+updated: 2026-08-14
+summary: OpenAI withheld GPT-2 in February 2019 on the grounds of risks that a later post admitted had not materialised, and the justification pointed at future systems rather than at the model being withheld. The argument structure — act early because acting late is worse — is the one that later produced the board crisis, and it is unresolved in exactly the same way today.
+origin: agent
+---
+
+From [[sutskevers-list-notes|Heimann's chapter 1]]. GPT-2 is not on Sutskever's List; the book
+spends a section on it anyway, on the grounds that it is where the release-versus-safety tension
+first became a public event. That is the right call for this notebook too, because it is the
+earliest instance of an argument that recurs on nearly every page in the
+[[recursive-self-improvement-greenblatt|safety cluster]] here.
+
+## What happened
+
+A 1.5B-parameter transformer trained on about 8M web pages, roughly 10× GPT-1 in parameters and
+data. In February 2019 OpenAI published a paper and a 124M-parameter model — about GPT-1's size —
+and withheld the full model, the training data and the code, calling it an experiment in
+responsible disclosure. The stated risks were misleading news articles, online impersonation,
+abusive or fake social content, spam and phishing, framed by analogy to deepfakes: text should
+earn the scepticism images had.
+
+Then a staged release: 355M in May, 774M in August with a six-month follow-up post, and the full
+1.5B model in November 2019 — accompanied by the admission that no strong evidence of misuse had
+been seen.
+
+The reception was mostly derision. *Wired* and *TechCrunch* ran the "too dangerous" framing
+straight; Anima Anandkumar argued the caution was unnecessary on safety grounds and harmful to
+research, on the standard argument that transparency is what lets other people build safeguards;
+"ClosedAI" became a meme; and a significant share of the community read the whole thing as
+publicity. Researchers also noted the technical shape of it accurately at the time — no
+algorithmic contribution, a scale-up of prior work, and that being the contribution.
+
+## The contradiction at the centre of it
+
+Miles Brundage's defence was that the point was never GPT-2 specifically but the risks of a broader
+class of systems. Heimann's objection is clean and I think correct: if GPT-2 did not pose the risk,
+withholding *GPT-2* cannot be justified on GPT-2's risk. The action and the reason come apart. What
+you are left with is a demonstration — a costly signal about publication norms, performed on a
+model chosen for availability rather than for danger.
+
+Read that way it worked. Grover's staged release followed the same pattern, Google withheld Imagen
+in 2022, Meta gated LLaMA 1 to approved researchers in 2023, and both Galactica and Gemini were
+pulled *after* release when the problem turned out to be authoritative-sounding wrongness rather
+than misuse. Heimann's claim that this was the first time in about 75 years of the field that
+anyone pressed pause is the sort of superlative worth distrusting, but the norm-setting is real
+and traceable.
+
+One piece of context reframes the whole episode and is the most useful thing in the section:
+**OpenAI had quietly revised its charter in 2018**, saying it expected safety and security concerns
+to reduce its traditional publishing over time. So the February 2019 decision was not a reaction to
+a capability surprise. It was the first visible instance of an institutional pivot already
+committed to, which makes both the "they panicked" and the "they were vindicated" readings wrong.
+
+## The argument structure, which is the part that lasts
+
+The book connects GPT-2 to Altman's firing in November 2023 through one shared premise: **acting
+too late is worse than acting prematurely.** In both cases the action was taken against an
+anticipated risk rather than a present one; in both cases the feared thing did not arrive; the
+difference is that the first was symbolic and the second cost the company its stability. Heimann's
+line for it is that the impulse to guard against catastrophe caused one.
+
+That premise is not obviously wrong — it is the correct premise for genuinely irreversible harms,
+and it is what everyone means by precaution. What GPT-2 demonstrates is its failure mode as an
+*institutional* rule: it licenses action on unfalsifiable grounds, and it cannot generate the
+evidence that would tell you when to stop. The November 2019 admission that no misuse had appeared
+did not settle anything, because "the harm hasn't happened yet" is equally consistent with having
+been right and with having been wrong. Nine months of waiting bought no information.
+
+This is worth holding next to how the current argument is conducted:
+
+- **[[recursive-self-improvement-greenblatt|Greenblatt's]] 35–40% on takeover by 2040** and his
+  observation that his own case rests on illegible conceptual arguments deep in the weeds is the
+  same epistemic position, stated much more carefully and with the uncertainty on the outside where
+  it can be argued with.
+- **[[training-against-your-own-monitor|The absence-of-evidence problem]] is the same problem.**
+  This notebook's standing complaint about the safety literature — that a falling misbehaviour rate
+  is weak evidence — is GPT-2's "we've seen no strong evidence of misuse" from the other end.
+  Neither absence tells you what you want to know, and it is the same reason.
+- **[[aligned-to-whom|Who decides]] is the question this episode avoided.** The 2019 decision was
+  one lab's, made about its own artefact, and the norm it set was voluntary. The current
+  arrangement is the same in every respect, which is why the constitution-versus-fiduciary argument
+  is not a new topic but this one grown up.
+
+## Where it touches the rest of the notebook
+
+**Open weights.** [[model-speciation-and-touching-the-weights|Karpathy's placement of the
+open-weight models]] — six to eight months behind and better off there — is downstream of the norm
+GPT-2 established. The staged-release pattern is what a lag looks like when it is a policy rather
+than a capability gap, and the two are hard to tell apart from outside.
+
+**The dual-use problem is the same one, sharper.** The vulnerability-finding example in
+[[aligned-to-whom]] — patch your own code, attack someone else's, indistinguishable request — is
+why GPT-2's risk list could not be turned into a release criterion in 2019 and still can't be. The
+scenarios OpenAI published were about *uses*, and a model is not a use.
+
+**And the thing that actually reset expectations was not the risk.** GPT-2's technical significance
+in this account is the Ovid's-unicorn sample: multi-paragraph, stylistically coherent text with a
+fabricated scientist and fabricated quotes, from a model with no explicit memory — while still
+producing four-horned unicorns and fires burning underwater, which is a fragile world model
+producing fluent prose. That combination is the thing everyone has been arguing about ever since,
+and it is what [[jaggedness-and-what-rl-optimises|jaggedness]] describes seven years later with a
+larger vocabulary.
