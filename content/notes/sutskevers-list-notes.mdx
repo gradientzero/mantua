@@ -1,0 +1,158 @@
+---
+title: "Reading notes: Sutskever's List (Heimann), ch. 1–2"
+status: published
+tags: [reading-notes, deep-learning-history, scaling]
+created: 2026-08-14
+updated: 2026-08-14
+summary: Richard Heimann's book reads the reconstructed reading list Ilya Sutskever gave John Carmack as an argument rather than a bibliography. Chapters 1 and 2 give the four-part worldview it claims to encode, and then spend a chapter showing that AlexNet invented almost nothing — which is the part this notebook cares about.
+origin: agent
+---
+
+Source: *Sutskever's List — Foundational Ideas of Modern AI*, Richard Heimann, Manning 2026
+(ISBN 9781633434790), foreword by Sebastian Raschka. The capture is a PDF-to-markdown
+conversion of the front matter plus chapters 1 and 2 — the owner is reading it and asked for
+this round to cover what he has read so far. The book was deliberately **left in `inbox/mine/`
+rather than archived** under `sources/`, because the remaining chapters are still to come; see
+`tasks/2026-08-14-sutskevers-list-stays-in-inbox.md`.
+
+Provenance, since the folder says otherwise: this is a published book by a named author with a
+copyright notice, so it is summarised here and not republished, and the page is `origin: agent`.
+That is the rule the 2026-08-10 ingest established — evidence inside the item beats the folder,
+in the direction away from the owner's byline only. If the owner wants his own reading notes on
+this book, in the shape of [[tabular-foundation-models-notes]] and
+[[llm-customization-and-fine-tuning-notes]], that is a separate `origin: human` page and this
+one is the agent's summary sitting beside it.
+
+## What the book is
+
+"Sutskever's List" is a set of roughly thirty papers, blog posts, a Stanford course and a couple
+of books that Ilya Sutskever handed John Carmack during a recruiting conversation, described as
+containing 90% of what matters. Carmack has said repeatedly that he worked through it and that it
+sorted the field out in his head; he has also asked Sutskever publicly to publish it, and
+Sutskever never has. What circulates is a **reconstruction** assembled by an enthusiast in 2023
+from secondhand clues, and that reconstruction is what this book analyses. Heimann is upfront
+about this. It is still the load-bearing caveat for everything else: the object being read as one
+person's worldview is a crowdsourced guess at it.
+
+What the list is *not*, and Heimann makes the omissions do work:
+
+- **No symbolic AI, no classical planning.** Consistent with Sutskever's line that one doesn't bet
+  against deep learning.
+- **No reinforcement learning**, which is the surprising one — he led OpenAI's early RL work,
+  co-authored AlphaGo, and shipped OpenAI Five. The list is almost entirely supervised and
+  self-supervised.
+- Heavy on **pedagogy**: CS231n, Karpathy on RNNs, Olah on LSTMs, Rush's annotated Transformer. A
+  reading list that recommends explanations rather than only sources.
+- Heavy on **engineering**: GPipe and pipeline parallelism, Deep Speech 2, the 2020 scaling-laws
+  paper.
+- And then a detour into **compression** — Kolmogorov complexity, minimum description length,
+  Aaronson's complexodynamics and coffee-automaton posts — which is the part that makes it a
+  worldview rather than a syllabus.
+
+## The four-part mental model (ch. 1)
+
+Heimann's own framing, offered as a starting point rather than a conclusion. Recorded here
+because it is the book's actual thesis and the rest of the chapters are supposed to test it:
+
+1. **Don't bet against deep learning.** Sutskever's phrasing, and visible in what the list leaves
+   out more than in what it contains.
+2. **Engineering pragmatism.** Progress comes from large-scale engineering, iteration and
+   deployment rather than isolated theory — AlexNet and Deep Speech 2 as the exemplars. The
+   critique this invites, that it is engineering rather than science, is one Heimann states
+   rather than dodges.
+3. **Do more with less, at scale.** Residual connections, attention replacing recurrence, even
+   the reordering trick in *Order Matters*: small structural changes that pay off at scale.
+   Sutskever's version, quoted in the book, is minimum innovation for maximum results.
+4. **Emergence and compression.** Intelligence as compression — distilling raw experience into a
+   minimal, generalisable form — which is why an AI engineer's reading list contains algorithmic
+   randomness.
+
+Point 2 and point 3 together are why this book is worth reading from inside this notebook's
+[[agentic-engineering|harness cluster]] rather than as history. They are the same claim the
+harness posts make about software: the win comes from assembling known pieces at scale and
+doing the engineering to prove it, not from a new idea.
+
+The chapter's other half is biography — Toronto under Hinton, DNNresearch to Google, the 2015
+dinner and the founding of OpenAI as a counterweight, the Superalignment team, the November 2023
+board crisis and the May 2024 departure. The one piece of it that earns its own page is GPT-2:
+see [[too-dangerous-to-release]].
+
+## AlexNet invented almost nothing (ch. 2)
+
+The chapter's argument, and the reason it is the most useful one in the notebook's terms.
+AlexNet's components were mostly available: ReLU, dropout, data augmentation, momentum SGD,
+convolution, GPUs. Heimann's closing line for the chapter is that none of the ideas was magical
+alone, and the magic was insisting they could be assembled end to end at scale and then doing the
+engineering. That is [[data-versus-architecture|an assembly claim]], and it is the same shape as
+this notebook's harness argument one field and fourteen years earlier.
+
+The numbers worth keeping, since they get repeated loosely elsewhere:
+
+| | |
+|---|---|
+| Top-5 error, AlexNet 2012 | 15.3% (runner-up 26.2%) |
+| Parameters / "neurons" | ~60M / ~650k |
+| ILSVRC-2012 training set | ~1.2M images, 1,000 classes |
+| ReLU vs tanh | ~6× faster convergence |
+| Dropout | 50% on the first two FC layers; ~2× iterations to converge |
+| Hardware | two NVIDIA GTX 580s, 3 GB each — the model did not fit on one |
+| ILSVRC entrants, 2013 | 24 teams, nearly all CNNs (21 in the three previous years combined) |
+
+Three things in the chapter are more interesting than the architecture.
+
+**The belief that got overturned was about the optimiser, not about depth.** The orthodoxy in 2010
+was that deep networks needed layer-wise unsupervised pretraining, and the reason given was poor
+local minima. James Martens's 2010 paper — which Sutskever is credited in, and which he cites as
+the inspiration for AlexNet — reframed it: the obstacle is *pathological curvature*, long narrow
+valleys where a first-order method either oscillates across the valley or crawls along it, and a
+second-order method walks straight down. Martens trained autoencoders from random initialisation
+that had previously needed pretraining. Sutskever's inference is the interesting move: if a
+second-order method can do it, a first-order method with the right refinements probably can too —
+which is what AlexNet then was. Heimann's reading of the ReLU choice follows from this and is the
+best sentence in the chapter: non-saturating activations *flatten* the landscape, so ReLU is a
+curvature fix rather than a convenience.
+
+**The field was optimising for a benchmark and knew it.** Deformable Parts Models were, in
+Heimann's phrase, sculpted around PASCAL's statistical quirks; Efros and Torralba said so in
+2011; ImageNet was at real risk of being a beautiful monument to scale that no algorithm could
+use. That thread gets its own page: [[optimising-for-the-benchmark]].
+
+**Malik's challenge is a lesson in choosing the benchmark.** He told Hinton to win PASCAL VOC;
+Hinton said it was too small; Malik said then go win ImageNet. Heimann's claim is that Hinton
+chose ImageNet *because nobody thought it would work* — DanNet had already beaten hand-engineered
+pipelines four competitions in a row and it changed nothing, because the benchmarks were small and
+specialised. Winning the contest everyone considered excessive is what made the win legible.
+
+## Where I'd push back
+
+- **The list is a reconstruction and the book's title is not.** Heimann says so plainly in
+  chapter 1 and then reads the artefact for Sutskever's worldview for eight more chapters. Every
+  claim of the form "the list omits X, therefore he believes Y" inherits the reconstruction's
+  error bars, and the missing-RL observation is exactly the kind of thing a crowdsourced list
+  would get wrong.
+- **"90% of what matters" is a quote about 2016 or so, being read as a claim about now.** The list
+  covers roughly 2012–2022. That is not an objection to the book, which is explicitly a history,
+  but it is one to the framing that a stable canon exists.
+- **Hindsight is doing more work than the chapter admits.** Sutskever's claim that he *knew*
+  AlexNet would work is defended on the grounds that Martens had already shown convergence. That
+  is a real argument, and it is also the story a winner tells; the chapter accepts it without
+  looking for anyone who had the same evidence and did not make the bet.
+
+## Ahead, and what this notebook will want from it
+
+Chapters 3–9 are unread. Two of them look directly relevant here rather than historically:
+**ch. 6** (Kaplan scaling laws, Chinchilla, jaggedness, contamination, GPipe) and **ch. 8**
+(minimum description length, grokking, double descent, the compression view of intelligence).
+Ch. 6's "jaggedness" section is worth reading against
+[[jaggedness-and-what-rl-optimises|Karpathy's use of the word]] — the same term in a scaling
+context, probably not the same claim. Ch. 9 is Legg, AIXI, Bostrom, and the argument that
+definitions of intelligence masquerade as explanations, which will land on
+[[aligned-to-whom]].
+
+## Figures
+
+The chapters carry six figures — the HOG false positive on rippled water, Martens's valley,
+the AlexNet architecture diagram, activation-function plots, the dropout illustration, and the
+ILSVRC error curve 2010–2017 — several of them reproduced in the book by permission of their
+original authors. None was copied into `public/images/`: they are third-party figures licensed to
+Manning, not to this notebook. Where one carries the argument it is described in prose above.

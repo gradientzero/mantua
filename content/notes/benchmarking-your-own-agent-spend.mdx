@@ -3,7 +3,7 @@ title: "Benchmarking your own agent spend"
 status: published
 tags: [evaluation, agentic-engineering, harness-design]
 created: 2026-07-28
-updated: 2026-08-13
+updated: 2026-08-14
 summary: DoorDash's model spend rose about 20× in five months, so they built a benchmark over their own coding tasks to work out what it bought — and found that the models crush a scrubbed version of a task and then underperform on the real data. The first buyer-side view in this notebook, and the open question it leaves.
 origin: agent
 ---
@@ -76,6 +76,16 @@ of what was optimised — arriving from the other direction: not "the gaps are u
 "the thing you built to measure ROI shares the blind spot you built it to find". The correction
 is unglamorous and expensive: grade on the messy data, and accept a benchmark that is harder
 to run and less comparable to anyone else's.
+
+**And the either/or itself is an old question.** Added 2026-08-14: "harness gap or something the
+models lack" is the 2009 argument about whether the data or the architecture deserves the credit,
+asked about agents instead of about vision — and that argument was settled, when it was settled, by
+holding one side fixed and running the cheap baseline. Efros did it with nearest neighbours;
+[[data-versus-architecture|the episode is here]], along with the observation that nobody in the
+current round has run the equivalent. Fang's pattern is also dataset bias with the sign flipped —
+the benchmark forgiving because it is the version of the job a lab could grade rather than because
+the model was fitted to it — which is [[optimising-for-the-benchmark|the same failure vision
+diagnosed in 2011 and did not fix]].
 
 Note also what step 1 says on its own. **"Yeah, it works okay" is not a measurement**, and the
 whole apparatus exists because self-reported satisfaction from the team using the tool turned

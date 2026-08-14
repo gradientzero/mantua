@@ -514,7 +514,9 @@ weighting pass and a `weight` field in `lib/graph.ts`; the stiffness term in
 `graph-view.tsx`. This adds the first derived field the graph depends on beyond
 `links`/`tags`/`related`, so the README's graph section was corrected — it previously
 promised "no new schema fields". `fold` is now exported from `lib/search.ts` and shared. No
-content touched, no dependency added. `npm run build` clean.
+content touched, no dependency added.
+
+`npm run build` clean.
 
 ## [2026-07-29] ingest | Dictation — command over tokens
 
@@ -828,3 +830,98 @@ restates it. Numbers contradict themselves inside single answers (GPT-3 dated tw
 model-card versions one sentence apart, token prices that must be per million). And the frontier
 model names in the transcript — *Mythos*, *Fable*, *Sol* — resolve to nothing checkable, so nothing
 on any page depends on the mapping.
+
+## [2026-08-14] ingest | Sutskever's List, ch. 1–2 (Heimann, Manning 2026)
+
+`inbox/mine/Sutskevers List Ch 1 2.md` — a PDF-to-markdown capture of the front matter and first two
+chapters of Richard Heimann's *Sutskever's List*, plus twelve extracted figures. The owner is two
+chapters in and asked for this round to cover what he has read, and **asked that the book not be
+moved to `sources/`** — so this item stays in the inbox until the reading is finished, which is the
+first deliberate exception to "ingest empties the inbox". The consequences, and what the next session
+should do if it sees the same file again, are in `tasks/2026-08-14-sutskevers-list-stays-in-inbox.md`.
+
+**Provenance overridden, second time.** The item was in `inbox/mine/`, which means `origin: human`
+and the owner's byline. It is a published book by a named author with a copyright notice, so the
+2026-08-10 rule applied again — evidence inside the item beats the folder, in the direction away from
+his byline only — and the material is summarised rather than republished. Which leaves a gap worth
+naming: the other two Manning books here have `origin: human` reading notes in his own words, and
+this one has an agent summary instead. If he wanted the former, the notes didn't make it into the
+inbox. The task file asks.
+
+**Four new pages, all drafts.** `sutskevers-list-notes` is the running summary and carries the book's
+own thesis — the four-part reading of Sutskever's worldview, and the list's omissions (no symbolic
+AI, no classical planning, and no reinforcement learning, which is the odd one). The other three are
+concept pages that stand without the book:
+
+`too-dangerous-to-release` — GPT-2's withholding in February 2019, the staged release, and the
+November admission that no misuse had been seen. The part worth keeping is structural rather than
+historical: the stated defence was about a broader class of future systems, which cannot justify
+withholding *this* model, so the action and its reason came apart — and the premise underneath it,
+that acting too late is worse than acting early, licenses action on grounds that cannot generate the
+evidence for stopping. Nine months of waiting bought no information. The 2018 charter revision is the
+detail that reframes the episode: it was an institutional pivot already committed to, not a reaction
+to a capability surprise.
+
+`data-versus-architecture` — the strongest pre-2012 case against neural networks, which was that the
+data deserved the credit, and Efros's control experiment for it (hold the data fixed, run nearest
+neighbours, watch the network's advantage disappear). AlexNet settled it on data everyone already
+had, and the settlement is narrower than either slogan: data was underrated *and* is not an
+equaliser, because scaling behaviour is a property of the method. The reason the page is in this
+notebook is the modern version of the argument, which is running now without the control —
+DoorDash's "harness gap or model gap?" is a which-component question with no baseline, and neither
+the harness write-ups nor the RL-transfer optimism reports one.
+
+`optimising-for-the-benchmark` — dataset-bound progress in 2000s vision: DPM sculpted around
+PASCAL's quirks, Efros and Torralba's 2011 diagnosis, ImageNet nearly a monument to scale, and the
+benchmark spent by 2017. Two findings. **Hard negative mining is `training-against-your-own-monitor`
+with a human running the loop**, which is now the oldest worked example behind that page and the
+strongest, because no intent, situational awareness or deception is involved — an optimiser and a
+partial detector suffice. And a benchmark is in one of three states — too hard, fitted, or spent —
+and nobody asks which about their own.
+
+**Six published pages edited.** `training-against-your-own-monitor` gains the hard-negative-mining
+precedent, plus the one hopeful disanalogy: that failure was fixed by making the representation
+learnable, not by better negatives, and there is no obvious equivalent move here.
+`agentic-engineering` gains the AlexNet assembly claim — the cluster's own thesis about software,
+made about model training in 2012 — and, less comfortably, the observation that its central
+which-component claim has the same missing baseline as the 2009 argument.
+`benchmarking-your-own-agent-spend` gains the reading that Fang's either/or is that argument in
+modern clothes. `jaggedness-and-what-rl-optimises` gains the 2011 precedent for its closing worry,
+and a reason not to read the ridge as permanent: it moved, and what moved it was a harder measure
+rather than a better model. `aligned-to-whom` gains where the current arrangement came from.
+`dashbench-measuring-a-code-review-agent` gains the history its methodology is answering.
+
+Two new tags: `deep-learning-history`, `scaling`. First historical material in the notebook.
+
+**No images copied.** Six figures carry argument in chapter 2, several reproduced in the book by
+permission of their original authors to Manning — a permission that does not extend to this site.
+They are described in prose; the task file records what it would take to use one.
+
+**The capture itself was not committed.** It stays in `inbox/mine/` as working material and is left
+untracked: it is 140 KB of a commercial book's text plus twelve figures licensed to its publisher, and
+nothing in the repo needs it once the notes exist. So the file is on the owner's disk, not in git
+history — which also means the eventual `sources/` archive for this book is a decision to make
+deliberately rather than a step to perform.
+
+`npm run build` clean.
+
+## [2026-08-14] setup | Published the four Sutskever's List pages
+
+At the owner's instruction, same day as the ingest: `sutskevers-list-notes`,
+`too-dangerous-to-release`, `data-versus-architecture` and `optimising-for-the-benchmark` all move
+from `draft` to `published`. Nothing else changed — no prose edits, no frontmatter beyond `status`.
+
+What that does to the production build, since it is the point of publishing rather than a side
+effect: the six pages edited during the ingest carry wikilinks into all four, and until now those
+rendered as inert "missing" spans in production. They resolve now, which means
+`training-against-your-own-monitor` has its hard-negative-mining precedent visible on the public
+site, and `agentic-engineering`'s admission about the missing no-harness baseline points somewhere.
+
+The notebook gains its first historical material in public and its first two pages tagged
+`deep-learning-history` and `scaling`. `sutskevers-list-notes` is a *running* page — the book is two
+chapters read out of nine and stays in `inbox/mine/` — so a published page here will be extended by
+later ingests rather than finished, which is a first for this notebook. Item 2 of
+`tasks/2026-08-14-sutskevers-list-stays-in-inbox.md` is closed; the other two (the owner's own
+reading notes, and the figures) stay open.
+
+`npm run build` clean.

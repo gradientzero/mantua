@@ -3,7 +3,7 @@ title: "DashBench: measuring a code review agent"
 status: draft
 tags: [evaluation, agentic-engineering, harness-design, code-review]
 created: 2026-07-30
-updated: 2026-07-30
+updated: 2026-08-14
 summary: DoorDash's write-up of the benchmark behind its code review agent — why acceptance rate can only ever fill two cells of a confusion matrix, how they built labels that don't rest on any single fallible source, and the model-mix table where no configuration wins.
 origin: agent
 ---
@@ -186,3 +186,13 @@ repository —
   The equivalent for [[linting-as-agent-guardrail|/lint here]] would be pages known to be
   fine, to catch a lint pass that manufactures findings to look useful.
 - **Run it more than once.** Aggregate across runs before believing a coverage number.
+
+## The history it is unknowingly answering
+
+Added 2026-08-14. Replaying real PRs from the real codebase, keeping the benign and later-reverted
+cases in, and building labels out of three sources that disagree is the expensive correction for a
+failure computer vision diagnosed in 2011 and never fixed — models fitted to the quirks of the
+dataset they are scored on, scoring well and generalising badly. See
+[[optimising-for-the-benchmark]]. Worth reading next to this page because it also supplies the
+question this one doesn't ask about itself: which of the three states is DashBench in — too hard,
+fitted, or spent — and what would tell you.
