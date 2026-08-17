@@ -1,0 +1,132 @@
+---
+title: "Diffusion or autoregression, by modality"
+status: published
+tags: [inference, deployment]
+created: 2026-08-17
+updated: 2026-08-17
+summary: Why video generation is stuck at five-second clips — quadratic attention over 35,000 tokens for five seconds of 480p — and why the open/closed gap that has nearly closed for text is night-and-day for video. Plus the argument that text diffusion is being marketed as the wrong product.
+origin: agent
+---
+
+From [[inference-engineering-baseten|the Baseten interview]]. This half of the conversation is
+about a split the notebook has not had to think about, because everything in it so far has been
+text: **which generation paradigm a modality runs on**, and what that does to the economics of
+serving it.
+
+Kiely's working division, which he admits is imperfect:
+
+| Autoregressive | Diffusion |
+|---|---|
+| text, embeddings, voice in, voice out | image, video |
+
+The distinction underneath it is one sentence long. Diffusion attends in both directions across
+the whole sequence and can revise the past to make the future coherent; autoregression only ever
+goes forward. Taha's intuition for why the split lands where it does is the best short version I
+have read: writing is sequential — you think, you emit, you think again, and you need to go back
+and edit less often than you would guess — whereas in a video the top-left pixel and the
+bottom-right pixel have to attend to each other about equally, and neither comes first.
+
+## Video is a token-count problem
+
+The numbers are the point, and they are brutal. Five seconds of 480p at 16 frames per second is 81
+frames; compressed into latent space it is roughly 30 × 50 × 21, which is about **35,000 tokens for
+five seconds**. Attention is quadratic in that. Ten seconds squares it, and a one-minute cutscene —
+the shortest unit anyone actually wants — is not reachable inside any usable compute budget.
+
+So the field is stuck choosing between three bad options:
+
+1. **Full attention over everything.** Correct, and unaffordable past a few seconds.
+2. **Sparse attention** — each token attends to the top ~12.5% that matters, exploiting spatial and
+   temporal locality, so the token for a crown attends to the head beneath it and to the same head
+   in the adjacent frames. Affordable, and it costs visible quality.
+3. **Autoregressive video**, which would inherit the whole optimisation stack from
+   [[inference-engineering-baseten|the text side]] — speculative decoding included — except that
+   Taha's assessment of every autoregressive video model available today is that the quality is
+   terrible.
+
+What closed-source products appear to do instead is stitch: generate seven seconds, then extend.
+Grok Imagine does this well and does not say how. The open-source approximation is to take the last
+frame of a clip and feed it into image-plus-text-to-video for the next five seconds, and it
+**drifts** — each chunk slightly lower quality than the last, each one a little darker. They built a
+demo of it and decided it was too embarrassing to show.
+
+Taha's bet is that long-form video has to become autoregressive, or wait for a leap in compute that
+makes full attention over millions of tokens affordable. Kiely's is that the answer is a hybrid,
+each paradigm doing what it is good at. Neither is a prediction with a date on it, and the honest
+summary of the section is that nobody in it knows.
+
+## The serving profile is inverted
+
+Worth recording separately, because it undoes most of what
+[[inference-engineering-baseten|the text page]] establishes. Video diffusion does not batch — one
+request, one GPU, served there. There is no sharding. The models are small: around 20 billion
+parameters, orders of magnitude below the frontier LLMs. Almost none of the machinery that makes
+text serving hard applies, and the bottleneck moves entirely into attention over the sequence.
+
+## The open/closed gap depends on the modality
+
+The most useful correction in this source for something the notebook has already committed to.
+[[model-speciation-and-touching-the-weights|Karpathy's estimate]] — open weights six to eight months
+behind the closed frontier, down from eighteen, and staying there — was recorded here as a general
+fact about the field. Taha's version, four months later, is that it is a fact about *text*:
+
+- **LLMs**: nearly at parity. "It used to be six months. I don't think it's six months anymore."
+- **Video**: night and day. Open models against Kling or Veo is not a comparison anyone makes
+  seriously.
+
+And the mechanism he gives for why the gap persists in video is a feedback loop rather than a
+capability ceiling. The gap sends media companies to closed models; even a 100× cheaper open
+pipeline loses when the job still costs $1,000 and the closed output is better; less demand means
+less innovation and fewer open checkpoints; labs that were releasing weights stop — Wan's latest is
+closed, the open line stopped at an earlier version. Falling behind is self-reinforcing in a way
+that being briefly behind is not.
+
+Which is the sort of thing to watch for on the text side rather than assume cannot happen there.
+The open text ecosystem is at parity *now*, and the argument above says what parity depends on:
+enough demand to justify the capex. Karpathy's own reason for expecting the text gap to hold — that
+the industry wants a common substrate to build on — is a demand argument, so the two accounts agree
+about the mechanism and disagree only about whether the demand is there. In video it is not.
+
+## Text diffusion is marketed as the wrong product
+
+The most interesting stray argument in the interview, and Kiely says he has made it to the labs
+directly. Text diffusion models — Mercury, Diffusion Gemma — are sold as a faster way to do
+chat-response, competing on tokens per second against models that have the entire optimisation
+stack pointed at exactly that number. That is a fight they lose.
+
+The pitch he thinks they should make instead is that **the API should be different**, because the
+capability is different. Diffusion attends across all positions at once, so it can hold a
+constraint that spans the whole output — a rhyme scheme, a syllable count, a plot structure that
+has to resolve, a storyboard whose ending has to attend to its beginning. His personal benchmark is
+sonnets, which current models still get wrong on syllables; that failure is structural for
+left-to-right generation and native for diffusion. Ask for the artefact to diffuse into place
+rather than for tokens to arrive faster.
+
+The counter, which they raise themselves and do not resolve: the open text-diffusion models are
+small, so "for its size it does pretty well" is the only claim anyone can make, and nobody has spent
+frontier-scale compute on one to find out whether the paradigm or the parameter count is the limit.
+David Holtz is reported to have invested in text diffusion at MidJourney for the storyboarding case
+with nothing shipping from it.
+
+## Audio, briefly
+
+Speech is autoregressive and has been since the Orpheus architecture roughly eighteen months
+earlier: add waveform tokens to the vocabulary, have the LLM emit them, and speech streams out of
+an ordinary decode loop. Kiely's framing is that this makes voice a text problem wearing a
+different output layer. Music is the one place the two paradigms are reported as roughly on par,
+and neither of them has a strong take on why.
+
+## Why this is in the notebook
+
+It is off the main thread — nothing here generates video — and it earns its place in two ways.
+
+The first is the correction to the open/closed gap above, which the notebook had recorded as a
+single number and which turns out to be per-modality with a mechanism attached.
+
+The second is that this is the clearest case available of **a capability wall that is a serving
+problem rather than a model problem**. Nothing about a video model prevents it from generating a
+minute of footage; quadratic attention over 35,000 tokens per five seconds does. That is the same
+class of constraint as the KV-cache-versus-parameters squeeze on
+[[inference-engineering-baseten|the hardware page]], and it is worth having one example in the
+notebook where the ceiling everyone is bumping into is arithmetic about tokens rather than anything
+about intelligence.

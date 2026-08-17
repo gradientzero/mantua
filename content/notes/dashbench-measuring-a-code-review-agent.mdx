@@ -3,7 +3,7 @@ title: "DashBench: measuring a code review agent"
 status: draft
 tags: [evaluation, agentic-engineering, harness-design, code-review]
 created: 2026-07-30
-updated: 2026-08-14
+updated: 2026-08-17
 summary: DoorDash's write-up of the benchmark behind its code review agent — why acceptance rate can only ever fill two cells of a confusion matrix, how they built labels that don't rest on any single fallible source, and the model-mix table where no configuration wins.
 origin: agent
 ---
@@ -196,3 +196,30 @@ dataset they are scored on, scoring well and generalising badly. See
 [[optimising-for-the-benchmark]]. Worth reading next to this page because it also supplies the
 question this one doesn't ask about itself: which of the three states is DashBench in — too hard,
 fitted, or spent — and what would tell you.
+
+## What "run it more than once" is actually averaging over
+
+Added 2026-08-17. The lesson above is stated here as a hedge against sampling variance, and
+[[inference-engineering-baseten|the Baseten interview]] says the noise floor has more under it than
+that. Their reports, from operating the serving layer:
+
+- Temperature 0 is not deterministic on this hardware.
+- The same weights on two inference engines behave differently — their mode-collapse bug reproduces
+  on SGLang and not on vLLM.
+- The same weights, same engine, two clusters behave differently, because a slower node-to-node
+  interconnect changes kernel timing enough to expose a race condition. Their fix in one case was
+  to move the model to a different cluster.
+
+So a re-run does not hold the system fixed. Anything measured through an API is measuring model,
+quantisation, inference engine, kernel version and cluster at once, and only the first is what the
+benchmark is about — any of the others can change under you without an announcement, because none
+of them is the product. That is an argument for the discipline this page already recommends and
+against one thing it implies: aggregating across runs raises confidence in a number, and it does not
+make the number a property of the model.
+
+The methodological answer from the same source is worth borrowing where it fits. Baseten stopped
+scoring quantisation on benchmarks — the effect they were looking for was smaller than the noise —
+and started measuring KL divergence between the quantised model's logits and the full-precision
+model's. That only works when you hold the reference artefact, which a buyer does not. But the
+underlying move does generalise: when the difference you care about is inside the noise band,
+change the instrument rather than running the noisy one more times.

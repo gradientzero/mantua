@@ -3,7 +3,7 @@ title: "Benchmarking your own agent spend"
 status: published
 tags: [evaluation, agentic-engineering, harness-design]
 created: 2026-07-28
-updated: 2026-08-14
+updated: 2026-08-17
 summary: DoorDash's model spend rose about 20× in five months, so they built a benchmark over their own coding tasks to work out what it bought — and found that the models crush a scrubbed version of a task and then underperform on the real data. The first buyer-side view in this notebook, and the open question it leaves.
 origin: agent
 ---
@@ -131,6 +131,22 @@ labels come from three disagreeing sources rather than one convenient one. That 
 on the messy data, and accept a benchmark that is harder to run" looks like when someone
 actually pays for it. What it does not do is close the gap Fang describes on the *non-coding*
 work — that is still where the scrubbed-versus-real problem lives, and still unmeasured.
+
+**The token price is not a property of the model either.** One thing this page treats as given —
+that spend is spend, and the question is only what it bought — gets complicated by
+[[inference-engineering-baseten|the provider-side view]]. Two of its findings bear directly on a
+buyer's arithmetic. Serving the same weights, the spread between a careless deployment and a
+careful one on identical hardware is 2–4×, so the provider spreads visible on OpenRouter or
+Artificial Analysis are a real quality difference and not only a pricing one. And past some
+volume the per-token model stops being the cheaper unit at all: at millions of tokens per hour,
+renting the box by the hour and taking responsibility for saturating it is the cheaper
+arrangement, with the trade being that saturation becomes your problem.
+
+Neither changes the argument on this page, and both sharpen what a benchmark over your own tasks
+should be varying. If cost and latency are results rather than controlled-away parameters — which
+is the thing DashBench gets right — then the provider and the serving configuration are as much a
+part of the measured system as the model name, and a 20× spend curve has at least one term in it
+that is procurement rather than usage.
 
 **And the acquisition is the same claim in a different register.** They bought a company
 (transcribed as *Metis*) to import AI-native habits, on the diagnosis that a large company's

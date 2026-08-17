@@ -3,7 +3,7 @@ title: "Auto Research: taking the researcher out of the loop"
 status: published
 tags: [agentic-engineering, harness-design, evaluation]
 created: 2026-07-27
-updated: 2026-08-13
+updated: 2026-08-17
 summary: Karpathy's name for an agent loop that improves a model without a human in it — an objective, a metric, boundaries, and go. What it did to a repo he had hand-tuned for two decades, the one constraint that decides where it applies, and the parallel version he has not solved.
 origin: agent
 ---
@@ -193,3 +193,20 @@ The note's conclusion is unaffected — the labs have published no working versi
 their work months late, and the useful response is to build your own. But the premise was
 overstated, and the interesting gap is narrower and more specific than "nobody has done it":
 it is *coordination and parallelism*, not the loop itself.
+
+## One running outside a lab
+
+An instance from an ordinary company, four months later, and it matches this page's specification
+line for line. Baseten report a loop in which GLM-5.2 runs a forward pass on itself, reads the
+resulting profiling trace, finds the bottleneck kernels in the inference engine, writes
+replacements, and profiles again — see [[training-and-inference-are-merging]] for the account and
+for the confounder nobody controlled.
+
+What makes it worth adding here is the metric. This page's one constraint is that Auto Research
+applies wherever the objective can be computed without a human, and its examples of that have been
+loss curves and benchmark scores. A profiling trace is a stronger case than either: it is not a
+proxy for the goal, it *is* the goal, and there is nothing in it to game. So the constraint holds,
+and the example set now includes one case where satisfying it required no eval design at all —
+somebody simply pointed the loop at a measurement that already existed.
+
+It is also single-threaded, which leaves the gap above exactly where it was.

@@ -925,3 +925,96 @@ later ingests rather than finished, which is a first for this notebook. Item 2 o
 reading notes, and the figures) stay open.
 
 `npm run build` clean.
+
+## [2026-08-17] ingest | Inference engineering (Latent Space × Baseten, 2026-08-03)
+
+A two-hour Latent Space episode with Philip Kiely and Ali Taha of Baseten, dropped as a single
+unlabelled ASR transcript with no file extension. Third item in a row to arrive in `inbox/mine/`
+and turn out to be somebody else's work, so the 2026-08-10 rule applied again — evidence inside the
+item beats the folder, in the away-from-`origin: human` direction only. Summarised, not
+republished. Archived at `sources/2026-08/latent-space-inference-engineering-baseten/`.
+
+This is the notebook's first source about **the layer between a released checkpoint and a served
+endpoint**. Everything here so far has treated inference as a thing you buy or a thing you run, and
+tokens-per-second as a property of the model. It is a property of what somebody did to the model
+afterwards: 2–4× on identical hardware between a careless deployment and a careful one, which is
+wider than the gap between adjacent model generations. First source from an infrastructure vendor,
+and the first covering modalities other than text.
+
+Three new pages, all drafts. `inference-engineering-baseten` is the source note — the request path,
+the four optimisations and what each is worth, the claim that quantising *more* of a model can make
+it better (errors cancel, and they measure it by KL divergence against the full-precision logits
+rather than by benchmark), the mode-collapse bug that turned out to be a kernel race exposed by a
+slow interconnect, and composing models out of frozen parts.
+`diffusion-versus-autoregressive-generation` takes the video and audio half: 35,000 tokens for five
+seconds of 480p, quadratic attention, and why the open/closed gap that has nearly closed for text is
+night-and-day for video with a feedback loop keeping it there.
+`training-and-inference-are-merging` takes the closing stretch, and it is the one that matters here.
+
+Six existing pages edited, and two of the edits are corrections rather than additions.
+`model-speciation-and-touching-the-weights` gains composition at the serving layer — a frozen Kimi
+encoder, a frozen GLM backbone, a trained projector between them — as a third option that Karpathy's
+context-window-versus-weights dichotomy has no slot for; and the correction that his six-to-eight
+month open/closed gap was a claim about text, recorded here as a claim about the field.
+`dashbench-measuring-a-code-review-agent` gains what "run it more than once" is actually averaging
+over, which is model, quantisation, engine, kernel version and cluster at once. `auto-research`,
+`recursive-self-improvement-greenblatt`, `learning-from-deployment` and
+`benchmarking-your-own-agent-spend` gain the rest.
+
+**The one worth flagging.** Baseten report plugging a GLM-5.2 endpoint into their Claude Code
+harness and running it in a loop: forward pass, profiling trace, find the bottleneck kernels in
+SGLang, write replacements, profile again — with some of the kernels the model then runs on having
+been written by it. That crosses the boundary this notebook drew on 2026-08-13, where the recursion
+stopped at Karpathy's overnight nanochat run. Modestly: it is one anecdote, the obvious confounder
+is uncontrolled (best coding model available, or uniquely good at optimising itself — nobody ran the
+experiment), and the reason it works at all is that a profiling trace is a mechanical metric with no
+judge in the loop. But it is the first instance here of the loop closing outside a lab and outside a
+demo, on somebody's ordinary Tuesday.
+
+**No pages with `origin: human` or `origin: mixed` were edited**, per the 2026-08-14 precedent.
+`serving-slms-on-a-desktop-gpu` is the page this source bears on most — the local-versus-datacenter
+framing ("fit it and make it less dumb" versus "load it and make it less slow"), TurboQuant being
+valuable on a Mac and harmful on a B200, active-versus-total parameters at batch size one — and all
+of it is recorded on the new pages with links back rather than written into his note.
+
+**No images copied**: the item arrived as one text file. Several passages describe diagrams shown on
+camera; none are in the capture and none were reconstructed.
+
+The capture is badly damaged and the source record lists it in full. Two things constrain what could
+be taken: there are **no speaker labels**, so the Kiely/Taha split was reconstructed from content and
+is declared as inference on the page, with several exchanges left unattributed; and the quantisation
+research — the most surprising claim in the source — rests on a paper that is not in the capture.
+
+`tasks/2026-08-17-third-misfile-into-inbox-mine.md` records the pattern: three for three, nothing
+correctly filed in `inbox/mine/` in the period these logs cover, which is a fact about the contract
+rather than three accidents.
+
+`npm run build` clean.
+
+## [2026-08-17] setup | Published the three inference-engineering pages
+
+At the owner's instruction, same day as the ingest: `inference-engineering-baseten`,
+`diffusion-versus-autoregressive-generation` and `training-and-inference-are-merging` all move from
+`draft` to `published`. Nothing else changed — no prose edits, no frontmatter beyond `status`.
+
+What that does to the production build, since it is the point of publishing rather than a side
+effect: the six pages edited during the ingest are all published and all carry wikilinks into the
+three new ones, which until now rendered as inert "missing" spans. They resolve now. So
+`model-speciation-and-touching-the-weights` has the serving-layer composition argument and the
+open/closed-gap correction pointing somewhere on the public site;
+`recursive-self-improvement-greenblatt`, `auto-research` and `learning-from-deployment` all reach
+`training-and-inference-are-merging`, which means the notebook's first case of the recursion closing
+outside a lab is now reachable from all three pages that care about it; and
+`benchmarking-your-own-agent-spend` reaches the provider-side cost material.
+
+The notebook gains its first published pages about the serving layer, and the `inference` tag goes
+from two pages to five. 40 of 42 notes are now published.
+
+One outbound link still does not resolve in production, deliberately:
+`inference-engineering-baseten` links to `dashbench-measuring-a-code-review-agent`, which is a draft
+pending `tasks/2026-07-30-publish-dashbench-note.md`. The link is the right one to have — the
+non-determinism material was written into that page during this ingest — and it will resolve when
+that task is closed. Nothing else on the three pages points at a draft.
+
+`npm run build` clean; the 15 broken-wikilink warnings are the pre-existing ones and none of them
+come from these pages.

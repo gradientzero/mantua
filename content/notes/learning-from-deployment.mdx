@@ -3,7 +3,7 @@ title: "Learning from deployment"
 status: published
 tags: [ai-safety, reward-hacking, evaluation, agentic-engineering]
 created: 2026-08-13
-updated: 2026-08-13
+updated: 2026-08-17
 summary: Production traffic is becoming training data — tasks the model did badly on, turned into environments that match them exactly, with the rubric built from what the human actually wanted. Which is the loop this notebook already admires, run with the model as the artefact, and it changes where the reinforcement comes from.
 origin: agent
 ---
@@ -92,6 +92,34 @@ transfer is that it is "pretty strong". So the notebook's own reason for sceptic
 capability transfer is weakest precisely where the safety story is worst, and both of those follow
 from the same property. That is an uncomfortable pairing and it should be recorded as one rather
 than split across two pages that each sound reasonable.
+
+## If it runs through the cache instead of the weights
+
+Everything above assumes the update is a gradient. A practitioner's argument four days later says it
+may not be. Taha, in [[training-and-inference-are-merging|the Baseten interview]], frames continual
+learning as a fork — push knowledge into the weights (or into LoRA adapters), or compact it into an
+effectively unbounded KV cache — and argues for the cache on grounds that have nothing to do with
+cost. Editing a fact into the weights lets the model recall it and does not put it into the model's
+*reasoning*: it will repeat the edited fact when asked directly and fail to use it one inference
+step later. A fact you can recall and cannot reason with is not the thing this loop is trying to
+install.
+
+If that is where continual learning lands, this page changes in one respect and not in the other,
+and the split is worth being precise about because it is easy to read the good half as a solution.
+
+**Better:** there is no gradient, so nothing is permanently selected for. A bad update is a cache
+entry that can be found and deleted rather than a weight change nobody can locate. The
+[[training-against-your-own-monitor|selection-without-intent]] mechanism needs a training signal,
+and this removes it.
+
+**Not better, and unchanged:** something still decides which interactions are worth retaining, and
+that decision is still a judgement about whether the work was good. The thumbs-up is now a retention
+policy rather than a reward, and it is the same bad label doing the same job. The distinction this
+notebook keeps arriving at — *was accepted* versus *was real* — sits exactly where it sat. What
+moves is where the damage accumulates, not whether it accumulates.
+
+Which means the line at the bottom of this page survives the substitution intact, and that is
+mildly reassuring about the line rather than about the situation.
 
 ## What it means for anything built here
 
