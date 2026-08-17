@@ -990,3 +990,31 @@ correctly filed in `inbox/mine/` in the period these logs cover, which is a fact
 rather than three accidents.
 
 `npm run build` clean.
+
+## [2026-08-17] setup | Published the three inference-engineering pages
+
+At the owner's instruction, same day as the ingest: `inference-engineering-baseten`,
+`diffusion-versus-autoregressive-generation` and `training-and-inference-are-merging` all move from
+`draft` to `published`. Nothing else changed — no prose edits, no frontmatter beyond `status`.
+
+What that does to the production build, since it is the point of publishing rather than a side
+effect: the six pages edited during the ingest are all published and all carry wikilinks into the
+three new ones, which until now rendered as inert "missing" spans. They resolve now. So
+`model-speciation-and-touching-the-weights` has the serving-layer composition argument and the
+open/closed-gap correction pointing somewhere on the public site;
+`recursive-self-improvement-greenblatt`, `auto-research` and `learning-from-deployment` all reach
+`training-and-inference-are-merging`, which means the notebook's first case of the recursion closing
+outside a lab is now reachable from all three pages that care about it; and
+`benchmarking-your-own-agent-spend` reaches the provider-side cost material.
+
+The notebook gains its first published pages about the serving layer, and the `inference` tag goes
+from two pages to five. 40 of 42 notes are now published.
+
+One outbound link still does not resolve in production, deliberately:
+`inference-engineering-baseten` links to `dashbench-measuring-a-code-review-agent`, which is a draft
+pending `tasks/2026-07-30-publish-dashbench-note.md`. The link is the right one to have — the
+non-determinism material was written into that page during this ingest — and it will resolve when
+that task is closed. Nothing else on the three pages points at a draft.
+
+`npm run build` clean; the 15 broken-wikilink warnings are the pre-existing ones and none of them
+come from these pages.
