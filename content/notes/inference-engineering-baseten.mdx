@@ -1,0 +1,283 @@
+---
+title: "Inference engineering as a discipline (Latent Space × Baseten, 2026-08)"
+status: draft
+tags: [inference, deployment, reading-notes]
+created: 2026-08-17
+updated: 2026-08-17
+summary: Philip Kiely and Ali Taha on what actually happens between an open-weight checkpoint and a production endpoint — the four optimisations that stack to 2–4× on fixed hardware, why quantising more of a model can make it better, and the reliability failures that turn out to be a race condition in a kernel rather than anything about the weights.
+origin: agent
+---
+
+Source: the Latent Space podcast of 2026-08-03, "The Inference Engineering Masterclass", with
+Philip Kiely and Ali Taha of Baseten, archived under
+`sources/2026-08/latent-space-inference-engineering-baseten/`. The capture is a speaker-unlabelled
+ASR transcript of a two-hour conversation; the damage it carries is recorded at the bottom of this
+page and every number here was checked against the passage it sits in.
+
+This is the notebook's first source about **the layer between a checkpoint and an endpoint**.
+Everything else here has treated inference as a thing you buy or a thing you run —
+[[serving-slms-on-a-desktop-gpu|a box under a desk]] on one end,
+[[benchmarking-your-own-agent-spend|a spend line]] on the other — and taken the tokens-per-second
+number as a property of the model. It is not. It is a property of what somebody did to the model
+after the lab released it, and the spread between a careless deployment and a careful one is
+larger than the spread between adjacent model generations.
+
+Two more pages come out of this source: [[diffusion-versus-autoregressive-generation]] for the
+video and audio half of the conversation, and [[training-and-inference-are-merging]] for the
+closing stretch, which is the part with the most consequence for the rest of this notebook.
+
+## What a long request actually does
+
+Asked what happens to a 200,000-token request, Kiely describes a path with four decision points,
+and the shape of it is worth having because every optimisation below attaches to one of them:
+
+1. **Cache-aware routing.** The first question is whether some prefix of this request has been seen
+   before, because prefill is the expensive part and a cache hit skips it. Requests are routed to a
+   replica that has both free prefill capacity and, ideally, the relevant cache already resident.
+   His aside is a good calibration: at 200k tokens you are almost certainly coding or running a
+   multi-turn agent, which is exactly the traffic where prefixes repeat.
+2. **Prefill/decode disaggregation.** On some models the two phases run on separate GPU pools —
+   one set processes the input and builds the KV cache, which is then handed to a different set
+   that generates tokens. They are different workloads and giving them the same hardware wastes
+   one of them.
+3. **A speculator in front of decode.** A small draft model proposes several tokens; one forward
+   pass of the full model verifies them and they are accepted or rejected.
+4. **Stream and bill.**
+
+The honest detail is that step 3 is tuned to an assumption. Their speculator assumes coding
+traffic, so it has a high acceptance rate on coding and a lower one on anything else — "if you're
+asking me to summarize every Harry Potter book, it's going to be slower." A shared endpoint is
+fast at what its operator expects you to do.
+
+## The stack, and what each layer is worth
+
+The clearest thing in the interview, and the reason this page exists. Holding hardware fixed and
+counting only what inference engineering buys:
+
+| Optimisation | Rough gain | Lossy? |
+|---|---|---|
+| BF16 → NVFP4 quantisation | ~2× (≈30–40% for 16→8, again for 8→4) | yes — the only lossy one |
+| Speculative decoding | ~2× | no — wrong drafts are rejected |
+| Prefill/decode disaggregation | ~2× (given enough hardware and traffic) | no |
+| A current runtime with current kernels | double-digit % | no |
+
+Their baseline for a trillion-parameter model on a plain deployment is 30–50 tokens/second;
+the number they aim at is 300–400. Normalising for identical hardware and GPU count, Taha puts the
+achievable range at **2–4×**, with the rest of any observed spread coming from the hardware itself.
+Kiely's summary — "some of it's what's the car and some of it's who's the driver" — is the sentence
+to keep, because the provider spreads visible on OpenRouter or Artificial Analysis are the two
+effects added together and are routinely read as the first alone.
+
+The build costs are smaller than the gains suggest. Quantised weights are "hours to days of work"
+for someone who knows how; so is a speculator; and for anyone not operating at provider scale, both
+usually already exist — an open-source quantised checkpoint (NVIDIA ships one if nobody else does),
+and often a speculator published with the model. What does not come for free is the disaggregation
+setup, which is an infrastructure problem rather than a model problem.
+
+**On Dynamo**, since it is the thing people reach for expecting a speedup: NVIDIA's open-source
+library is a toolkit for moving KV cache around a cluster, not a system that makes anything faster
+on install. "It's more of a developer toolkit." They decline to treat it as a benchmark baseline on
+the grounds that almost nobody in the wild has these deployments standing.
+
+## Quantising more of a model can make it better
+
+The most surprising claim, and the one this page would most like verified independently. The
+industry default assumption is monotone: more quantisation, more loss, worse model. Taha reports
+internal research (attributed to an intern, Joshua; a paper cut from 72 pages to 39) arguing that
+**quantisation errors in different layers can cancel**, and that which layers cancel is predictable
+in advance. A model with layers 1, 5 and 10 quantised can beat one with only layers 1 and 2
+quantised. Their reported result is 20% more of GLM-5.2 quantised than NVIDIA's checkpoint, at
+better quality — which is also 20% more of the model running in NVFP4, so the throughput gain and
+the quality gain point the same way.
+
+The methodological move underneath it is the part worth stealing regardless of whether the headline
+survives. They stopped scoring quantisation on benchmarks and started measuring **KL divergence
+between the quantised model's logit distribution and the full-precision model's**. The reasoning:
+benchmark scores on a non-deterministic system move inside the noise band, so a benchmark cannot
+resolve the size of effect you are looking for, while the logit distributions can be compared
+directly. That reframes the goal as fidelity rather than performance — Kiely's definition of
+quality throughout is "to what degree are we faithfully serving the original model", against a
+hypothetical golden implementation at 100%.
+
+Which is a different standard from the one [[optimising-for-the-benchmark|benchmark-bound
+progress]] describes, and a better one for this particular job: the reference is not a task score
+that can be gamed, it is another artefact you have in hand. It only works because the full-precision
+model exists to compare against. There is no equivalent when the thing being measured is capability
+rather than fidelity, which is why this trick does not generalise out of quantisation.
+
+Two related notes on quality. Everything except quantisation is claimed lossless — KV caching only
+avoids recomputation, and rejected draft tokens are rejected. And the vendors have started policing
+this from the other side: Kimi publishes a **vendor verifier** benchmark after providers serving
+degraded quantisations made the model look bad. Taha's framing of the incentive is exactly right —
+a customer getting poor output from a badly-quantised endpoint does not conclude that the provider
+quantised badly, they conclude the model is bad.
+
+## The reliability failures are not where you would look
+
+The section that changed how I would read an inference bug report. Their symptom is mode collapse:
+a model emitting the same token forever, most often `S`, on GLM-5.2 and reportedly DeepSeek V4. It
+happens at temperature 0.9 as readily as at 0, so it is not a sampling problem. Their mitigation is
+blunt — four identical tokens in a row and the generation is killed and retried, with special
+characters excluded so that a model drawing a table of dashes survives.
+
+The diagnosis is the interesting part, and it is a chain of eliminations:
+
+- **Not the weights.** The same weights on a different inference engine — SGLang versus vLLM —
+  do not reproduce it.
+- **Not the quantisation**, for the same reason.
+- **The kernels, and the interconnect.** The same model on the same software on two different
+  clusters behaves differently, because a slower node-to-node interconnect changes the timing
+  enough to expose a race in a kernel — a missing barrier, threads reading registers before
+  another thread has written them. Their fix in at least one case was to stop hosting that model
+  on that cluster.
+
+Two things follow. The first is that PyTorch's execution graph does not save you here: PDL-style
+optimisations deliberately overlap the start of one kernel with the end of the previous one, and
+the race lives inside a hand-written kernel rather than in the ordering between them. The second
+is the one for this notebook. Temperature 0 is already not deterministic on this hardware; add
+cluster-dependent kernel races and **"the model behaved differently" has an entire stack of
+non-model explanations under it**. Any measurement here — [[dashbench-measuring-a-code-review-agent|a
+benchmark over your own tasks]], a [[generator-evaluator-loops|judge scoring a generator]], a
+regression check either side of a change — is measuring model, quantisation, engine, kernel version
+and cluster at once, and only one of those is what you meant. "Within margin of error" is doing
+much more work than it usually gets credit for.
+
+## Supporting a new model is not a switch
+
+A useful corrective to the release-day support announcements. Kiely separates two things that get
+the same word:
+
+- **"I can make a token out of this model"** — mostly free. vLLM and SGLang frequently receive
+  weights before release.
+- **A production API** — requantise to NVFP4 for Blackwell and calibrate it so nothing regresses,
+  train a speculator, build runtime support for whatever is architecturally new, stand up and test
+  the infrastructure.
+
+The speculator step has a wrinkle worth recording because it is the same problem
+[[self-improving-agents-from-production-feedback|the tax-agent loop]] solves with practitioner
+corrections, arriving from the opposite direction. Baseten runs zero data retention on its model
+APIs, so they do not have their customers' traffic to train speculators on. They train on public
+datasets chosen to resemble what they believe the traffic is — coding, agentic work. A privacy
+guarantee and a personalised optimisation are in direct tension, and the resolution is to guess the
+distribution instead of measuring it. It is also why the dedicated-deployment customers get
+better speculators: with a known workload you can train the draft model on it.
+
+## Composing models out of parts
+
+The most concrete thing in the interview, and it belongs to a thread this notebook has been
+following. Baseten retrofitted vision onto GLM-5.2, which shipped without it, by taking a **frozen**
+vision encoder from Kimi and a **frozen** GLM backbone and training only the projector between
+them — a few million parameters. Taha's image for it: the eyes are frozen, the brain is frozen, and
+what is being learned is the connection. The training progression is textbook and they watched it
+grok: captioning first ("describe this image"), which produced incomplete understanding, then
+question–answer sets against each image ("does this image contain a scientist?"), which produced
+it. The result reaches 56% on MMLU Pro — not frontier — and, because the encoder is simply skipped
+when there is no image, **costs the text model nothing**.
+
+The line Kiely draws out of it: "Kimi vision, GLM weights, and DeepSeek attention all in one model."
+The attention is there because GLM-5.2 adopted DeepSeek's sparse attention; the labs borrow from
+each other in the open and the serving layer assembles the pieces. They also swap layers for
+efficiency rather than capability — Minimax M3's full-attention head is a bottleneck at long
+context, so they replace it with a GQA layer taken from another model and retrain until the
+acceptance rate recovers.
+
+That is [[model-speciation-and-touching-the-weights|the speciation Karpathy said he could not
+see]] happening, at a layer he was not looking at. His claim was that we lack primitives for
+working with intelligences other than the context window, so specialisation does not happen. This
+is specialisation performed by an inference provider, on frozen weights, with a projector and a
+layer transplant — and it is neither a fine-tune nor a context-window trick. Two caveats keep it
+from being a clean refutation: the vision retrofit is described as a research project rather than a
+product, and freezing both large components is precisely a way of *avoiding* the unsolved problem
+he named, which is changing weights without losing capability elsewhere. The primitives that exist
+are the ones that route around it.
+
+## Hardware, and what the next generation changes
+
+Held loosely — this is the section that dates fastest.
+
+The memory arithmetic is simple and worth being able to do. A parameter at NVFP4 is half a byte, so
+a 2.8-trillion-parameter Kimi is about 1.4 TB. A B200 has 180 GB, eight of them 1.44 TB — which
+does not fit once you leave room for KV cache; a GB300 has 288 GB, and eight of those do. H100s are
+80 GB, which is where the generation boundary bites. Kiely's observation about model releases
+forming to the hardware: DeepSeek R1 at 671B was large enough at the time to push the industry onto
+Blackwell quickly.
+
+Parallelism, compressed:
+
+- **Tensor parallelism** shards the model across GPUs and needs all-gather/all-reduce every step,
+  so it lives or dies on the interconnect. Good for latency. Bad fit for local inference over
+  anything slower than NVLink.
+- **Expert parallelism** puts whole experts on a GPU and replicates the small router. Far less
+  communication, big throughput win. Applies only to MoE models, which is now effectively all
+  models large enough to bother parallelising.
+- **Pipeline parallelism** splits layers across machines and is what you are forced into across
+  nodes, because the inter-node link is too slow for anything else. Within a node, EP and TP
+  together.
+
+Two contrarian positions worth recording as positions rather than facts. Taha is **bearish on mega
+kernels**: fusing everything is theoretically attractive but the resulting kernel is very hard to
+write well, companies that build them often do not run them in production because per-component
+optimisation plus parallelism wins, and fusion cannot cross a tensor-parallel boundary anyway
+because the non-linearity needs the whole row. He also reports that Ruben's design makes them
+largely unnecessary. And both expect the discipline to become **an infrastructure problem rather
+than a kernel problem** — Ruben's emphasis is on CPU–GPU and GPU–GPU interconnect, which makes KV
+cache offloading, KV-aware routing and disaggregation the things that matter, while the GPU itself
+drifts toward being programmed at the level of tiles rather than threads.
+
+The ASIC exchange is the best-argued disagreement in the two hours and neither side wins it. Taha's
+position: if NVIDIA is specialising anyway, what is left for an ASIC company, and burning weights
+into silicon is fragile because a model that gets fine-tuned or re-released makes the chip useless
+in a month. Kiely's counters are that the hardware design cycle is years long so Ruben is the first
+chip designed with today's architectures visible, that a vertically integrated lab spending $50B of
+a $500B training run on its own chip clears the bar easily, and — the one this notebook can check —
+that **models last longer than the argument assumes**. There are still Llama 3 workloads running.
+An enterprise batch job that is signed off, predictable and working does not get migrated because
+something better exists.
+
+## Local inference and datacenter inference are different jobs
+
+Directly relevant to [[serving-slms-on-a-desktop-gpu|the desktop under the desk]], and the framing
+is cleaner than anything on that page:
+
+> With local AI, it's how do I fit this model onto my hardware and then make it less dumb. And with
+> data center inference, it's how do I load this model and then make it less slow.
+
+The consequences are not symmetric. Local practitioners are ahead on dynamic quantisation, pruning,
+distillation and layer removal — Kiely says of pruning that in the datacenter "no one does pruning,
+really", and calls the openness of that field something to admire. But the techniques do not
+transfer in either direction, and the example is exact: **TurboQuant** is valuable on a Mac, where
+memory bandwidth is the binding constraint, and actively harmful on a B200, where the
+dequantise-requantise overhead inside the kernel costs more than the bandwidth it saves.
+
+One more asymmetry that the desktop page half-states and this makes precise. On a batch size of one
+you only pay for the *active* parameters of an MoE model, which is why gpt-oss-20b is usable on a
+12 GB card. Serving the same model as an API at batch scale, you must assume every parameter is
+active, because across a batch the router will reach all of them. The same checkpoint has two
+different memory profiles depending on who is asking.
+
+## What the capture will and won't support
+
+The transcript is ASR output with no speaker labels, and it is damaged in ways that matter:
+
+- **Names and terms are consistently mangled.** "Base 10" for Baseten, "influence" for inference
+  throughout, "spec deck" for spec dec, "KL Diversions" for KL divergence, "sports attention" for
+  sparse attention, "NVFV4"/"NVFE4" for NVFP4, "CRTLM" for TensorRT-LLM, "Nixle" for NIXL,
+  "auto-aggressive"/"ultra-aggressive" for autoregressive. These are recoverable from context and
+  have been silently corrected here; anything not recoverable was left out.
+- **Attribution is guesswork in places.** With no speaker labels, the split between Kiely and Taha
+  was reconstructed from content — Kiely writes the book and speaks in systems, Taha speaks in
+  kernels — plus the two places where one addresses the other by name. Where a claim is attributed
+  on this page it is because the passage made the speaker unambiguous; several exchanges have been
+  left unattributed for that reason.
+- **Several passages collapse mid-sentence.** The Ruben speculation, the Andrew Lo analogy, and the
+  closing continual-learning argument all have sentences that terminate into unrelated text.
+  Nothing here reconstructs one.
+- **Some referents could not be resolved at all**: "deflash, despark" as speculative-decoding
+  successors, a hardware company rendered "talus", "Edge and Maddox", and a person called "Cero".
+  They are omitted rather than guessed.
+
+Model names in the source's own present — GLM-5.2, Kimi K2.5/K3, Minimax M3, DeepSeek V4, Wan
+(rendered "1.2.2" and "Kwan") — are treated as real releases in its world, unlike the unverifiable
+frontier names that needed
+[[recursive-self-improvement-greenblatt|a whole section of caveats on the Greenblatt page]]. Nothing
+here depends on which is which.

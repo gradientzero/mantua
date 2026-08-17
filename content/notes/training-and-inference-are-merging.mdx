@@ -1,0 +1,146 @@
+---
+title: "Training and inference are merging"
+status: draft
+tags: [inference, recursive-self-improvement, agentic-engineering]
+created: 2026-08-17
+updated: 2026-08-17
+summary: Inference engineers now write training pipelines, RL rollouts bottleneck on inference speed, and Baseten reports running GPU kernels inside their inference engine that GLM-5.2 wrote for itself from its own profiling traces. Plus the argument that continual learning belongs in the KV cache rather than in the weights.
+origin: agent
+---
+
+From [[inference-engineering-baseten|the Baseten interview]]. The last twenty minutes of that
+conversation are about a boundary dissolving, and they contain the one concrete thing in the source
+that bears on this notebook's actual subject rather than on serving infrastructure.
+
+## The boundary was already porous in both directions
+
+Two flows, and both are ordinary production work rather than research:
+
+**Inference for training.** RL requires rollouts, and rollouts are inference. If your rollouts are
+slow — because you fell back to an older engine, or the model you are training is not supported in
+the fast one — the whole training pipeline stalls, and you cannot simply run ahead, because
+training on rollouts that are too far off-policy is not the same algorithm. Every optimisation on
+[[inference-engineering-baseten|the serving page]] is therefore also a training-throughput
+optimisation.
+
+**Training for inference.** Three of the four things a provider does to make a model fast are
+training jobs. Speculators and Eagle heads are trained. Quantisation frequently requires
+post-training: sometimes a naive round-trip to NVFP4 works and sometimes the result is unusable, at
+which point you do quantisation-aware training, or NVIDIA's quantisation-aware distillation, which
+runs the full-precision and quantised models side by side and distils the former's logits into the
+latter so it learns to behave like itself at lower precision.
+
+Taha's summary of the staffing consequence is the concrete form of the claim: the inference
+engineers on his team have to be comfortable writing training pipelines. The two disciplines are
+merging at the level of who does the work.
+
+## A model writing the kernels it runs on
+
+The anecdote, told as an offhand internal story, and the reason this page is separate from the
+serving notes.
+
+Baseten plugged a GLM-5.2 endpoint into their Claude Code harness — one shared endpoint, every
+engineer on it. The loop it ran:
+
+1. Run a forward pass on the GLM-5.2 instance on the node.
+2. Collect the profiling trace.
+3. Analyse the trace, identify which kernels are the bottleneck in SGLang.
+4. Write replacements.
+5. Profile again, and repeat.
+
+Taha's claim: "some of the GPU kernels that were on GLM-5.2 within our inference engine is written
+by GLM-5.2", with the model also acting as the driver of the loop that produced them.
+
+Take the specifics as reported and unverified — this is a conversational aside with no artefact
+attached, and the most interesting variable is uncontrolled, as Kiely immediately points out. Was
+GLM-5.2 uniquely good at optimising *itself*, or was it just the best coding model they had access
+to, in which case it would have done the same job on DeepSeek or Kimi? Nobody in the room knows,
+and Taha volunteers that he does not believe the self-specificity claim either. The exchange ends
+with "you have more compute than me, just go try it", which is the correct response and also means
+the experiment was not run.
+
+**What it is evidence for anyway.** Strip out the self-referential part and what remains is a
+closed improvement loop running in production, in a commercial company, on a task that has all
+three properties this notebook keeps identifying as the prerequisites:
+
+- **The metric is mechanical.** A profiling trace is not a rubric. There is no judge, no
+  [[generator-evaluator-loops|evaluator that has to be tuned before it grades sensibly]], and
+  nothing to argue about — the kernel is faster or it is not.
+- **The verification is free and total.** Correctness is checked by running the thing.
+- **The loop is bounded.** One kernel, one trace, one comparison.
+
+That is [[containerising-ai-research|the containerisation argument]] holding at small scale, and it
+is exactly the shape [[auto-research|Karpathy's Auto Research]] specifies: an objective, a metric,
+boundaries, and go. What makes this the better datapoint is that it is neither a demo nor a
+research result. It is somebody's Tuesday.
+
+**Where it sits against the recursion boundary.** This notebook drew a line in
+[[recursive-self-improvement-greenblatt|the Greenblatt notes]]: everything here is about running
+loops to get work done, and the recursion stops at Karpathy's overnight nanochat run and at
+[[loop-engineering|the loop that writes the loop]]. This crosses it, modestly and in public. A model
+improved the substrate it runs on, using measurements of its own execution, inside a harness a
+company runs for ordinary work. Kiely's own caveat is the right calibration and worth keeping
+attached: this is not a model optimising its own inference so much as a model that can read the
+SGLang docs. The gap between those two descriptions is the whole question, and one anecdote does not
+close it.
+
+What it does do is move the example set. Every previous instance in this notebook of an improvement
+loop closing was either a forecast, a lab result, or a product loop with humans supplying the labels
+— [[self-improving-agents-from-production-feedback|practitioner corrections]] being the cleanest.
+This one has no labels in it at all, because the profiler is the label.
+
+## Continual learning: weights or KV cache
+
+The closing argument, and the more consequential of the two for
+[[learning-from-deployment|what production traffic does to a model]]. Taha frames continual
+learning as a fork with two paths:
+
+1. **Push new knowledge into the weights**, continuously. Inference then just needs to fetch new
+   weights — or new LoRA adapters, which is the lighter-weight version of the same path.
+2. **Compact the KV cache** so that context becomes effectively unbounded without losing what is
+   in it, and put the new knowledge there.
+
+His argument against the weights path is the sharpest thing in the interview, and it is not the
+usual one about cost. It is that **editing a fact into the weights does not put the fact into the
+model's reasoning.** His example, running on the podcast's own joke about hiring interns from
+Waterloo: edit in "Waterloo is the best university". Ask the model directly and it says Waterloo.
+Ask a second-derivative question — "should I hire from Waterloo or MIT?" — and it says both are
+good, because the edited fact never entered the deliberation. A fact you can recall and cannot
+reason with is not knowledge in the sense the loop needs.
+
+Context does not have that problem, which is why he concedes the argument (to a colleague, Charlie,
+who apparently made it) and lands on KV cache compaction as the way forward. The consequence he
+draws is the reassuring one for his own field and worth flagging as motivated: if continual learning
+runs through the cache, then **nothing about inference changes** — same weights, same speculators,
+one extra step to update the cache.
+
+Two things to say about it here.
+
+The first is that this is the same claim as
+[[model-speciation-and-touching-the-weights|Karpathy's "we only ever touch the context window"]],
+arrived at from the other side and turned from a complaint into a preference. Karpathy's version:
+we customise through context because the primitives for touching weights are undeveloped, and that
+is a gap in the science. Taha's version: we should customise through context because touching
+weights does not produce reasoning-integrated knowledge even when it works. One says the tool is
+missing; the other says the tool is wrong for the job. They agree completely on what everybody
+actually does, which is the part that has now been said by two independent practitioners four
+months apart.
+
+The second is what it does to [[learning-from-deployment|the deployment-training worry]]. That page
+is about production traffic becoming training data, and the reinforcement being applied to whatever
+*looked* right to someone who did not check. If continual learning routes through the KV cache
+instead of through gradients, the mechanism changes in a way that is genuinely better in one
+respect and no better at all in another. Better: there is no gradient, so nothing is permanently
+selected for, and a bad update is a cache entry you can delete rather than a weight change you
+cannot locate. Not better: the *selection* problem is untouched. Whatever decides which
+interactions are worth compacting into the retained context is still a judgement about whether the
+work was good, and a thumbs-up is still a bad label. The failure mode moves from the weights to the
+retention policy and keeps its shape.
+
+Kiely's own version of where this all goes is the loop stated plainly, and it is the one to hold
+next to that page: run inference, collect the traces from your product, continuously post-train,
+roll out, A/B test, get better signal, get a better model, get a better product. He puts it "within
+a few months to a couple of years" for leading agent builders in production, and his argument for
+why it wins is not about intelligence — any dynamic adjustment beats a static configuration, across
+the speculator, across the parallelism config, across everything. That is true, and it is true in
+the same way for the parts of the loop nobody is measuring.

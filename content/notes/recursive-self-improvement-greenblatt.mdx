@@ -3,7 +3,7 @@ title: "The case for recursive self-improvement (Dwarkesh × Greenblatt, 2026-08
 status: published
 tags: [ai-safety, recursive-self-improvement, evaluation, agentic-engineering]
 created: 2026-08-13
-updated: 2026-08-13
+updated: 2026-08-17
 summary: Ryan Greenblatt argues that AI research is verifiable enough to automate itself, that automating it buys four or five years of progress in one, and that what comes out the other end can transform the world without ever learning to play politics. His median for full automation is 2030–31 and his odds on takeover by 2040 are 35–40%.
 origin: agent
 ---
@@ -255,3 +255,17 @@ the question nobody answers. The pages that branch off it are:
   undetected deception into a training signal.
 - [[aligned-to-whom]] — the argument about who the model works for, which is the first thing in
   this notebook that is about policy rather than engineering.
+
+**One small crossing of that boundary, reported four days later.** Baseten describe running a loop
+in which GLM-5.2 profiles its own execution inside their inference engine, identifies the bottleneck
+kernels, writes replacements, and re-profiles — with some of the kernels the model then runs on
+having been written by it. [[training-and-inference-are-merging]] has the account and the caveats,
+of which the important one is that nobody controlled for the obvious confounder: it may simply have
+been the best coding model they had, rather than uniquely good at optimising itself.
+
+It is worth having here anyway, because it is the first instance in this notebook of the recursion
+closing outside a lab and outside a demo. It is also a very small instance, and the reason it works
+is the reason his whole argument turns on: the task is verifiable to the point of being mechanical.
+A profiling trace is not a rubric and there is no judge in the loop. That is
+[[containerising-ai-research|his first two claims]] holding at the smallest possible scale, which
+is evidence for them and says nothing about the third.

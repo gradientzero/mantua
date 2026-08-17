@@ -3,7 +3,7 @@ title: "Speciation, and why we only ever touch the context window"
 status: published
 tags: [fine-tuning, deployment, inference]
 created: 2026-07-27
-updated: 2026-08-13
+updated: 2026-08-17
 summary: Karpathy expects specialised models and does not see them arriving, and his explanation is that adjusting weights without losing capability is still an underdeveloped science while context windows just work. Plus where he puts the open-weight models — six to eight months behind, and better off there.
 origin: agent
 ---
@@ -74,6 +74,28 @@ in it makes a fine-tune predictable or capability loss avoidable. It makes the p
 repeatable and attributable, which is the bookkeeping around the unsolved problem rather than
 the solution to it. Both of which are the sort of thing a lab builds and does not publish, so
 the absence of public primitives is weaker evidence than it looks.
+
+**Specialisation is happening at the serving layer.** The strongest counter-evidence arrived four
+months after the interview, from [[inference-engineering-baseten|an inference provider]] rather
+than a lab, and it is specialisation performed on models nobody retrained. Baseten bolted vision onto
+GLM-5.2 — which shipped without it — by freezing a Kimi vision encoder, freezing the GLM backbone,
+and training only the few-million-parameter projector between them. It reaches 56% on MMLU Pro, and
+because the encoder is skipped when there is no image, the text model loses nothing. Separately,
+they swap layers for efficiency: Minimax M3's full-attention head becomes a GQA layer taken from
+another model, retrained until the draft-acceptance rate recovers. Kiely's summary of what comes out
+is "Kimi vision, GLM weights, and DeepSeek attention all in one model."
+
+That is a third answer to the question this section poses, and it is neither of the two on offer
+here. Karpathy's dichotomy is context windows (cheap, works) versus touching weights (undeveloped
+science), and his conclusion follows from there being nothing in between. Composition is in
+between: it produces a genuinely specialised model, it is not a prompt, and it is not a fine-tune.
+
+Two things keep it from being a clean refutation, and both matter. The vision retrofit is described
+as a research project rather than a shipping product. And freezing both large components is
+precisely a way of *routing around* the problem he named rather than solving it — nothing here makes
+a weight change predictable or capability loss avoidable, it just declines to make one. The
+primitives that exist are the ones that avoid the unsolved part. Which is the same shape as the
+Aleph Alpha reading above: real capability, built beside the gap rather than across it.
 
 ## What travels between generations, and can't be filtered out
 
@@ -152,6 +174,21 @@ around it. That is the "lab partnering with a business on a specific problem" he
 where specialisation would first show up. It is also, notably, still not touching the weights
 of anything the business runs: the environment is built around the task, the model stays the
 lab's.
+
+**The number is text-only, and that was not visible here until now.** Taha, in
+[[diffusion-versus-autoregressive-generation|the Baseten interview]] four months later, puts the
+open/closed LLM gap at *near parity* — "it used to be six months, I don't think it's six months
+anymore" — while the gap in video is night and day, open checkpoints against Kling or Veo not being
+a comparison anyone makes seriously. So Karpathy's six-to-eight months was a fact about text
+recorded here as a fact about the field.
+
+His reason for expecting the gap to hold is a demand argument: the industry needs a common
+substrate everyone feels safe building on, and that demand funds the capex. The video case is what
+happens when the demand is not there, and it is a loop rather than a ceiling — the quality gap sends
+buyers to closed models, less demand means less innovation, and labs stop releasing weights at all.
+Which means the prediction on this page is conditional in a way it did not look conditional: text
+open weights stay close *while* the substrate demand holds, not as a standing property of open
+development.
 
 **For this notebook** that mostly confirms an existing bet rather than changing it. The
 [[serving-slms-on-a-desktop-gpu|desktop under the desk]] runs open weights on the assumption
