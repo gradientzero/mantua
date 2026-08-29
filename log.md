@@ -1018,3 +1018,43 @@ that task is closed. Nothing else on the three pages points at a draft.
 
 `npm run build` clean; the 15 broken-wikilink warnings are the pre-existing ones and none of them
 come from these pages.
+
+## [2026-08-29] setup | The entry page is the recent entries now
+
+At the owner's instruction: the front page led with the "what this notebook is and is not"
+text, which is worth reading once and not on every visit. It moves to `/about`, and `/`
+now opens on the notebook's recent entries.
+
+`content/index/home.mdx` keeps its role as the page's content file but is down to a single
+sentence of orientation, set small and grey above a hairline. Under it, `Recent entries` —
+the twelve most recently updated notes, the same list rows `/notes` uses, then `All 40
+notes →`. The list was already on the home page; it was the fifth thing on it and showed
+five notes.
+
+The moved prose is now on `content/index/about.mdx`, whose title is *How this notebook
+works*: the commonplace-notebook definition became its opening paragraph, and the
+markdown/git/wikilinks/drafts paragraph became a new section, `Where the pages live`. The
+"two kinds of writing" bullets were not moved — that page already said the same thing under
+`Who writes what`, and duplicating it would have been the wrong kind of copy. Nothing was
+rewritten: both pages are `origin: agent`, no `origin: human` prose was touched. `About`
+joins Notes/Tags/Graph in the header tabs, since the text is no longer somewhere you land
+by default.
+
+Second thing the owner reported: pages open slightly scrolled, not at the top. Real, and
+not a design choice. On a client-side navigation the document is briefly shorter than the
+position we were scrolled to — the old page's content is gone, the new one has not laid out
+yet — so the browser clamps the scroll to the new maximum. Next then checks whether the new
+page's top edge is visible, finds that the clamp already brought it into view, and leaves
+it there: the page settles about a header's height down. Measured in Chromium, going from a
+scrolled `/notes` into a note landed at scrollY 153 every time, on the deployed design as
+well as this one. `components/scroll-to-top.tsx` corrects it after the commit. It skips the
+first render, so a deep link to a `#heading` keeps its anchor, and skips back/forward, where
+the browser's restored position is the one the reader wants.
+
+Verified in a headless browser against `next start`: every forward navigation now lands at
+0 (home → note, scrolled `/notes` → note, wordmark → home, and the four tabs), and
+`/about#lineage` still opens on its heading. Back/forward restoration is unchanged — it has
+the same clamping problem and lands at 153 on both the old and the new build; the component
+deliberately does not touch it, and fixing it is a separate job.
+
+`npm run build` clean; the 15 broken-wikilink warnings are the pre-existing ones.

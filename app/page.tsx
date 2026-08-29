@@ -1,11 +1,17 @@
+import Link from 'next/link'
 import type { Metadata } from 'next'
 import { MDXContent } from '@/components/mdx'
 import { NoteList } from '@/components/note-list'
 import { allNotes, getHub } from '@/lib/content'
 import { site } from '@/lib/site'
 
-// The home page IS a content file: content/index/home.mdx. Edit that file —
-// not this one — to change what visitors see first.
+// The entry page is the notebook's recent-entries feed: what changed, newest
+// first. The one-line orientation above it IS a content file —
+// content/index/home.mdx. Edit that file, not this one, to change it; the
+// longer "how this works" text lives on /about (content/index/about.mdx).
+
+/** Recent entries shown before sending the reader to /notes for the rest. */
+const RECENT = 12
 
 export function generateMetadata(): Metadata {
   const hub = getHub('home')
@@ -22,20 +28,22 @@ export function generateMetadata(): Metadata {
 
 export default function HomePage() {
   const hub = getHub('home')
-  const recent = allNotes().slice(0, 5)
+  const notes = allNotes()
+  const recent = notes.slice(0, RECENT)
   return (
-    <article>
-      {hub ? (
-        <MDXContent code={hub.body} />
-      ) : (
-        <p>
-          Create <code>content/index/home.mdx</code> (status: published) to fill this page.
+    <>
+      {hub && (
+        <div className="home-lead">
+          <MDXContent code={hub.body} />
+        </div>
+      )}
+      <h1 className="page-title">Recent entries</h1>
+      <NoteList notes={recent} />
+      {notes.length > recent.length && (
+        <p className="home-more">
+          <Link href="/notes">All {notes.length} notes →</Link>
         </p>
       )}
-      <section className="link-section">
-        <h2>Recently updated</h2>
-        <NoteList notes={recent} />
-      </section>
-    </article>
+    </>
   )
 }

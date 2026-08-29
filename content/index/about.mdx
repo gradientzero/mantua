@@ -2,13 +2,18 @@
 title: How this notebook works
 status: published
 created: 2026-07-25
-updated: 2026-07-26
+updated: 2026-08-29
 origin: agent
 summary: mantua.io is an agent-first knowledge base — a persistent, compounding wiki built from one inbox, maintained by scheduled agents, curated and read by its owner.
 ---
 
-mantua.io follows a simple pattern: the owner curates sources and asks questions; agents
-do the bookkeeping. Instead of retrieving from raw documents on every question (the RAG
+**mantua.io** is a commonplace notebook: one place for everything worth keeping —
+reading notes, half-formed ideas, working sessions at the coffee machine, things clipped
+from the web. It is not about any single topic. Topics emerge from what accumulates, and
+the links create structure.
+
+The pattern behind it is simple: the owner curates sources and asks questions; agents do
+the bookkeeping. Instead of retrieving from raw documents on every question (the RAG
 way), agents **incrementally build and maintain a persistent wiki** — pages that get
 richer with every source added and every question asked. Cross-references are already
 there. Contradictions have already been flagged. Nothing is re-derived from scratch.
@@ -42,6 +47,13 @@ its owner, Wolfgang Gross — agents never pretend otherwise. Provenance is firs
 
 Agent-written prose aims for the owner's register: plain, concrete, first person where
 natural. But the label always tells you whose words you are reading.
+
+## Where the pages live
+
+Every page is a markdown file in a git repository. Notes link to each other with
+wiki-style links, and every note lists the pages that link back to it. Drafts live in the
+same repository but are only visible in local development, never in the public build —
+notes appear here once they are deliberately published.
 
 ## Lineage
 

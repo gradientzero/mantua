@@ -13,6 +13,7 @@ const tabs = [
   { label: 'Notes', href: '/notes' },
   { label: 'Tags', href: '/tags' },
   { label: 'Graph', href: '/graph' },
+  { label: 'About', href: '/about' },
 ]
 
 export function SiteNav() {

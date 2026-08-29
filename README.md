@@ -67,7 +67,8 @@ sources/              # ARCHIVE — immutable raw sources, one folder per ingest
 content/
   notes/              # THE WIKI — atomic pages, one topic each → /notes/<slug>
   index/              # curated hub pages (entry points)
-                      #   home.mdx → /   ·   anything-else.mdx → /<slug>
+                      #   home.mdx → the lead line on /   ·   anything-else.mdx → /<slug>
+                      #   about.mdx → /about, linked from the header tabs
 log.md                # append-only agent activity log (## [YYYY-MM-DD] kind | title)
 tasks/                # plain-markdown backlog (tasks/README.md = format)
 .claude/commands/     # the agent operations: /ingest, /oracle, /lint
@@ -83,6 +84,8 @@ components/
   mdx.tsx             # MDX renderer; resolves wikilinks; REGISTER CUSTOM MDX COMPONENTS HERE
   note-list.tsx       # shared list/badge/tag UI
   search.tsx          # header search bar (as-you-type, client-side)
+  site-nav.tsx        # header tab row — add a tab here when you add a hub worth linking
+  scroll-to-top.tsx   # lands client-side navigations at the top (see the file's comment)
   graph/              # canvas force-directed graph (/graph + per-note neighborhood)
 app/                  # Next.js routes (article template, tags, hubs, graph, OG images, sitemap)
 next.config.mjs       # runs Velite as part of next dev/build — no separate content build step
@@ -258,8 +261,15 @@ wikilinks are listed as warnings. Run it before pushing if you changed anything
 non-trivial. There are no unit tests — the build is the test.
 
 Hub pages work the same, but live in `content/index/<slug>.mdx` (no `tags`/`related`)
-and render at `/<slug>` (`home.mdx` is special — it renders at `/`). Hubs are curated
-maps: mostly prose + wikilinks pointing into the notes.
+and render at `/<slug>`. Hubs are curated maps: mostly prose + wikilinks pointing into
+the notes.
+
+`home.mdx` is the exception. `/` is the recent-entries feed — the most recently updated
+notes, newest first, then a link to `/notes` for the rest — and `home.mdx` supplies only
+the line of orientation above it. Keep it to a sentence or two: the longer "how this
+notebook works" text belongs on `about.mdx` (`/about`), which the header tabs link to.
+Renaming `about.mdx` therefore breaks a nav tab and the home page's wikilink; change
+`components/site-nav.tsx` in the same commit if you ever do.
 
 ## Embedding interactive components (Distill-style)
 
