@@ -795,22 +795,6 @@ th:not(:first-child) {
 
 /* ------------------------------------------------------------ home */
 
-/* The entry page leads with one line of orientation, then hands the page over
-   to the recent entries — a hairline is all the separation it needs. */
-.home-lead {
-  padding-bottom: 24px;
-  margin-bottom: var(--stack-block);
-  border-bottom: var(--stroke-hairline) solid var(--border-faint);
-}
-
-.home-lead p {
-  max-width: 62ch;
-  margin: 0;
-  font-size: 15px;
-  line-height: 1.6;
-  color: var(--text-secondary);
-}
-
 .home-more {
   margin: var(--stack-block) 0 0;
   padding-top: 20px;

@@ -1117,3 +1117,44 @@ Galaxy's 320px viewport the synthetic tap used to cancel the assert loop landed 
 new page correctly landed at 0. Re-tested with a genuine touch drag dispatched down the left
 margin: the reader keeps his position on both profiles (815px, 779px), so the loop does not
 fight a finger. iOS Safari remains untested, and remains untestable here.
+
+## [2026-08-29] setup | The entry page is only the entries, and it sorts by created
+
+At the owner's instruction, two changes to `/`.
+
+The line of orientation above the list is gone, and with it `content/index/home.mdx`. The
+page is now the heading, the entries, and the link to `/notes` — nothing else. Nothing was
+lost in the deletion: that sentence was a condensed restatement of the opening paragraph of
+`about.mdx`, which still carries it, and nothing in the wiki wikilinked to `[[home]]`. So
+`/` no longer has a content file behind it at all, which is a real change to a convention
+this README used to state the other way round: `home` is now a **reserved slug**, refused by
+the `/<slug>` hub route rather than rendered at `/home`. That is written down in
+`README.md`, `velite.config.ts`, `lib/content.ts` and the route itself, since a future agent
+adding `content/index/home.mdx` and watching it do nothing is exactly the kind of hour this
+notebook is supposed to save.
+
+The feed sorts by `created` instead of `updated`. The reason it matters here more than it
+would elsewhere: an ingest routinely revisits a dozen old pages, and under the old sort that
+pushed them all back to the top of the front page as though they were new. `auto-research`
+was the visible case — written 2026-07-27, touched by the inference-engineering ingest on
+08-17, and sitting first on the home page because of it. It is now in its right place and
+the three notes actually written on 08-17 lead instead.
+
+The row date follows the sort: a list ordered by creation date that displays edit dates
+reads as a shuffled list, so `NoteList` takes a `dateField` prop, defaulting to `updated` so
+`/notes` is untouched. Same-day ties — an ingest creating four notes at once is the normal
+case, not the exception — break on `updated` then title, so the order does not shuffle
+between builds.
+
+`/notes` deliberately keeps its `updated` sort: it is the other view, "what has been touched
+lately", and the two answer different questions. Worth flagging as a decision rather than an
+oversight, since the two lists now disagree about what "recent" means.
+
+Verified against `next start`: the home list is twelve rows, monotonically descending by
+created date, with no lead element before the heading; `/notes` is unchanged at 40 rows by
+updated. The scroll suites were re-run because the page's structure changed — desktop and
+both Android profiles under slow-3G and 4× CPU still land every path at 0, and the Galaxy
+profile's finger-drag check now passes cleanly, since the wikilink its synthetic tap used to
+land on is no longer on the page.
+
+`npm run build` clean; the 15 broken-wikilink warnings are the pre-existing ones.

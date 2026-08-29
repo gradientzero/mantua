@@ -16,6 +16,17 @@ const showDrafts = process.env.NODE_ENV === 'development'
 
 const byUpdatedDesc = (a: Note | Hub, b: Note | Hub) => b.updated.localeCompare(a.updated)
 
+/**
+ * Newest first by the date the note was written, not the date it was last
+ * touched — an old note that an ingest revisited is not new. Same-day ties
+ * (an ingest routinely creates several notes at once) fall back to the edit
+ * date and then the title, so the order is stable between builds.
+ */
+const byCreatedDesc = (a: Note, b: Note) =>
+  b.created.localeCompare(a.created) ||
+  b.updated.localeCompare(a.updated) ||
+  a.title.localeCompare(b.title)
+
 const visible = <T extends Note | Hub>(docs: readonly T[]): T[] =>
   docs.filter((d) => showDrafts || d.status === 'published')
 
@@ -25,6 +36,9 @@ const visible = <T extends Note | Hub>(docs: readonly T[]): T[] =>
 
 export const allNotes = (): Note[] => visible(notes).sort(byUpdatedDesc)
 
+/** What `/` lists: the notebook's newest entries, by creation date. */
+export const notesByCreated = (): Note[] => visible(notes).sort(byCreatedDesc)
+
 export const getNote = (slug: string): Note | undefined =>
   visible(notes).find((n) => n.slug === slug)
 
@@ -32,7 +46,8 @@ export const relatedNotes = (note: Note): Note[] =>
   note.related.map((slug) => getNote(slug)).filter((n): n is Note => Boolean(n))
 
 // ---------------------------------------------------------------------------
-// Hubs (curated entry points; `home` renders at `/`, others at `/<slug>`)
+// Hubs (curated entry points, rendered at `/<slug>`). `home` is reserved: `/`
+// is the entries feed, built from the notes, with no content file behind it.
 // ---------------------------------------------------------------------------
 
 export const allHubs = (): Hub[] => visible(hubs).sort(byUpdatedDesc)

@@ -66,8 +66,8 @@ const notes = defineCollection({
     .transform(withComputedFields),
 })
 
-// Curated hub/overview pages (wiki entry points). `home` renders at `/`,
-// every other hub at `/<slug>`.
+// Curated hub/overview pages (wiki entry points), each rendering at `/<slug>`.
+// `home` is reserved: `/` is the entries feed, not a content file.
 const hubs = defineCollection({
   name: 'Hub',
   pattern: 'index/**/*.{md,mdx}',

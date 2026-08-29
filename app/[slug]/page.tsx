@@ -6,10 +6,11 @@ import { DraftBadge, formatDate } from '@/components/note-list'
 import { allHubs, backlinksFor, getHub } from '@/lib/content'
 import { bylineFor, site } from '@/lib/site'
 
-// Hub pages (curated entry points) from content/index/*.mdx.
-// `home.mdx` is rendered by app/page.tsx at `/`; every other hub lands here
-// at `/<slug>`. Static routes like /notes, /tags and /graph always win over
-// this one.
+// Hub pages (curated entry points) from content/index/*.mdx, each at
+// `/<slug>`. `home` is a reserved slug — `/` is the entries feed (app/page.tsx)
+// and is not a content file — so a hub claiming it is refused here rather than
+// rendering at `/home`. Static routes like /notes, /tags and /graph always win
+// over this one.
 
 export const dynamicParams = false
 
