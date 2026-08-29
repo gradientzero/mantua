@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import type { Metadata } from 'next'
 import { SiteSearch } from '@/components/search'
+import { ScrollToTop } from '@/components/scroll-to-top'
 import { SiteNav } from '@/components/site-nav'
 import { searchDocs } from '@/lib/content'
 import { site } from '@/lib/site'
@@ -19,6 +20,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en">
       <body>
+        <ScrollToTop />
         <header className="site-header">
           <div className="site-header-inner">
             <div>
