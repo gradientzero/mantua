@@ -66,9 +66,9 @@ inbox/                # CAPTURE — drop zone; emptied by /ingest (inbox/README.
 sources/              # ARCHIVE — immutable raw sources, one folder per ingested item
 content/
   notes/              # THE WIKI — atomic pages, one topic each → /notes/<slug>
-  index/              # curated hub pages (entry points)
-                      #   home.mdx → the lead line on /   ·   anything-else.mdx → /<slug>
+  index/              # curated hub pages (entry points) → /<slug>
                       #   about.mdx → /about, linked from the header tabs
+                      #   'home' is a reserved slug: / is the entries feed, not a file
 log.md                # append-only agent activity log (## [YYYY-MM-DD] kind | title)
 tasks/                # plain-markdown backlog (tasks/README.md = format)
 .claude/commands/     # the agent operations: /ingest, /oracle, /lint
@@ -264,12 +264,18 @@ Hub pages work the same, but live in `content/index/<slug>.mdx` (no `tags`/`rela
 and render at `/<slug>`. Hubs are curated maps: mostly prose + wikilinks pointing into
 the notes.
 
-`home.mdx` is the exception. `/` is the recent-entries feed — the most recently updated
-notes, newest first, then a link to `/notes` for the rest — and `home.mdx` supplies only
-the line of orientation above it. Keep it to a sentence or two: the longer "how this
-notebook works" text belongs on `about.mdx` (`/about`), which the header tabs link to.
-Renaming `about.mdx` therefore breaks a nav tab and the home page's wikilink; change
-`components/site-nav.tsx` in the same commit if you ever do.
+`/` is not a hub. It is the entries feed, built from the notes themselves: the twelve
+newest, then a link to `/notes` for the rest. There is no content file behind it, and
+`home` is a **reserved slug** — a hub claiming it is refused rather than rendered at
+`/home`. The notebook describes itself on `about.mdx` (`/about`), which the header tabs
+link to; renaming that file breaks a nav tab, so change `components/site-nav.tsx` in the
+same commit if you ever do.
+
+The feed sorts by **`created`**, newest first, and shows each note's `created` date — an
+old note that an ingest revisited is not a new entry. `/notes` is the other view: every
+note, sorted by `updated`, for "what has been touched lately". Same-day ties (an ingest
+routinely creates several notes at once) break on `updated` then title, so the order is
+stable between builds.
 
 ## Embedding interactive components (Distill-style)
 

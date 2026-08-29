@@ -24,7 +24,18 @@ export function TagList({ tags }: { tags: string[] }) {
   )
 }
 
-export function NoteList({ notes }: { notes: Note[] }) {
+/**
+ * `dateField` follows whatever the list is sorted by: showing the edit date on
+ * a list ordered by creation date makes a correctly sorted list read as a
+ * shuffled one.
+ */
+export function NoteList({
+  notes,
+  dateField = 'updated',
+}: {
+  notes: Note[]
+  dateField?: 'created' | 'updated'
+}) {
   if (notes.length === 0) return <p className="muted">Nothing here yet.</p>
   return (
     <ul className="note-list">
@@ -35,8 +46,8 @@ export function NoteList({ notes }: { notes: Note[] }) {
               {note.title}
             </Link>
             <DraftBadge status={note.status} />
-            <time dateTime={note.updated} className="muted note-list-date">
-              {formatDate(note.updated)}
+            <time dateTime={note[dateField]} className="muted note-list-date">
+              {formatDate(note[dateField])}
             </time>
           </div>
           <p className="note-list-summary">{note.summary}</p>
