@@ -1058,3 +1058,47 @@ the same clamping problem and lands at 153 on both the old and the new build; th
 deliberately does not touch it, and fixing it is a separate job.
 
 `npm run build` clean; the 15 broken-wikilink warnings are the pre-existing ones.
+
+## [2026-08-29] setup | The scroll fix missed the phone
+
+The owner reported from his phone that pages still open slightly scrolled. He was right,
+and the first fix was the wrong shape: it corrected forward navigation and deliberately
+skipped the first render and back/forward. Those two skips are most of what a phone does —
+swipe-back is the primary gesture, and a tab reopened days later is a reload, not a
+navigation. On the desktop paths I measured it worked; the paths I excused were the ones he
+was using.
+
+Two things changed in `components/scroll-to-top.tsx`. It no longer skips anything except a
+deep link to a `#heading`, which is the one case where the top is the wrong answer, and it
+now checks `location.hash` on every navigation rather than only guarding the first render.
+And it asserts the position across about twelve frames instead of once: a scroll set against
+a half-laid-out document gets clamped straight back, and on a phone — short viewport, the
+webfonts and the graph canvas arriving late — that is the common case rather than the rare
+one. `history.scrollRestoration` is set to `manual`, since the browser's own restoration was
+only competing with this and replaying a position measured against the previous page's
+height.
+
+The loop ends on the first `wheel`, `touchstart`, `keydown` or `pointerdown`, so it cannot
+fight a reader who has started scrolling. That guard is the part worth keeping an eye on: a
+programmatic scroll fires none of those events and will be reset, which is correct here
+(that is what the clamp looks like) but would be wrong if the site ever scrolls itself
+somewhere on purpose.
+
+The trade-off, taken deliberately: back/forward no longer tries to return you to your place
+in a long list. It never managed to — the clamp put it 153px down regardless of where you
+had been — so this trades an arbitrary position for a predictable one. Real restoration,
+remembering the offset per history entry and re-applying it once the document is tall
+enough, is a bigger job and its own change.
+
+Verified against `next start` under iPhone 13 emulation with slow-3G and 4× CPU throttling,
+so the late layout is real rather than theoretical: initial load, tap into a note from a
+scrolled list, back, forward, reload of a scrolled page, and the tab row all land at 0
+(back was 153 before). `/about#lineage` still opens on its heading. A finger touch or a
+wheel immediately after landing holds the reader's position at 1200 instead of being yanked
+to the top. Desktop suite re-run unchanged.
+
+Not verified on WebKit: this container has no WebKit build and the download host is blocked,
+so iOS Safari itself is untested. The mechanism being corrected is not engine-specific, but
+that is reasoning rather than a measurement.
+
+`npm run build` clean; the 15 broken-wikilink warnings are the pre-existing ones.
