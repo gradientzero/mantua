@@ -1102,3 +1102,18 @@ so iOS Safari itself is untested. The mechanism being corrected is not engine-sp
 that is reasoning rather than a measurement.
 
 `npm run build` clean; the 15 broken-wikilink warnings are the pre-existing ones.
+
+## [2026-08-29] setup | Addendum: the phone is Chrome, not Safari
+
+Correcting the entry above. The owner is on Chrome, so the WebKit caveat it ends on is not
+the gap it reads as: the engine the fix was measured on is the engine he is using. Re-run on
+Pixel 7 and Galaxy S9+ profiles under slow-3G and 4× CPU throttling — initial load, tap into
+a note from a scrolled list, back, forward, reload of a scrolled page and the tab row all
+land at 0.
+
+One test correction worth recording, because it looked like a real failure first: on the
+Galaxy's 320px viewport the synthetic tap used to cancel the assert loop landed on the
+`[[about]]` wikilink in the home page's lead, so it navigated instead of scrolling and the
+new page correctly landed at 0. Re-tested with a genuine touch drag dispatched down the left
+margin: the reader keeps his position on both profiles (815px, 779px), so the loop does not
+fight a finger. iOS Safari remains untested, and remains untestable here.
