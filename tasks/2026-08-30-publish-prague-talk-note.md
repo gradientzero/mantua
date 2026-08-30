@@ -2,9 +2,26 @@
 title: Publish the Prague talk note — after its own open items are closed
 date: 2026-08-30
 priority: medium
-status: open
+status: done
 area: content
 ---
+
+> **Resolved 2026-08-30, same day.** Owner call: **publish now, as written.** The
+> recommendation below was to wait until the §8 verification items closed; he decided
+> otherwise, and the reasoning holds up — the note flags its own weak evidence in its own
+> words ("verify before quoting from stage", and a reference section that separates primary
+> from "secondary / trade press"), so publishing it does not assert those numbers, it
+> publishes a working document that is explicit about which of its numbers are load-bearing.
+> Option 2 below was not taken and could not have been: trimming §4.4 would mean editing
+> `origin: mixed` prose, which is his to do, not an agent's. The three inbound links now
+> resolve. The `talks` tag is confirmed and stays.
+>
+> §8 remains his open list — the talk-title confirmation, the primary sources for the §4.4
+> numbers, and the OpenAI fine-tuning wind-down claim are still unverified, now in public.
+> Kept as a record because it is the first page on this site published with self-labelled
+> unverified secondary numbers in it, and the terms that made that acceptable — the labels
+> are in the author's own prose, and nothing unverified was promoted into any other page —
+> are the terms the next one should be held to.
 
 # Publish `prague-training-harness-talk`, but not yet
 

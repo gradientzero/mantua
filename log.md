@@ -1189,3 +1189,19 @@ primary-cited figures reached other pages. Publishing is blocked on the owner's 
 `npm run build` clean. Broken-wikilink warnings 15 → 18: the three new ones are the note's
 links to `small-language-models`, `private-deployment` and `slm-evaluation-harness`, all
 targets the owner's own hand-written notes already point at.
+
+## [2026-08-30] setup | Published the Prague talk note
+
+Owner call, same day as the ingest: publish `prague-training-harness-talk` as written, rather
+than waiting for the §8 verification items as `tasks/2026-08-30-publish-prague-talk-note.md`
+had recommended. The three inbound links from `model-training-as-code`,
+`model-speciation-and-touching-the-weights` and `learning-from-deployment` now resolve, and
+`talks` becomes a live tag with one member — confirmed as deliberate.
+
+What that means for the site, recorded because it is a first: this is the first page here
+published with self-labelled unverified secondary numbers in it — the Medium 287-deployment
+roundup, the ToolBench and LoRA-adapter figures, the OpenAI fine-tuning wind-down claim. What
+makes it acceptable is that the labels are in the author's own prose (§4.4 says "verify before
+quoting from stage"; §9 separates primary sources from trade press) and that none of those
+numbers were promoted into any other page. Trimming them was not an option available to an
+agent — that is `origin: mixed` prose. Task closed as done with the reasoning.
