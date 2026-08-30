@@ -3,7 +3,7 @@ title: "Speciation, and why we only ever touch the context window"
 status: published
 tags: [fine-tuning, deployment, inference]
 created: 2026-07-27
-updated: 2026-08-17
+updated: 2026-08-30
 summary: Karpathy expects specialised models and does not see them arriving, and his explanation is that adjusting weights without losing capability is still an underdeveloped science while context windows just work. Plus where he puts the open-weight models — six to eight months behind, and better off there.
 origin: agent
 ---
@@ -96,6 +96,36 @@ precisely a way of *routing around* the problem he named rather than solving it 
 a weight change predictable or capability loss avoidable, it just declines to make one. The
 primitives that exist are the ones that avoid the unsolved part. Which is the same shape as the
 Aleph Alpha reading above: real capability, built beside the gap rather than across it.
+
+## The demand-side answer, and the axis it works on
+
+Karpathy's structural reason for the monoculture is supply-side: a lab serving everybody does
+not know what the next request will be. [[prague-training-harness-talk|The talk note]] (2026-08)
+collects the counter-argument, which is demand-side and comes from Belcák et al. at NVIDIA
+Research — an agentic system does not serve everybody. It invokes a model to do a small number
+of narrow tasks, repetitively, and those tasks are known by construction because somebody wrote
+the workflow. On that reading the missing precondition was never the primitives; it was a
+workload whose shape is knowable in advance, and agents are the first place at scale where it is.
+
+The mechanism they attach to it is the part that makes it cheap. Instrument the tool/model-call
+interface of an agent already in production and you have collected the instruction data for the
+model that would replace it, filtered by whether the workflow succeeded. So specialisation
+becomes a consequence of having deployed something rather than a project you fund —
+[[learning-from-deployment]] for what that filter is actually worth.
+
+Two things keep this from settling the page's question, and the note carries both. The
+cautionary tale is BloombergGPT: 50B parameters, ~$10M, and GPT-4 matched or beat it on the
+public financial benchmarks with no finance-specific training at all. And the note's own
+decision rule ends up conceding most of the ground — the six conditions under which it says
+fine-tune are narrow task, constrained output schema, high volume, unseen domain data, a
+trustworthy eval, and a non-quality driver such as latency, unit cost, on-prem or auditability.
+Not one of them is a claim that the small model knows more.
+
+Which sharpens the page's title question rather than answering it. Karpathy is looking for
+speciation on the *knowledge* axis and does not see it; the case that survives scrutiny is
+speciation on the format, latency, cost and sovereignty axes, where the generalists are not
+competing. Both can be true at once, and if they are, "we have not seen much speciation yet" is
+right about the thing he means and wrong about how much of it is being deployed.
 
 ## What travels between generations, and can't be filtered out
 

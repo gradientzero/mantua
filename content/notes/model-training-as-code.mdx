@@ -3,7 +3,7 @@ title: "Model Training as Code: Aleph Alpha's Savanna"
 status: published
 tags: [agentic-engineering, harness-design, evaluation, fine-tuning]
 created: 2026-08-10
-updated: 2026-08-13
+updated: 2026-08-30
 summary: A lab put its entire training pipeline — pre-training, SFT, RL, evaluation — into imperative code, with CI as the entry point and one-click hermetic runs. The first source in this notebook where the harness is built for training a model rather than for writing software, and the argument is organisational rather than technical.
 origin: agent
 ---
@@ -155,6 +155,18 @@ evaluation suite" is a merge condition tied to a score the same organisation mai
 enough will overfit it — and the more of the pipeline you automate against that assertion, the
 more of your model's direction it silently sets. Nothing here checks the check; see
 [[generator-evaluator-loops]].
+
+**And the scale it was built at is not the scale most readers work at.**
+[[prague-training-harness-talk|The talk note]] (2026-08) names this as a category transfer, and
+it is the right complaint to attach to this page. Savanna is a frontier-pretraining factory run
+by a team that can afford a nightly end-to-end training run as a regression test; a consultancy
+post-training a 4B model for one client has neither that budget nor that cadence. Worth
+separating the two halves, because the argument is almost all in the cheap half. **Transfers
+cheaply:** hermetic runs, config-as-code, immutable artefact versioning, lineage from checkpoint
+back to recipe, CI as the entry point. **Does not:** the bespoke registry service, one-click
+multi-stage orchestration, and the nightly full-pipeline run. The post never claims to be a
+blueprint for anyone else — but it also never draws that line, and read as one it prices the
+whole factory.
 
 None of that undoes the main thing, which is that this is a lab describing infrastructure it
 runs in production rather than an experiment it ran once.
