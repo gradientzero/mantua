@@ -1158,3 +1158,34 @@ profile's finger-drag check now passes cleanly, since the wikilink its synthetic
 land on is no longer on the page.
 
 `npm run build` clean; the 15 broken-wikilink warnings are the pre-existing ones.
+
+## [2026-08-30] ingest | Note on the Prague training-harness talk (owner, mixed)
+
+The owner's own planning note for a 50-minute talk in Prague at the end of September, dropped
+in `inbox/mine/` and marked `origin: mixed` — compiled from a dictated recording, then
+structured and evidence-checked with agents, with several sections written as pushback on the
+dictation rather than as a transcription of it. Two halves: the business case for specialized
+small models, then the training-as-code harness demonstrated live.
+
+New: `prague-training-harness-talk` — `origin: mixed`, `status: draft`, prose unchanged, the
+duplicated H1 dropped and the off-schema frontmatter keys translated into schema fields, eight
+wikilinks added whose labels are his own words.
+
+Three existing pages gained sections from it. `model-training-as-code` picks up the complaint
+the note aims at it — Savanna is a frontier-pretraining factory, and reading it as a blueprint
+at consultancy scale prices the whole thing — plus the transferable subset named explicitly.
+`model-speciation-and-touching-the-weights` gains the demand-side answer to Karpathy's
+supply-side reason for the monoculture (an agentic workload is knowable by construction),
+BloombergGPT as its counter, and the observation that the case which survives is speciation on
+the format/latency/cost/sovereignty axes rather than the knowledge axis he is looking at.
+`learning-from-deployment` gains the data flywheel as the small version of its loop, and why
+"did the workflow succeed" is a coarser label than anything else on that page.
+
+The note's own unverified numbers were carried through verbatim and promoted nowhere: only the
+primary-cited figures reached other pages. Publishing is blocked on the owner's §8 list —
+`tasks/2026-08-30-publish-prague-talk-note.md`. Archived to
+`sources/2026-08/prague-training-harness-talk/`.
+
+`npm run build` clean. Broken-wikilink warnings 15 → 18: the three new ones are the note's
+links to `small-language-models`, `private-deployment` and `slm-evaluation-harness`, all
+targets the owner's own hand-written notes already point at.

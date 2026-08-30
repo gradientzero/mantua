@@ -3,7 +3,7 @@ title: "Learning from deployment"
 status: published
 tags: [ai-safety, reward-hacking, evaluation, agentic-engineering]
 created: 2026-08-13
-updated: 2026-08-17
+updated: 2026-08-30
 summary: Production traffic is becoming training data — tasks the model did badly on, turned into environments that match them exactly, with the rubric built from what the human actually wanted. Which is the loop this notebook already admires, run with the model as the artefact, and it changes where the reinforcement comes from.
 origin: agent
 ---
@@ -120,6 +120,32 @@ moves is where the damage accumulates, not whether it accumulates.
 
 Which means the line at the bottom of this page survives the substitution intact, and that is
 mildly reassuring about the line rather than about the situation.
+
+## The small, boring version of the same loop
+
+Everything above is about frontier labs. The same mechanism is being sold as an ordinary
+engineering practice, and it is worth having on this page because it is the version most people
+will actually meet. [[prague-training-harness-talk|The talk note]] (2026-08) records the
+argument from Belcák et al.: instrument the tool/model-call interface of an agent already in
+production, keep the calls, filter them by whether the overall workflow succeeded, and you have
+the instruction data to fine-tune a small model that replaces one of the steps. Nobody has to
+fund a data-collection project — the traffic was already there, it just was not being written
+down.
+
+That is this page's loop at consultancy scale, and the interesting part is the filter, because
+it is a *coarser* label than any discussed above. Workflow success is a verdict on the whole
+run applied to one step inside it. A workflow can succeed with a bad tool call that the next
+step quietly recovered from, and it can fail for reasons the step being trained had nothing to
+do with. So the same distinction this notebook keeps arriving at —
+[[dashbench-measuring-a-code-review-agent|was accepted versus was real]] — applies here one
+level up, and the reward is noisier than "did a human approve it", not cleaner.
+
+Two things make it less alarming than the rest of the page rather than more, and both are about
+size. The artefact is a 4B extraction model, not an agent anyone is worried about; and the
+operator owns the eval that gates the retrain, so there is a place to put the check. The talk
+note's decision rule makes exactly that the fifth of six conditions for touching weights at all
+— no trustworthy eval, no fine-tune. Which is the right instinct, and it is the same instinct
+that is missing from the lab-scale version above, where the grader is built from the traffic too.
 
 ## What it means for anything built here
 
