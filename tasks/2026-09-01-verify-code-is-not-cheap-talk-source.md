@@ -37,5 +37,10 @@ author is the kind of thing this notebook is careful about elsewhere (cf.
 - If the attribution turns out to be wrong, the two claims above stay — they are in the
   transcript either way — but the inference paragraph comes out.
 
-Not blocking on this: the notes are drafts and none of the talk's claims were promoted into
-any other page as established. Publishing is the owner's call as usual.
+## Status note, 2026-09-01
+
+The owner published all three notes the same day, before this was resolved. The task stays
+**open** — it is now a correction to make rather than a gate to pass. Nothing else changes: none
+of the talk's claims were promoted into another page as established, and the attribution is
+labelled as an inference in the first paragraph a reader meets, so a correction touches one
+paragraph in `code-is-not-cheap.mdx` and this file.
