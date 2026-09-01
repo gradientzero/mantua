@@ -1,0 +1,100 @@
+---
+title: "Deep modules, and designing the interface you delegate behind"
+status: draft
+tags: [agentic-engineering, harness-design, code-quality]
+created: 2026-09-01
+updated: 2026-09-01
+summary: Ousterhout's deep modules, repurposed as an agent-legibility property and as the line between what a human designs and what an agent is allowed to write unread. Why the boundary is the unit of delegation, and the one place this collides with the notebook's other evidence.
+origin: agent
+---
+
+From [[code-is-not-cheap|the software-fundamentals talk]], the idea worth pulling out on its
+own, because it is a harness decision this notebook did not have.
+
+Ousterhout's distinction, from *A Philosophy of Software Design*: a **deep** module hides a
+lot of functionality behind a simple interface; a **shallow** module exposes a complex
+interface over not much. Prefer relatively few deep ones. That is twenty-year-old advice
+about human comprehension. The talk adds two claims on top of it, one about agents writing
+code and one about humans reading it.
+
+## Claim one: shallow modules are hard for an agent to explore
+
+A codebase of many small pieces with wide interfaces is one an agent navigates badly — it
+does not reach the right module in time, or does not see all the dependencies. And agents
+are unusually good at *producing* that shape, so the failure compounds: the structure that
+makes an agent worse is the structure an agent left to itself will build.
+
+This is the same currency as [[harness-engineering-agent-first-repositories|"what the agent
+can't see doesn't exist"]], spent inside the source rather than around it. Both are about
+what fits in a context window while the agent is working. The difference is what you change:
+OpenAI's answer is to add artefacts the agent can read, and this one is to make the artefact
+smaller to read in the first place.
+
+**The collision worth recording.** OpenAI's repository — the one implementation in this
+notebook that ran for five months without visibly decaying — enforces six fixed layers per
+business domain (types → config → repo → service → runtime → UI) with a validated dependency
+direction, and cross-cutting concerns entering only through one explicit providers interface.
+That is *more* boundaries than the talk recommends, not fewer. My reading of the
+reconciliation, which neither source states: depth is about how much an interface hides, not
+about the module count, and a mechanically validated dependency direction buys the agent the
+same thing a small module count would — you can predict where a thing lives without reading
+everything. If that is right, the two prescriptions are the same prescription about
+navigability arrived at from taste and from lint. If it is wrong, one of them is.
+
+## Claim two: the boundary is the unit of delegation
+
+The part I had not seen argued anywhere else in this cluster. If a module's boundary is
+simple enough to test from outside, it is simple enough to treat as a **grey box**: you
+design the interface, you review the interface, and you do not read the implementation.
+
+Two conditions, both stated: a testable boundary, and an understood purpose. One exception,
+also stated: not where being wrong is expensive — his example is anything touching money.
+
+What makes this worth keeping is that it is a *different criterion* from the one the rest of
+the notebook uses. [[command-over-tokens|The four harness decisions]] all sort work by
+verifiability: what can be checked mechanically becomes a lint, what needs judgment gets an
+evaluator, what neither can settle stays with a person. The grey-box move sorts work by
+**position** instead — outside the boundary is yours regardless of how checkable it is,
+inside is the agent's regardless. That is coarser and much cheaper to apply, and it degrades
+gracefully: the worst case is that you read some implementation you did not have to.
+
+It is also the most direct answer in the notebook to
+[[agentic-engineering-my-role-in-the-loop|the owner's open question]] — delegating tasks is
+easy, delegating *decisions* is what buys time and nobody has scoped it. An interface is a
+decision. It is small, it is durable, it is written down, and it is exactly the kind of thing
+a person can still hold a view about at the volume agents now work at.
+
+## Why this makes TDD tractable
+
+The talk's chain is: testing is hard because every test forces a set of dependent choices —
+how big a unit, what to mock, which behaviours are even worth asserting — and a deep module
+answers all three by construction. The unit is the module, the mock surface is the interface,
+and the behaviours worth testing are the ones the interface promises.
+
+Which is the same observation the notebook keeps making about evaluation, one level down.
+[[generator-evaluator-loops|A judge needs something gradable]]; a test needs something
+assertable; and in both cases the expensive part is not building the checker, it is the
+design work that makes the thing checkable at all. A test written before the code is the
+cheapest rubric that exists — it costs no model call, it is unambiguous, and unlike
+[[linting-as-agent-guardrail|a lint rule]] it can express intent rather than only structure.
+
+The pacing argument sits underneath it: *the rate of feedback is your speed limit*. Left
+alone the model writes far past its last verified state, and TDD is a way to hold it to a
+step size rather than a way to get tests. Worth separating those two motives, because only
+the first is new.
+
+## Where a rule stops working
+
+[[linting-as-agent-guardrail]] draws its line at decidability: enforce invariants, because a
+property you can decide by inspection is one where passing the check and satisfying it are
+the same event. Module depth is not that property. "Is this interface simple relative to what
+it hides" is a judgment, and an agent asked to satisfy it mechanically can widen the module
+until any interface looks simple against it.
+
+So depth lands on the same side of that page's dividing line as taste: enforceable in
+consequence (dependency direction, file-size limits, an import graph that must stay acyclic)
+and not in substance. Which is the honest reason the talk ships it as a *skill* — a
+repeatable procedure a person invokes and reads the output of — rather than as a check. That
+is the right shape for it, and worth noticing as a third category the notebook has been
+treating as two: lint for what is decidable, an evaluator for what is gradable, and a skill
+for what is neither but is still a procedure.

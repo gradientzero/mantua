@@ -1,0 +1,69 @@
+---
+title: "A ubiquitous language, addressed to the agent"
+status: draft
+tags: [agentic-engineering, harness-design, code-quality]
+created: 2026-09-01
+updated: 2026-09-01
+summary: Domain-driven design's shared vocabulary, generated from a codebase and handed to a model as a working artefact. The reported effect is the odd part — not just better plans but shorter thinking — and it is cheap enough to test here.
+origin: agent
+---
+
+The second idea from [[code-is-not-cheap|the software-fundamentals talk]], and the cheapest
+thing in it to try.
+
+The failure mode it answers is "the model is too verbose" — read not as a style complaint but
+as the developer-and-domain-expert problem. You do not share terms with the person who
+understands the domain, so they say things you translate imprecisely into code that neither
+of you can check. Domain-driven design's answer is a **ubiquitous language**: one vocabulary
+in which the conversation among developers, the conversation with domain experts, and the
+expressions in the code are all derived from the same model of the domain.
+
+The move is to treat the agent as the party on the other side of that gap. Concretely: a
+markdown file of terms — the talk describes tables — kept aligned with what the terms
+actually mean, used in the code, in the prose about the code, and in every prompt. A skill
+scans the codebase for its terminology and produces the file, which is the part that makes it
+affordable; the maintenance is the part that will decide whether it survives.
+
+## The reported effect, which is the interesting bit
+
+Three things, in his account, from reading the model's thinking traces:
+
+1. Planning improved — expected, and the same thing any shared vocabulary does.
+2. **The model's own reasoning got shorter.** Not the output: the thinking.
+3. The implementation came out closer to what was planned.
+
+The second is the claim I would want to check, because it has a mechanism and the mechanism
+is testable. If a domain concept has a name, the model refers to it by name instead of
+re-deriving it in a paraphrase each time it comes up; the trace stops spending tokens
+restating what the plan already fixed. If that is real it is a *context* result rather than a
+comprehension one, and it belongs next to [[command-over-tokens|the first harness decision]]:
+what the agent can see. A hundred lines of vocabulary that stop a recurring paraphrase are the
+same kind of trade as a hundred-line table of contents that stops a thousand-line manual from
+crowding out the task.
+
+It is also the one claim in that talk with a free experiment attached. Same task, same model,
+with and without the file, and compare thinking-token counts. Nobody ran it, here included.
+
+## Where it fits with what this notebook already has
+
+[[harness-engineering-agent-first-repositories|OpenAI's docs-as-system-of-record]] is the
+general form: put it in the repository or it does not exist, and keep it fresh mechanically.
+A term glossary is a specific, small, unusually checkable instance of that — you can lint for
+terms used in code that are missing from the file, and for entries whose named symbols no
+longer exist, which is more than you can say for most documentation. That makes it a good
+candidate for the move [[linting-as-agent-guardrail]] keeps recommending: promote the
+convention from prose into something the build can check.
+
+The honest caveat is that a glossary rots the way every document rots, and the talk's fix is
+to regenerate it with the skill. Regeneration is not maintenance — it re-derives the terms
+that are in the code and loses whatever a person added about what they are *supposed* to
+mean, which is the half DDD cares about. Any real version needs the generated part and the
+curated part to be separable.
+
+## For this repo
+
+There is a version of this that applies to the notebook itself rather than to code. The wiki
+already has a vocabulary — harness, evaluator, rubric, grey box, loop, drift — used with
+fairly consistent meanings across forty-odd pages, and nothing anywhere states them. `/lint`
+already looks for tags that mean the same thing; a terms pass is the same job one level up,
+and its output would be a hub page rather than a config file. Filed as an idea, not a plan.

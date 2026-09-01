@@ -1205,3 +1205,37 @@ makes it acceptable is that the labels are in the author's own prose (§4.4 says
 quoting from stage"; §9 separates primary sources from trade press) and that none of those
 numbers were promoted into any other page. Trimming them was not an option available to an
 agent — that is `origin: mixed` prose. Task closed as done with the reasoning.
+
+## [2026-09-01] ingest | Conference talk: "code is not cheap"
+
+An auto-transcribed conference talk, pasted in by the owner and captured to the inbox
+unaltered. Its thesis is that the spec-to-code loop degrades a codebase on every pass, that the
+cause is ordinary software entropy rather than anything about models, and that five failure
+modes of AI coding each have an answer in a twenty-year-old book — Ousterhout, the Pragmatic
+Programmer, Brooks, Evans, Beck. No speaker label in the capture; attribution to Matt Pocock is
+recorded as an inference with its evidence, and nothing is quoted under his name.
+
+Three new notes, all `status: draft`, all `origin: agent`. `code-is-not-cheap` is the source
+note. `deep-modules-and-agent-legibility` takes the two claims that are new to this notebook —
+shallow modules as a thing *agents* navigate badly, and the grey-box rule that follows (design
+the interface, delegate the implementation unread), which sorts work by position rather than by
+verifiability and is the closest thing yet to an answer for the owner's standing question about
+delegating decisions rather than tasks. `ubiquitous-language-for-agents` takes the DDD glossary
+handed to a model, and the one claim in the talk with a free experiment attached: shorter
+*thinking*, not just better plans.
+
+Four existing pages updated. `agentic-engineering` gains the placement — this is the first
+source in the cluster to put the engineering effort inside the artefact the model edits rather
+than around it, which makes it a complement to every harness post here rather than a rival.
+`harness-engineering-agent-first-repositories` gains the shallow-module claim as a third route
+to "what the agent can't see doesn't exist", plus the disagreement it creates: six validated
+layers per domain is *more* boundaries than "relatively few deep modules", and that repository
+is the only one here that demonstrably held for five months. `linting-as-agent-guardrail` gains
+a third category next to lint and judge — the skill, for a property that is neither decidable
+by inspection nor worth a graded round trip. `loop-engineering` gains spec-to-code as the top
+rung of its ladder and the first empirical report of a rung failing.
+
+Nothing was promoted as established. The talk contains one number (a star count) and no
+measurement of its central claim, and each page that carries the claim says so.
+
+Archived to `sources/2026-09/code-is-not-cheap-talk/`.

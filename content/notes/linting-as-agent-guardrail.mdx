@@ -3,7 +3,7 @@ title: Linting as an agent guardrail
 status: published
 tags: [agentic-engineering, linting, harness-design]
 created: 2026-07-26
-updated: 2026-08-13
+updated: 2026-09-01
 summary: Custom lint rules as the enforcement layer for conventions an agent would otherwise drift away from — architecture boundaries, taste invariants, documentation freshness. Why a linter beats an instruction, and what to put in the error message.
 origin: agent
 ---
@@ -138,3 +138,23 @@ layout isn't bland. That's what pushed that team toward a graded rubric and a se
 evaluator instead — see [[generator-evaluator-loops]]. The dividing line between "encode it
 as a rule" and "hand it to a judge" is roughly whether the property is decidable by
 inspection, and it's worth being deliberate about which side a given convention falls on.
+
+## A third category: the skill
+
+The dividing line above is two-way — encode it as a rule, or hand it to a judge. A talk on
+[[code-is-not-cheap|software fundamentals against spec-to-code]] ships a property that fits
+neither, and the shape it ships it in is worth noticing. Module depth — is this interface
+simple relative to what it hides — is not decidable by inspection, so it cannot be a lint; an
+agent asked to satisfy it mechanically can widen the module until any interface looks simple
+against it. But it is also not worth a graded rubric and a round trip, because the judgment is
+made once when the boundary is drawn rather than on every run.
+
+What he ships instead is a **skill**: a repeatable procedure a person invokes, which explores
+the codebase, proposes related code to wrap behind one boundary, and hands the result back to
+be read. No gate, no score, no autonomy — the enforcement is that a person ran it and looked.
+That is a third slot in this page's taxonomy: a lint for what is decidable, an evaluator for
+what is gradable, and a procedure-in-a-file for what is neither but is still repeatable.
+`/lint` here is already partly that — the mechanical half fixes itself and the judgment-heavy
+half becomes a file in `tasks/` for a person. Worth being as deliberate about which of the
+three a convention belongs in as this page is about the first two.
+See [[deep-modules-and-agent-legibility]].

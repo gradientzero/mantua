@@ -3,7 +3,7 @@ title: "Agentic engineering: the work moves to the harness"
 status: published
 tags: [agentic-engineering, harness-design]
 created: 2026-07-26
-updated: 2026-08-14
+updated: 2026-09-01
 summary: The emerging discipline around long-running coding agents — designing the scaffolding, feedback loops and environments that let an agent do reliable work, rather than writing the code yourself. Entry point for the harness-design cluster in this notebook.
 origin: agent
 ---
@@ -255,6 +255,33 @@ Two things it lends this page rather than merely rhyming with it:
   different name and with nothing at stake commercially.
 
 The safety half of chapter 1 goes to [[too-dangerous-to-release]].
+
+## The harness that is the codebase
+
+Ingested 2026-09-01: [[code-is-not-cheap|a conference talk]] arguing that the spec-to-code
+loop — change the specification, recompile, never read the output — degrades a codebase on
+every pass, and that the reason is ordinary software entropy rather than anything about
+models. Its thesis is that a codebase which is hard to change is hard for an *agent* to change
+too, so good code got more valuable when the agents arrived, not less.
+
+It is the first source here to put the engineering effort **inside the artefact the model is
+editing** rather than around it. Everything above is scaffolding — docs, linters,
+observability, evaluators, loops; this one is about the shape of the source itself, and the
+two are complements nobody in the cluster had named together. Two things branch off it:
+
+- [[deep-modules-and-agent-legibility]] — module depth as an agent-legibility property, and
+  the grey-box rule that follows from it: design the interface, delegate the implementation
+  unread. That rule sorts work by *position* rather than by verifiability, which is a
+  criterion this cluster did not have, and it is the most direct answer yet to
+  [[agentic-engineering-my-role-in-the-loop|the owner's question about delegating decisions
+  rather than tasks]].
+- [[ubiquitous-language-for-agents]] — a generated domain glossary handed to the model, whose
+  reported effect is the one worth checking: shorter *thinking*, not just better plans.
+
+It also inherits the cluster's standing weakness in mirror image. The harness posts never
+report the scaffolding making things worse; this talk never measures the degradation that is
+its central claim. Both are which-component claims without a control —
+[[data-versus-architecture]] is why that keeps being worth flagging.
 
 ## To build
 

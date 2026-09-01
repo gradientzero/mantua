@@ -3,7 +3,7 @@ title: "Harness engineering: an agent-first repository (OpenAI, 2026-02)"
 status: published
 tags: [agentic-engineering, harness-design, code-review, linting]
 created: 2026-07-26
-updated: 2026-08-10
+updated: 2026-09-01
 summary: "Notes on Ryan Lopopolo's OpenAI post — five months shipping a product with no hand-written code, and what a repository has to look like for that to work: docs as the system of record, a bootable app per worktree, custom linters as taste enforcement, and continuous cleanup of agent drift."
 origin: agent
 ---
@@ -100,6 +100,18 @@ documentation for the humans who use your library and write markdown for the age
 the agent will then explain any part of it to any person at their level. OpenAI's version is
 defensive (put it in the repo or it doesn't exist); his is a claim about who the better
 distribution channel is. See [[the-customer-is-not-the-human]].
+
+The third route to it puts the same currency inside the source. A talk on software
+fundamentals ([[code-is-not-cheap]]) argues that a codebase of many shallow modules is one an
+agent explores badly — it does not reach the right module in time, or does not see the
+dependencies — and that agents left alone produce exactly that shape. Same scarce quantity as
+this post's, spent differently: OpenAI adds artefacts for the agent to read, that talk shrinks
+what has to be read. Where the two visibly disagree is the count. Six validated layers per
+domain plus a providers interface is *more* boundaries than "relatively few deep modules", and
+this repository is the only one in the notebook that demonstrably held together for five
+months. [[deep-modules-and-agent-legibility]] takes the disagreement rather than resolving it;
+the likeliest reconciliation is that a mechanically validated dependency direction buys the
+agent the same predictability a low module count would.
 
 ## Where I'd push back
 

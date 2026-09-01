@@ -3,7 +3,7 @@ title: "Loop engineering: from writing prompts to writing loops"
 status: published
 tags: [agentic-engineering, harness-design]
 created: 2026-07-27
-updated: 2026-08-13
+updated: 2026-09-01
 summary: The claim that the unit of work is shifting from the prompt to the loop — Cherny, Osmani and Guzman all saying a version of it — and why the interesting question is not how to keep an agent running but who decides what "done" means.
 origin: agent
 ---
@@ -124,3 +124,15 @@ is a training run with a validation loss, the friendliest metric that exists.
   survives being handed to something smarter than you, and it is the same shape at both ends of the
   scale: the typing goes away, the specification doesn't, and now neither does the question of who
   wrote the specification's opinions.
+
+- The first report of a loop on this ladder failing *empirically* arrived on 2026-09-01, and it
+  is about the rung above the ones here. Spec-to-code — change the specification, recompile,
+  never read the output — is "write the loop, not the code" taken to its end, and
+  [[code-is-not-cheap|a talk on software fundamentals]] reports running it and watching the
+  output get worse on each pass, with software entropy as the diagnosis: a change made without
+  regard for the design of the whole degrades the whole, and a faster loop only degrades it
+  faster. That is a different objection from this page's. This page says the specification work
+  does not go away; that talk says the *artefact* decays even when the specification is fine,
+  because nothing in the loop is investing in its design. Both survive, and the evidence for
+  the second is one person's experience with no measurement — worth holding loosely for exactly
+  the reason this page holds Cherny's claim loosely.

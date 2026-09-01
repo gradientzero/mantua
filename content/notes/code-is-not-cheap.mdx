@@ -1,0 +1,153 @@
+---
+title: "Code is not cheap: software fundamentals against spec-to-code"
+status: draft
+tags: [agentic-engineering, harness-design, evaluation, talks]
+created: 2026-09-01
+updated: 2026-09-01
+summary: A conference talk arguing that the spec-to-code loop degrades a codebase on every pass, that the reason is ordinary software entropy, and that five failure modes of AI coding each have a fix sitting in a twenty-year-old book. The first source in this notebook that locates the harness inside the code rather than around it.
+origin: agent
+---
+
+Source: an auto-transcribed conference talk, speaker and venue not stated in the capture.
+Archived under `sources/2026-09/code-is-not-cheap-talk/`. The attribution is an inference
+and should be checked before it is quoted: the speaker names a course called "Claude Code
+for real engineers", a newsletter at aihero.dev, and a skills repository the transcript
+renders as "Mac PCO skills", which reads as `mattpocock/skills` — i.e. Matt Pocock. Nothing
+in the capture confirms it, there are no speaker labels, and the transcript is rough enough
+to have mangled two author names (Ousterhout twice, once as "ouster" and once as "erhout")
+and the talk's own numbering, which runs 1, 2, 3, "failure mode number six", "tip number
+five".
+
+## The thesis
+
+**Code is not cheap. Bad code is the most expensive it has ever been.**
+
+The target is the spec-to-code movement: write a specification, compile it to code with a
+model, and when the application is wrong, fix the spec and recompile rather than reading
+the output. The speaker tried it and reports the loop degrading — each recompilation
+producing worse code than the last, ending in garbage — and his diagnosis is that this is
+not an AI phenomenon at all. It is *software entropy*, the Pragmatic Programmer chapter:
+change a system while thinking only about the change and not about the design of the whole,
+and the system decays. Running that loop faster does not change its direction.
+
+From which the argument runs: a bad codebase is one that is hard to change without causing
+bugs (Ousterhout's definition of complexity, and his book is the one the talk leans on
+most). A codebase that is hard to change is a codebase an agent cannot work in either — so
+the value of a good codebase went *up* when the agents arrived, and with it the value of the
+fundamentals that produce one.
+
+That is a different claim from the one the rest of this notebook's
+[[agentic-engineering|harness cluster]] makes, and it is the reason this page exists. Every
+other source here puts the engineering effort *around* the model — docs, linters,
+observability, evaluators, loops. This one puts it *inside the artefact the model is editing*.
+The two are compatible, and nobody in the cluster had said the second part out loud.
+
+## The five failure modes, and what each is answered with
+
+The talk's structure is a failure mode you have probably hit, then an old book, then a skill
+the speaker has published.
+
+**"The AI didn't do what I wanted."** No one knows exactly what they want (Pragmatic
+Programmer), so a conversation with an agent is requirements gathering. The concept he
+borrows is Frederick Brooks' *design concept* from *The Design of Design*: when two parties
+design a thing together there is an idea floating between them that is not an asset and
+cannot be written into a markdown file. His skill — "grill me" — is two sentences telling the
+model to interview him relentlessly, walking down each branch of the design tree and
+resolving dependencies between decisions one at a time, until they share the understanding.
+He reports it producing forty to a hundred questions before the model is satisfied, and the
+resulting transcript becoming a PRD or a set of issues. He prefers it to Claude Code's plan
+mode, whose fault he names precisely: plan mode is eager to produce an *asset* and start
+working, and a shared design concept is not an asset.
+
+**"The AI is too verbose."** Read as a domain-language gap — the same one between a developer
+and a domain expert. His answer is domain-driven design's *ubiquitous language*: one markdown
+file of the terms you and the model hold in common, kept aligned with what they actually
+mean, used in the code and in every conversation about it. A second skill scans a codebase
+for its terminology and generates the file. His reported effect is the interesting part, and
+[[ubiquitous-language-for-agents]] takes it on its own: reading the model's thinking traces,
+the planning improved, the *thinking got shorter*, and the implementation came out closer to
+the plan.
+
+**"It built the right thing and it doesn't work."** Feedback loops — static types, browser
+access for a frontend agent, automated tests — and then the observation that the model has
+them and uses them badly. It writes far too much before checking anything. The line he takes
+from the Pragmatic Programmer is the best sentence in the talk: **the rate of feedback is
+your speed limit**, and writing past it is outrunning your headlights. TDD is proposed not
+as a testing practice but as a *pacing* mechanism — the thing that forces small steps on
+something that does not take them by default.
+
+**"The AI can't navigate my codebase."** Ousterhout's deep modules: a few large modules with
+simple interfaces, rather than many shallow ones with complex ones. The claim added on top is
+new here — a codebase of many small blobs is one an *agent* explores badly, failing to reach
+the right module or to see the dependencies, and agents are unusually good at producing
+exactly that shape. A third skill walks a codebase looking for related code to wrap behind
+one boundary. The consequence he cares about is testability: with a simple boundary you test
+at the interface, so the deep-module codebase is the one that rewards the TDD in the previous
+point.
+
+**"I can ship more than my brain can hold."** The one I found most useful, because it is
+about the human and every other source in this cluster is about the machine. If the module
+boundary is simple enough to test from outside, it is simple enough to treat as a **grey
+box**: design the interface, review it carefully, and delegate the implementation without
+reading it. He is explicit about the exception — not for the parts where being wrong is
+expensive, finance being his example — and about the two conditions: a testable boundary, and
+an understood purpose. See [[deep-modules-and-agent-legibility]].
+
+The close is Kent Beck's *invest in the design of the system every day*, turned against the
+opening: spec-to-code is not investing in the design of the system, it is divesting from it.
+And the role framing — the agent is a tactical programmer, a sergeant on the ground, and the
+strategic level is yours.
+
+## Where it lands in this notebook
+
+**It supplies the missing half of "what the agent can't see doesn't exist".**
+[[harness-engineering-agent-first-repositories|OpenAI's answer]] to agent legibility is
+everything outside the source: docs as the system of record, a bootable app per worktree, an
+observability stack the agent can query. This talk's answer is the source itself — a codebase
+whose structure the agent can hold. Both teams are optimising the same scarce quantity, and
+only one of them was on this notebook's list of levers.
+
+**It disagrees with [[loop-engineering]] about how far the recursion goes.** That page tracks
+the ladder — stop writing the code, then the prompt, then the loop, then the thing that writes
+the loop — and its standing objection is that every rung still bottoms out in something
+unoptimised deciding what "better" means. Spec-to-code is a rung on that ladder, and this is
+the first source here to report it *failing empirically* rather than to object to it in
+principle. The two objections are different and both survive.
+
+**It is the first argument here for a harness component being a human's job on purpose.** The
+grey-box move draws a line — interface human, implementation agent — where the rest of the
+cluster draws lines by verifiability. That is a genuinely different criterion, and it is the
+one thing here that speaks to
+[[agentic-engineering-my-role-in-the-loop|the owner's open question about delegating decisions
+rather than tasks]]: an interface *is* a decision, small enough to make deliberately and
+durable enough to be worth the attention.
+
+## Where I would push back
+
+**There is no measurement anywhere in it.** The degradation claim — recompile the spec and the
+code gets worse — is the load-bearing empirical claim of the talk and its evidence is the
+speaker's own experience plus a show of hands. No task set, no baseline, no count of passes
+before it turns. This is the cluster's standing weakness pointed the other way: the harness
+posts never report the scaffolding making things worse, and this one never reports the
+measurement that would make its central failure real. [[data-versus-architecture]] is the
+reason to keep noticing it — a which-component claim with no control is where this field
+spends its decades.
+
+**The deep-module claim cuts against the one implementation in the notebook that worked.**
+OpenAI's repository enforces *six* fixed layers per business domain with a validated
+dependency direction, plus a providers interface for anything cross-cutting. That is more
+boundaries, not fewer, and it shipped a million lines over five months with the coherence
+holding. The reconciliation is probably that "deep" is about how much an interface hides
+rather than how many interfaces there are, and that a validated dependency direction gives an
+agent the same navigational help a small module count would — but the talk does not make that
+distinction, and as stated the two prescriptions point in opposite directions.
+
+**Every failure mode arrives with a skill for sale.** The speaker is a teacher with a course,
+a newsletter and a skills repository, and the talk is shaped like a syllabus. That does not
+make any of it wrong — the books it draws on predate the incentive by twenty years — but the
+"13,000 stars" cited for the grill-me repository is a popularity number offered where an
+outcome number is missing, and it is the only number in the talk.
+
+**The plan-mode comparison is a claim about a tool that is easy to check and was not checked.**
+"Plan mode is too eager to create an asset" is testable against the same task run both ways.
+It is asserted, hedged with *don't at me on this*, and left there.
