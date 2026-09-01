@@ -1239,3 +1239,26 @@ Nothing was promoted as established. The talk contains one number (a star count)
 measurement of its central claim, and each page that carries the claim says so.
 
 Archived to `sources/2026-09/code-is-not-cheap-talk/`.
+
+## [2026-09-01] setup | Published the three notes from the "code is not cheap" talk
+
+Owner call, same day as the ingest: publish `code-is-not-cheap`,
+`deep-modules-and-agent-legibility` and `ubiquitous-language-for-agents` as written, without
+waiting on the speaker identification that `tasks/2026-09-01-verify-code-is-not-cheap-talk-source.md`
+had recommended first. Same decision as the Prague note two days earlier, and the task stays
+open rather than being closed by the publish.
+
+What it means for the site. The seven inbound links from `agentic-engineering`,
+`harness-engineering-agent-first-repositories`, `linting-as-agent-guardrail` and
+`loop-engineering` now resolve. `code-quality` becomes a live tag with two members, alongside
+`talks`, which gains its second.
+
+What is now public with an unverified byline, recorded because it is the second time: the
+attribution paragraph at the top of `code-is-not-cheap` names Matt Pocock as an inference from
+four things the speaker says about himself, and two claims carried on the other pages — that
+shallow modules are specifically hard for *agents* to navigate, and that a term glossary
+shortens a model's thinking traces — are his rather than the books'. What makes that acceptable
+is that the inference is labelled as one in the prose the reader meets first, that neither claim
+was promoted into any other page as established, and that both are stated with the measurement
+that would support them named as missing. Correcting the byline later changes one paragraph and
+nothing else.
