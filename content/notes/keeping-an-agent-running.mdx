@@ -3,7 +3,7 @@ title: "Keeping an agent running: goals, loops, hooks and schedules"
 status: published
 tags: [agentic-engineering, harness-design, evaluation]
 created: 2026-07-27
-updated: 2026-07-27
+updated: 2026-09-04
 summary: "Four mechanisms decide what starts an agent's next turn and what stops the sequence — /goal, /loop, Stop hooks and scheduled runs. Notes on the /goal documentation, including the constraint that shapes everything else: its evaluator has no tools and can only judge what the transcript shows."
 origin: agent
 ---
@@ -115,3 +115,14 @@ of the artifact rather than the artifact, and the honest move is the bash loop o
 The tool-free evaluator is not a flaw so much as the price of it being free. Worth naming
 because it is easy to read "a separate model checks" and assume more independence than is
 there.
+
+## A fifth mechanism, self-directed
+
+[[gpt-6-astra-automated-ai-engineer|A launch-day vendor writeup]] describes something the
+table above doesn't quite have a row for: a 9-hour overnight run where the agent itself
+started and stopped successive "waves" of work, regrouping between them and adjusting its
+own subagent concurrency. That's this page's fourth mechanism (a schedule with no session
+open in between) merged with the third (a Stop hook), except the script deciding when to
+stop and restart is the agent's own judgement rather than a deterministic check. Worth
+tracking as a real pattern if it holds up outside a demo; the source gives no way to verify
+that it does.
