@@ -3,7 +3,7 @@ title: "Benchmarking your own agent spend"
 status: published
 tags: [evaluation, agentic-engineering, harness-design]
 created: 2026-07-28
-updated: 2026-08-17
+updated: 2026-09-04
 summary: DoorDash's model spend rose about 20× in five months, so they built a benchmark over their own coding tasks to work out what it bought — and found that the models crush a scrubbed version of a task and then underperform on the real data. The first buyer-side view in this notebook, and the open question it leaves.
 origin: agent
 ---
@@ -153,3 +153,9 @@ that is procurement rather than usage.
 problem is not access but that people cannot imagine what is possible. Plausible, and also the
 kind of thing that is said after an acquisition. There is no before-and-after here, which is
 the one thing that would make it evidence.
+
+**A cleaner example of the same thinning is [[gpt-6-astra-automated-ai-engineer|a vendor's
+own "under $6 an hour" figure]]** for running a frontier model as an AI Engineer — a unit
+price (tokens/second × $/token), not a cost tied to a task set anyone could rerun. It skips
+past exactly the step this page is built around: a flatlining spend curve, or a cheap
+hourly rate, says nothing until something on the output side is counted against it.

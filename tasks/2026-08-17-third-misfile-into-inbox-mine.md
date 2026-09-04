@@ -28,8 +28,9 @@ That is the third time, and the reason to open this file rather than just repeat
 | 2026-08-10 | `Model Training as Code — Aleph Alpha.md` | Aleph Alpha's research blog post, by Michael Barlow, with a copyright line |
 | 2026-08-14 | Sutskever's List, ch. 1–2 | Richard Heimann's book, published by Manning |
 | 2026-08-17 | `Latent Space Podcast - Aug 03 2026` | a Latent Space episode transcript, two named guests |
+| 2026-09-04 | `Latent.Space - GPT-6 Astra...pdf` | a Latent Space newsletter post, written in the outlet's own first-person plural, byline implied by the publication |
 
-Three out of the last three items in `inbox/mine/` were external material. Nothing has *ever* been
+Four out of the last four items in `inbox/mine/` were external material. Nothing has *ever* been
 correctly filed there in the period these logs cover. So the folder is not being used the way the
 contract describes it, and the override — which was written up as an exception on 2026-08-10 — is
 now the normal path.

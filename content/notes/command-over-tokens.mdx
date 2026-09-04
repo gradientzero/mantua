@@ -3,7 +3,7 @@ title: "Command over tokens"
 status: draft
 tags: [agentic-engineering, harness-design, evaluation]
 created: 2026-07-29
-updated: 2026-07-29
+updated: 2026-09-04
 summary: Nobody I know exhausts a weekly token allowance, so the limit is not the limit — throughput that means something is a skill. What that skill consists of, and the four decisions that actually make up a harness.
 origin: mixed
 author: Wolfgang Gross
@@ -123,6 +123,12 @@ unattended run but many short ones — tasks sized to roughly twenty minutes at 
 several in flight, review proportional to how much you care about that particular code. Both
 regimes are real and they are not the same workflow: one asks for good task decomposition, the
 other for a grader you trust.
+
+[[gpt-6-astra-automated-ai-engineer|A vendor writeup]] describes a version of this at larger
+scale — 20-50 subagents, with the concurrency and reasoning-effort mix tuned by the model
+itself mid-run rather than by the operator. Read skeptically (it is a launch-day demo with
+self-reported numbers), but it names the decision correctly: fleet size and per-agent effort
+are still the same lever, just pulled by a different hand.
 
 ## How to get there without pretending
 

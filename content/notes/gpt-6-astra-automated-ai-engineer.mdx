@@ -1,0 +1,75 @@
+---
+title: "GPT-6 Astra: an automated AI Engineer for under $6 an hour"
+status: published
+tags: [agentic-engineering, harness-design, evaluation]
+created: 2026-09-04
+updated: 2026-09-04
+summary: A Latent Space writeup of early access to OpenAI's GPT-6 Astra, framed around the claim that it is cheap enough and capable enough to function as a junior AI Engineer — running 20-50 subagents in parallel, monitoring its own multi-day jobs, and building its own benchmarks. Read as a vendor demo rather than a measurement, and cross-checked against what the notebook already has on spend, throughput and unattended runs.
+origin: agent
+related: [command-over-tokens, keeping-an-agent-running, benchmarking-your-own-agent-spend]
+---
+
+Source: "GPT-6 Astra: an automated AI Engineer you can hire for &lt;$6 an hour", a Latent
+Space newsletter post dated 2026-09-04, the day of GPT-6 Astra's launch, captured as a PDF
+clipping (no URL recorded in the capture). Archived under
+`sources/2026-09/gpt-6-astra-automated-ai-engineer/`.
+
+## What it claims
+
+Early access to OpenAI's newest model, used to burn "20B+ tokens" across real internal
+projects rather than benchmarks. The headline is a cost figure — 33 tokens/second at up to
+$50/million tokens works out to under $6/hour of wall-clock use — and a capability claim
+riding on top of it: the model is good enough at choosing and training models, labelling
+data, running pipelines, reading logs, deploying systems, and commanding fleets of
+subagents that it functions as a junior AI Engineer, not just a coding assistant. The
+piece runs through six scenarios: parallel subagent fleets (20-50 concurrent, one main
+agent managing them), multi-day unattended runs it starts, monitors and restarts itself,
+building its own model benchmarks and human-rating pipelines, and standing up a
+personal Arena-style tool for comparing models.
+
+## Why it goes in as a draft, not a claim
+
+This is a vendor demo, not a measurement, and it reads as one: self-reported token counts,
+no independent benchmark, screenshots with the interesting numbers redacted, and the framing
+device — "OpenAI already uses GPT-6 to do this internally" — is asserted, not shown. The
+$6/hour figure is a unit-price calculation, not a report of what a task actually cost;
+nothing here does the DoorDash-style work of tying spend to a task set anyone could rerun.
+[[benchmarking-your-own-agent-spend|That page]] is the reason to be careful: a company that
+actually measured this found June's spend 20x January's, an open question about whether
+gains hold on real (non-scrubbed) data, and no output measure against the cost — the exact
+gap "under $6 an hour" skips past. A screenshotted run count is not a Dashbench.
+
+## What still transfers
+
+Strip the marketing framing and three things line up with what is already here:
+
+**The parallelism regime it describes is the one [[command-over-tokens|Karpathy's practice]]
+argues for** — many bounded tasks in flight rather than one long unattended run — just at a
+larger fleet size (20-50 vs. Karpathy's handful) and with the fan-out delegated to the model
+itself rather than the operator. Whether a model commanding its own subagent fleet still
+needs the four harness decisions on that page (what it can see, what "done" means, what's
+enforced mechanically, what starts/stops a turn) or whether scale changes which of those
+matter most is not answered here — the piece shows the fleet running, not how its harness
+was built.
+
+**"Monitoring its own runs, starting and stopping waves" is [[keeping-an-agent-running|the
+scheduled-run mechanism]] pointed at itself** — a 9-hour overnight run tuning concurrency and
+regrouping between dependency waves is a self-managed loop, not a new mechanism. The
+interesting claim buried in that section is that the model adjusted its own concurrency
+("high reasoning for planning and questions, medium for writing/review, low for extraction")
+mid-run — a harness decision usually made by the operator, made instead by the agent. If
+real, that is worth watching for; nothing here says how it was verified.
+
+**The "we went from prompting humans to building a dozen internal tools" framing is another
+instance of [[the-harness-is-a-skill-issue|the harness-is-a-skill-issue]] argument** — the
+piece's own thesis, stated plainly in its title footnote, is that the limiting factor moved
+from model capability to operator ambition. That is consistent with what this notebook has
+been assembling from other sources; it just arrives here with no method behind the specific
+numbers.
+
+## Open question
+
+Whether the concurrency- and wave-management behaviour described (the model tuning its own
+subagent parallelism and reasoning-effort mix mid-run) is a real harness capability worth
+tracking, or a demo artifact that does not reproduce outside a sponsored writeup. Nothing in
+the source resolves this either way.

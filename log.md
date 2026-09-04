@@ -1262,3 +1262,21 @@ is that the inference is labelled as one in the prose the reader meets first, th
 was promoted into any other page as established, and that both are stated with the measurement
 that would support them named as missing. Correcting the byline later changes one paragraph and
 nothing else.
+
+## [2026-09-04] ingest | GPT-6 Astra: an automated AI Engineer
+
+A Latent Space newsletter post covering early access to OpenAI's GPT-6 Astra, dropped in
+`inbox/mine/` but not the owner's writing — the fourth item in a row misfiled there (see
+`tasks/2026-08-17-third-misfile-into-inbox-mine.md`, updated with this occurrence). Processed
+as external material.
+
+New note `gpt-6-astra-automated-ai-engineer`, published per the owner's ingest request, reads
+the piece as a vendor demo rather than a measurement — self-reported token counts, no
+independent benchmark, no output measure against its "<$6/hour" figure — while pulling out
+what does transfer: a 20-50 subagent fleet as a larger instance of the parallelism decision on
+`command-over-tokens`, a self-directed run/wave-management pattern that extends the mechanism
+table on `keeping-an-agent-running`, and another instance of the harness-is-a-skill-issue
+argument.
+
+Updated `command-over-tokens`, `keeping-an-agent-running`, and `benchmarking-your-own-agent-spend`
+with cross-references. Archived to `sources/2026-09/gpt-6-astra-automated-ai-engineer/`.
