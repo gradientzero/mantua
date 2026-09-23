@@ -1280,3 +1280,22 @@ argument.
 
 Updated `command-over-tokens`, `keeping-an-agent-running`, and `benchmarking-your-own-agent-spend`
 with cross-references. Archived to `sources/2026-09/gpt-6-astra-automated-ai-engineer/`.
+
+## [2026-09-23] ingest | (KV) Cache Rules Everything Around Me
+
+A Substack post by Diogo (*Complete Skeptic*, 2026-09-09), captured as a PDF print. It was in
+`inbox/mine/` but it is not the owner's writing: the fifth misfile in a row, added to
+`tasks/2026-08-17-third-misfile-into-inbox-mine.md`. Processed as external material. The subscribe
+overlay covers most of the post's charts in the capture, so only figures stated in the text are used.
+
+New draft `kv-cache-economics-of-agents`. The post's argument: an agent re-reads its whole context
+on every tool call, so cache reads, not output, dominate the bill (output 9–18% on replayed SWE
+traces), and those reads cost the provider almost nothing. From that: per-step routing to a
+cheaper model costs more, subagents only pay off with narrow briefs, and self-hosting keeps the
+cache discount. The note treats "resident cache is free" as the weak step, since the cache still
+takes HBM capacity.
+
+Updated `benchmarking-your-own-agent-spend` (routing per task vs. per step), `command-over-tokens`
+(subagent context inheritance), `inference-engineering-baseten` (the cache from the customer's
+side) and `gpt-6-astra-automated-ai-engineer` (the $6/hour figure is computed on output).
+Archived to `sources/2026-09/kv-cache-rules-everything-around-me/`.

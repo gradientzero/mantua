@@ -3,7 +3,7 @@ title: "GPT-6 Astra: an automated AI Engineer for under $6 an hour"
 status: published
 tags: [agentic-engineering, harness-design, evaluation]
 created: 2026-09-04
-updated: 2026-09-04
+updated: 2026-09-23
 summary: A Latent Space writeup of early access to OpenAI's GPT-6 Astra, framed around the claim that it is cheap enough and capable enough to function as a junior AI Engineer — running 20-50 subagents in parallel, monitoring its own multi-day jobs, and building its own benchmarks. Read as a vendor demo rather than a measurement, and cross-checked against what the notebook already has on spend, throughput and unattended runs.
 origin: agent
 related: [command-over-tokens, keeping-an-agent-running, benchmarking-your-own-agent-spend]
@@ -66,6 +66,13 @@ piece's own thesis, stated plainly in its title footnote, is that the limiting f
 from model capability to operator ambition. That is consistent with what this notebook has
 been assembling from other sources; it just arrives here with no method behind the specific
 numbers.
+
+**A cost the $6/hour figure leaves out.** Added 2026-09-23: the headline is computed from output
+speed and output price, but [[kv-cache-economics-of-agents|a breakdown of agent session costs]]
+puts output at 9–18% of an agent's bill, with cache reads — the model re-reading its context on
+every tool call — most of the rest. A fleet of 20–50 subagents multiplies that by however much
+context each one inherits. So the unit price is not only untied to a task set, it is computed on
+the smaller line of the bill.
 
 ## Open question
 
