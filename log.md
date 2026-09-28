@@ -1299,3 +1299,9 @@ Updated `benchmarking-your-own-agent-spend` (routing per task vs. per step), `co
 (subagent context inheritance), `inference-engineering-baseten` (the cache from the customer's
 side) and `gpt-6-astra-automated-ai-engineer` (the $6/hour figure is computed on output).
 Archived to `sources/2026-09/kv-cache-rules-everything-around-me/`.
+
+## [2026-09-28] setup | Published the KV-cache note
+
+Owner call: `kv-cache-economics-of-agents` published as written. The links to it from
+`benchmarking-your-own-agent-spend`, `command-over-tokens`, `inference-engineering-baseten` and
+`gpt-6-astra-automated-ai-engineer` now resolve in production.
