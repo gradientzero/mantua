@@ -3,7 +3,7 @@ title: "Inference engineering as a discipline (Latent Space × Baseten, 2026-08)
 status: published
 tags: [inference, deployment, reading-notes]
 created: 2026-08-17
-updated: 2026-08-17
+updated: 2026-09-23
 summary: Philip Kiely and Ali Taha on what actually happens between an open-weight checkpoint and a production endpoint — the four optimisations that stack to 2–4× on fixed hardware, why quantising more of a model can make it better, and the reliability failures that turn out to be a race condition in a kernel rather than anything about the weights.
 origin: agent
 ---
@@ -48,6 +48,12 @@ The honest detail is that step 3 is tuned to an assumption. Their speculator ass
 traffic, so it has a high acceptance rate on coding and a lower one on anything else — "if you're
 asking me to summarize every Harry Potter book, it's going to be slower." A shared endpoint is
 fast at what its operator expects you to do.
+
+Step 1 has a customer-side counterpart on [[kv-cache-economics-of-agents]]. For the provider a
+cache hit is the cheap path, skipping prefill; for the customer running an agent loop, cache reads
+are the largest line on the bill, because every tool call re-reads the whole context. Same
+mechanism from either side of the counter, and the gap between what a hit costs to serve and what
+it is billed at is that page's argument.
 
 ## The stack, and what each layer is worth
 

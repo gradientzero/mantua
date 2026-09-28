@@ -1,0 +1,143 @@
+---
+title: "The KV cache is most of an agent's bill"
+status: published
+tags: [inference, agentic-engineering, reading-notes]
+created: 2026-09-23
+updated: 2026-09-23
+summary: An agent re-reads its whole context on every tool call, so cache reads, not output tokens, are the largest line on the bill — and they cost the provider close to nothing to serve. What that means for routing, subagents, self-hosting, and what to measure.
+origin: agent
+related: [inference-engineering-baseten, benchmarking-your-own-agent-spend, command-over-tokens]
+---
+
+Source: "(KV) Cache Rules Everything Around Me" by Diogo, on his Substack *Complete Skeptic*,
+dated 2026-09-09 (`completeskeptic.com/p/kv-cache-rules-everything-around`), captured as a PDF
+print of the page. Archived under `sources/2026-09/kv-cache-rules-everything-around-me/`. Most of
+the post's charts are hidden under a subscribe overlay in the capture, so the figures below are the
+ones stated in the text; the one chart that survives is the opening pie.
+
+## The claim
+
+An agent is a loop: read the context, emit a tool call, append the result, read it all again. With
+a context of N tokens and T tool calls you process about N × T input tokens to produce a small
+number of output tokens, and since N grows every turn, **cost grows quadratically with session
+length**. Most of those input tokens are cache reads, charged at a discount but charged every
+time.
+
+His numbers, from a small simulator replaying Nvidia's Open-SWE-Traces at Fable 5 prices:
+
+- **Output tokens are 9–18% of the bill.** The opening chart puts it at cache reads 67%, output
+  roughly 18%, fresh input 12%, cache-write premium 3% — against a "what devs think" pie of
+  output 75%, input 19%.
+- **Hit rate is a large lever.** The whole dataset costs $1.07M at a perfect hit rate and $1.97M
+  at Claude Code's reported 89% — 84% more. Going from 95% to 98% saves about 17%.
+- Martin Alderson's independent model of a 100-turn session from 60k tokens of context lands in
+  the same place: cache reads about 76% of an Opus 5 bill.
+
+## Why the provider barely pays for it
+
+The argument has three steps, and it is the part worth keeping even if the prices move:
+
+1. **Prefill costs compute.** Reading the prompt is one parallel forward pass, cost proportional
+   to tokens. The KV cache *is* the saved result of that pass; a cache read is input that needs no
+   compute.
+2. **Decode costs memory bandwidth.** Every generated token attends over the whole KV cache, so
+   it reads the context out of HBM once per output token. That is why output is priced several
+   times above input.
+3. **A tool call is just a pause.** The cache stays resident while the tool runs. Nothing is
+   recomputed; the bytes only have to be kept.
+
+So, his claim: the real cost of reading the cache is already paid inside the output-token price,
+and the separate charge for cache reads is mostly margin. He points at two provider behaviours as
+corroboration — cache reads do not count against input rate limits on the Claude API, and OpenAI
+ran automatic prefix caching for over a year without a write premium, adding the 1.25× only with
+GPT-5.6.
+
+This lines up with [[inference-engineering-baseten|the Baseten interview]], seen from the other
+side of the counter: Kiely's first step for any long request is cache-aware routing, because
+prefill is the expensive part and a hit skips it. The provider organises its fleet around the
+cache; the customer's bill is organised around charging for it.
+
+## What follows from it
+
+**Routing a step to a cheaper model usually costs more.** A KV cache is not shared between models,
+so the moment a second model touches the context it pays to prefill all of it. His worked example —
+a 100k-token Opus 5 session, one step of 1k output and 3k tool result, done by Opus or handed to
+Sonnet and back — makes the "easy" step almost 3× more expensive, done by the weaker model. A
+per-request router pays that on every switch, and worst on the longest contexts.
+
+**Subagents mostly don't pay off either — if they need the parent's context.** Handing the full
+context to a second model means writing it into a second cache. The exception, in his footnote, is
+the useful one: a subagent with a tiny brief ("search the codebase for X, report back in 200
+tokens") never inherits the parent's context, and the 50k tokens of grep output it reads never
+enter the parent's. That makes N smaller for every later turn, which is the only thing in this
+account that bends the quadratic.
+
+**The subscription "subsidy" may not be one.** SemiAnalysis found the $200/month plans can yield
+$8,000 (Anthropic) to $14,000 (OpenAI) a month of API-equivalent tokens — a 40–70× subsidy at list
+price. If 90%+ of a coding agent's tokens are cache reads and those are nearly free to serve, the
+list price is the wrong denominator.
+
+**Self-hosting makes more sense for agents than for chat.** Running open weights yourself is the
+only way to keep the cheapness of the cache instead of paying list price for it. He hedges this
+himself: Fable 5.1 cut cache reads from $1.00 to $0.25 per million, so the gap may keep closing.
+
+**What to measure**: cache hit rate and the number of tool calls. On his account the tool-call
+count matters far more than the tokens per call.
+
+## How it lands against what is here
+
+**It sharpens the routing question on [[benchmarking-your-own-agent-spend]].** DoorDash's stated
+plan is to route cheap tasks to open-weight models and pay frontier prices only where they buy
+something. That survives this argument only if the routing is *per task* — a fresh session with its
+own context — and not per step inside a session. Routing per step is exactly the case he shows
+losing. The same distinction applies to [[serving-slms-on-a-desktop-gpu|the desktop under the
+desk]]: sending whole jobs to the local model is fine; switching models mid-conversation is the
+expensive move. And the self-hosting argument is a second reason for that box to exist, separate
+from privacy: an agent loop run locally keeps the cache discount instead of paying for it.
+
+**It puts a price on the parallelism decision in [[command-over-tokens]].** Many short runs in
+flight, or a fleet of 20–50 subagents as in [[gpt-6-astra-automated-ai-engineer|the GPT-6 Astra
+writeup]], is cheap or expensive depending on one thing the usual discussion skips: how much context
+each worker inherits. Narrow briefs and short reports are the cheap version, and also the better
+harness, since they keep the parent's context small. Forking a full context twenty times is paying
+for twenty caches.
+
+**It gives the long-running-agent material a cost curve.** The pages on
+[[keeping-an-agent-running|keeping an agent running]] and
+[[harness-design-for-long-running-coding-agents|Anthropic's long-running harness]] weigh session
+length against the context window and the model's behaviour near its limit. Quadratic cost is a
+third reason, independent of both, to prefer a context reset from a written handoff over one
+ever-growing session — the harness writeup arrives at resets for behavioural reasons, and this is
+the billing reason for the same move.
+
+## Where it thins out
+
+**"Keeping bytes around costs nothing" is the weak step.** Resident KV cache does not use compute
+or bandwidth while it sits there, but it uses HBM *capacity*, and capacity is what caps batch size
+— which is what decode throughput, and so the provider's economics, actually depend on. A long
+context parked during a slow tool call is memory that is not serving anyone else. The provider can
+offload it to CPU memory or disk, and the Baseten interview says that offloading is where the
+industry is heading, but the move costs something. One commenter on the post makes the market
+version of the objection: if cache reads really cost nothing, some lab would price them at zero and
+take share. None has.
+
+**The headline percentages depend on the price sheet.** With output priced 5× input and cache reads
+at a tenth of input, the split follows from the trace shape; a different ratio moves it. The
+direction is robust — long agent sessions are input-dominated — and the exact 67% is not.
+
+**"Mostly margin" is an inference, not a disclosure.** The rate-limit and pricing-history points
+are consistent with it, and neither is a cost figure. The same goes for the step from "cache reads
+are cheap" to "this is why inference margins are rising"; it is plausible and it is not shown.
+
+**Hit rates are reported, not measured here.** He quotes 89% and 95% for Claude Code from different
+people and says to take both with salt.
+
+**He has a stake.** The post ends by hinting at "a new kind of foundation model" that escapes the
+KV cache and invites people to get in touch. That does not change the arithmetic, which anyone can
+redo, but it is the reason the conclusion is framed as a tyranny to escape.
+
+## For this notebook
+
+The practical takeaway is small and checkable: this repo's own sessions have a hit rate and a
+tool-call count, and neither has ever been looked at. The ingest runs in `log.md` are a ready-made
+set of trajectories.
