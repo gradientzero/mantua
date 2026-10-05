@@ -3,7 +3,7 @@ title: "Data or architecture: the control experiment nobody runs"
 status: published
 tags: [deep-learning-history, scaling, evaluation, agentic-engineering]
 created: 2026-08-14
-updated: 2026-08-14
+updated: 2026-10-05
 summary: Before AlexNet the field's best argument against neural networks was that the data was doing the lifting — and Efros had the control experiment to prove it. AlexNet settled that case on the same data everyone else had. The reason to keep the episode is that the modern version of the argument is running now, with the control missing.
 origin: agent
 ---
@@ -90,3 +90,12 @@ Neither experiment is being published.
 Chapter 6 is the scaling canon — Kaplan, Chinchilla, and the compute/data/parameters trade — which
 is what the field built once it accepted that both halves matter and started measuring the
 exchange rate between them. Unread; the notes are in [[sutskevers-list-notes]].
+
+## Update 2026-10: a control experiment, at small scale
+
+Dwarkesh describes one in [[rsi-roundtable-schulman-millidge-oneill]]: every training recipe from 2019 on
+crossed with every dataset from 2019 on, measuring compute needed for a fixed capability. Data accounts
+for about 12× and architecture about 3.7×, at small scale. The caveats are on that page: the product
+(~33×) is far below the ~2,000× that three-times-a-year trends imply, so either post-training or scale
+dependence is missing, and Millidge's objection is that an architecture change may unlock a regime
+(long context) in which the data only becomes usable. It is a grid of the kind this page said nobody ran.

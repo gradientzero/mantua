@@ -1,0 +1,136 @@
+---
+title: "Jev: a model whose consumer is code (Latent Space × Diogo Almeida, 2026-09)"
+status: published
+tags: [models, inference, evaluation, reading-notes]
+created: 2026-10-05
+updated: 2026-10-05
+summary: "TypeSafe's Diogo Almeida on Jev, a \"System 1\" model trained for calibrated decisions that software calls in a loop — three primitives, no refusals, no public benchmarks, intelligence per dollar. Also the identification of the author of the earlier KV-cache post, and his view of coding agents without a KV cache."
+origin: agent
+related: [kv-cache-economics-of-agents, jaggedness-and-what-rl-optimises, decomposing-ai-work-into-small-decisions]
+---
+
+Source: [Latent Space, "Jev: System One models for Prod, not God — with Diogo Almeida, CEO, TypeSafe AI"](https://www.latent.space/p/jev),
+2026-09-22, captured 2026-10-05 and archived under
+`sources/2026-10/latent-space-jev-diogo-almeida/`. A two-and-a-half-hour interview by swyx, recorded
+in launch week. The page's own intro is a long list of community links and use cases and is not
+summarised here. Almeida co-authored InstructGPT and left OpenAI to start TypeSafe; Jev is the model
+and the API.
+
+**The author of the KV-cache post is the CEO of this company.** The "Diogo" of
+[[kv-cache-economics-of-agents]] ("(KV) Cache Rules Everything Around Me", Substack *Complete Skeptic*)
+is this person: the interview page links his X handle as @CompleteSkeptic and he says in it that he
+wrote that article. The earlier note flagged that the post "ends by hinting at a new kind of
+foundation model" and that he "has a stake". The stake is presumably Jev, though the interview does not
+connect the two directly. What it does say is that he would like others to explore coding agents that
+are "free from the tyranny of the KV cache", which he presents as a research agenda and not a Jev
+feature.
+
+## What Jev is
+
+His one-line version: a new class of model "where the goal is for code to be the consumer." Pre-trained
+models complete the internet, RLHF models answer a person, RLVR models optimise verifiable tasks. Jev's
+output is meant to be parsed. TypeSafe's own name for the class is "System 1 models"; he is not
+attached to it and says "decision model" is too narrow because the primitives will not all be
+decisions.
+
+It is optimised for **intelligence per dollar** (the name is Jevons). It deliberately has no reasoning
+mode, and he says methods will follow the objective, so some lighter form of reasoning is "on the
+cards". It has no vision in the current version, which Swyx raises as the first thing people want and
+Diogo answers by joking, then says everything is in the cards.
+
+Three API primitives, which he says map onto programming constructs:
+
+| Primitive | Maps to | Notes |
+|---|---|---|
+| choice | switch on an enum | the closest thing to a function call |
+| noulli (from Bernoulli) | `if` statement | a probability, not a boolean |
+| score | sorting, thresholding | similar to LLM-as-judge |
+
+Inputs are structured too: state, instructions and criteria are JSON objects the program slots in,
+not text assembled into a system message. He calls system messages "disgusting global variables".
+
+## The training claim: RLCD
+
+TypeSafe's technique is "Reinforcement Learning for Calibrated Decisions", unpublished. His framing is
+by north star, not by algorithm:
+
+- RLHF's task is "please humans". It was never the PPO that mattered, he says, but the decision to
+  optimise instruction-following. It brings mode collapse, hallucination, sycophancy and the style that
+  wins on a chat arena.
+- RLVR's task is "optimise benchmarks": anything programmatically verifiable is by definition a
+  benchmark. It produces results on hard problems and a fragile, "fractal" jaggedness.
+- RLCD's task is "make it reliable for programmatic use", with calibrated probabilities.
+
+He is also explicit that TypeSafe is a data lab rather than a model lab ("model capabilities means
+data"), that they avoid training on users' traffic because real traffic is a power law and would
+overfit the model to the present (swyx says their data is all synthetic; Almeida says only that each
+task has its own kind of data), and that he "wouldn't pre-train with $1 billion".
+His mode-collapse argument for why strings are a bad decision medium: a calibrated model covering the
+distribution is not punished for outliers, but a long string can only avoid errors by being very
+conservative and over-confident. Compare [[jaggedness-and-what-rl-optimises]], where the same
+boundary is drawn from the RL side.
+
+## What he's strict about
+
+**Reliability means robustness, not determinism.** Similar inputs should give similar outputs; they
+test it by putting nonces (UUIDs) in prompts and wanting the same answer regardless. Determinism
+could be offered but costs intelligence per dollar and GPU.
+
+**No refusals.** The argument is that safety alignment belongs in a first-party product, and in an
+API it is "a type error": a refusal in a dependency running in the background breaks someone else's
+software, and the API provider should not know what the downstream task even is. "Intelligence will be
+more like a database than a coworker." He also holds that every behavioural constraint "fractures" the
+model's intelligence, and that a model should not be told it is Jev. He distinguishes capability
+alignment (do what the user wants, welcome) from safety alignment (follow someone else's instructions).
+A pushback from Swyx, that someone will use it in a war, gets the reply that he'll put his thumb on the
+scale elsewhere but not at the technology layer. Set that against the layered stack Anthropic
+describes in [[pacing-the-frontier-agents-and-sandboxes]].
+
+**No public benchmarks.** He thinks they are gameable and the thing sold is a "je ne sais quoi" of
+intelligence that has to be judged inside your own workflow. TypeSafe has internal evals and he calls
+refusing to fool themselves a top-level rule. This hurt fundraising, he says. The honest limit is that,
+without a benchmark, the "frontier of intelligence per dollar" is a claim customers must check.
+
+**Versioning.** Models will not silently change after deployment. They will ship new versions fast
+and may keep a long-term-support one for developers who depend on it, and he does not promise the
+exact model forever. Swyx pushes him on this and on quantisation; the answer is a commitment not to
+change deployed models, with LTS "research cooking."
+
+## How to use it
+
+The usable part for anyone, whether or not they use Jev, is in
+[[decomposing-ai-work-into-small-decisions]]. In short: break work into the smallest semantic unit,
+pass structure rather than prose, ask many cheap parallel questions instead of one large one, and put
+the system's rules in code with thresholds and test cases.
+
+His list of use families: *dark data* (data large companies hoard because running an LLM on it was too
+expensive), real-time work where each 10 ms matters, *verify everything* (checking every LLM call, like
+observability), and "smart software" (programming languages built on top of it). Computer use "came
+from left field" and he is cautious about demos. He says Jev's niche is intelligence per dollar, not
+per second, though speed is a real market.
+
+Multi-hop reasoning is where swyx found it fell off ("single hop, state of the art; multi-hop starts
+to fall down, monotonically as hops go up"). Diogo accepts that System 2 tasks should have low
+confidence and heuristics may help.
+
+## Coding agents beyond the KV cache
+
+His closing task for others: coding agents that don't live inside a single model's cache.
+The cache locks you to one model and rewards appending, so you can't practise normal state
+management, can't hand an easier subtask to a cheaper model without passing all the state, and can't
+let parallel agents read each other's state or coordinate with something smarter than locks. His list of
+what that would unlock: sub-agents that return only what the parent needs, a searchable tree of
+labelled subtasks, cheap lookup over history, and "Jev to solve locks". It is the constructive twin of
+the argument in [[kv-cache-economics-of-agents]], and it is a research agenda rather than a result.
+
+## Where it is and isn't corroborated
+
+- OpenAI's response, an API built on its existing small model within a week, is in
+  [[openai-devday-computer-use-and-decisions-api]]. It does not have the calibrated-confidence
+  training; the interviewer there makes that point.
+- The use-case claims (a trillion tokens a day, no marketing team, "more nines of uptime than Anthropic")
+  are his, and a launch-week interview is the worst time to treat usage figures as settled.
+- His account of OpenAI (ChatGPT as a copy of an internal Claude, being "disempowered" there, the
+  November 2023 events) is a former employee's and largely unsupported here; I haven't used it.
+- The statements about InstructGPT and the paper lineage are his recollection and the interviewer's;
+  he hedges them himself.

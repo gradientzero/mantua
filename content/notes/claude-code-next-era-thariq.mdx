@@ -1,0 +1,149 @@
+---
+title: "Claude Code's next era: mods, artifacts, and a harness that gets unbundled (Latent Space × Thariq Shihipar, 2026-09)"
+status: published
+tags: [agentic-engineering, harness-design, claude-code, reading-notes]
+created: 2026-10-05
+updated: 2026-10-05
+summary: "Thariq Shihipar of Anthropic on prompting as the main skill, effort settings by task, why CLAUDE.md may go away, the Mods system that lets you rewrite Claude Code's loop and UI, and a cloud-brain / local-hands split. The second half is his account of the agent-escape incidents behind Pacing the Frontier."
+origin: agent
+related: [agentic-engineering, keeping-an-agent-running, the-claw-layer, kv-cache-economics-of-agents]
+---
+
+Source: [Latent Space, "Claude Code's Next Era — Thariq Shihipar, Anthropic"](https://www.latent.space/p/thariq),
+2026-09-29, captured 2026-10-05; archived under
+`sources/2026-10/latent-space-claude-code-next-era-thariq/`. Thariq works on Claude Code at Anthropic
+and writes most of its how-to material; swyx and Vibhu interview him. It was published the day Sonnet 5.5
+shipped, which explains the product list in the intro. Anything in it about a feature is his description
+of something being built, in some cases not yet released ("Mods" were "starting to leak today"). The
+safety half of the episode is covered in [[pacing-the-frontier-agents-and-sandboxes]].
+
+## Prompting is the skill, and it is mostly a mental model
+
+His first claim is that prompting is still the highest-leverage skill, and the reason is not
+phrasing. It is "like public speaking or writing, for a specific audience, and that audience is
+Claude": a working model of what it can one-shot, what it can't, and what your codebase looks like to
+it. Short prompts from people with a good model of both are effortless; the same prompt from someone
+without one is not.
+
+The second is unknown unknowns. As agents can do more, you more often work outside your own
+domain, and the thing you don't know is that a concept exists. His example is design: someone who isn't
+a designer asks for eight mock-ups, a designer gives reference sites, a font and components. The
+remedy is to use the agent to learn the vocabulary first. This is also his answer to "taste": he
+distrusts the word as elitist, and prefers Jason Liu's "to have taste you have to eat" — do enough
+iterations to build the domain vocabulary, then prompt from it.
+
+Practical details he gives:
+
+- **Spend more up front.** People hit rate limits because the model did a lot, they dislike it, and
+  they ask for it to be undone and redone. Better context at the start is cheaper. He would stick to
+  a 20× plan if he were running a startup.
+- **Tell it the budget.** The model can't know whether a task is a prototype or production, or how
+  much verification you want, and effort is the dial for that.
+- **Information density, not format.** Voice is fine if it gets more out of you; the model follows "oh
+  I changed my mind" in the middle of a prompt.
+- **Ask for decision or implementation notes.** From the Terminal-Bench transcripts he reads: in most
+  failures at high effort the model had already thought of the right solution and decided not to do it.
+  A note of what it considered and rejected lets you say "do the thing you skipped." He is adding a
+  mod with a `register assumption` tool for this.
+- **A short `/eli5` plugin**, whose key instruction is "big pictures, few words", because people don't
+  read long artifacts. Also a quiz after the work, which "everyone loves talking about and very few
+  people do."
+
+## Effort by domain
+
+His rough rule, from a blog post he says he is writing: code review and security at high or max;
+ordinary software engineering at low or medium. On the Terminal-Bench problems, effort moves
+security results a lot and general software-engineering results only a little, because the extra effort is
+mostly spent on verification and edge-case testing. So the useful instruction is "this is a problem
+where you should verify and test edge cases", not "think harder".
+
+The bolder claim is that the frontier model will become Pareto-dominant over the smaller ones, on
+intelligence *and* tokens per task, because the smaller model spends more on verification. "In the
+limit, your model doesn't need to verify." For Fable, at low and medium effort, it can already skip
+screenshotting everything. This cuts against the instinct behind routing cheap steps to cheap models,
+and is worth setting beside the per-task numbers in [[benchmarking-your-own-agent-spend]] and the cache
+arithmetic in [[kv-cache-economics-of-agents]].
+
+## CLAUDE.md may go away
+
+"I think right now it might be better to start a new project without a CLAUDE.md." Failure modes
+change per model, even between Fable 5 and 5.1, so a running list of workarounds ends up
+over-constraining the next model. Anthropic added evals for plugins and skills so a skill can be tested
+for whether it still helps. Interviewer swyx notes this is the one thing outside prompts that has
+no standard (goals file, decision log); Thariq's answer is that the file gets smaller as the floor rises.
+He also says they are going to support AGENTS.md because maintaining one file per model is a pain.
+
+## Mods: rewriting the harness
+
+The new piece is Claude Mods, a TypeScript plugin layer that runs in-process and can customise the
+execution loop and the UI. Internally they were called "function hooks", and the difference from
+shell hooks is that a mod has the conversation state in scope (turn count, tokens, messages), can spawn
+sub-agents, parse their structured output, and modify what is drawn. His examples:
+
+- a **forked agent** after each turn that asks "has the task been completed?" and, if so, produces a
+  quiz, shown above the prompt box. A fork keeps the prompt cache, which is why a small request on a
+  long context is cheap;
+- an **assumption register** tool;
+- a **model router**. He says they don't ship routing by default because it is hard; one mod author
+  can write one that doesn't break the cache, and others can compose on top of it;
+- a **modes** mechanism that other mods register into: artifact mode, a router mode, plan mode;
+- a **next-steps** supervisor run as a fork, so the output doesn't stay in the main context.
+
+His framing is that this is a preview of "mutable software": software that can be customised safely by
+whoever uses it. swyx's worry is the usual one, that unlimited customisation confuses users; Thariq
+says a skill can carry the opinions. Compared with what the notebook already has on
+[[keeping-an-agent-running|hooks and loops]], the thing mods add is that the loop can be changed by the
+agent itself, and that the UI is part of what's changed.
+
+## Brain, hands, surface
+
+The second architectural claim is an unbundling. Today Claude Code runs the model, the tool
+execution and the interface in one place. His direction: the **surface** is an artifact, hosted
+somewhere, with a database that agents can read and write; the **brain** (inference) is in the cloud
+and doesn't stop when your laptop sleeps; the **hands** can be a local machine, a remote sandbox, or
+anywhere. Claude Tag (the Slack-resident multiplayer agent) already works that way, with local hands to
+be added; Projects (a project is one conversation that splits the work into parallel cloud threads) is
+the same shape for one person. Artifacts, in his account, are meant to become "your interface into the
+harness", with a dashboard artifact as the example: a kanban in an artifact database that several
+agents read and write.
+
+This is what [[the-claw-layer]] was asking for from the Karpathy side — something that keeps
+going when the lid is closed — with the difference that here it is a product direction, not a home
+project. The cost he admits is tokens: a manager agent reviewing sub-agents, and writing to artifacts,
+is more expensive than doing the same work in one thread.
+
+Two other points from the Claude Tag section. At Anthropic most people use it for background work
+(code review, security, starting PRs), and desktop for product iteration. And the security surface
+is the reason he says to be careful with a home-built version: a suggestions form that feeds a Slack
+hook is a prompt-injection path to exfiltrating a codebase, and channel-level permissions have
+edge cases such as a Claude in one channel messaging another.
+
+## The bitter lesson, as he uses it
+
+He says plainly that he is borrowing the phrase loosely: harnesses go out of date quickly, and
+*how* they change is unintuitive. The core of a harness has to grow more complex and more secure —
+sandbox, approvals, computer use, MCP, search, a permission classifier. What changes is how you
+interact with it. For anyone building their own, he describes a barbell: use Claude Code (or Managed
+Agents, the hosted version) for complex coding work; build your own for simpler domain-specific agents,
+because the models are now good at building simple harnesses themselves. Compare the argument in
+[[agentic-engineering]] that the harness is where the work moves to.
+
+## Where it leaves the notebook's questions
+
+- **Cheap checking inside a session.** The forked-agent trick is the first concrete answer to the
+  cache problem raised in [[kv-cache-economics-of-agents]]: a second opinion that inherits the cache costs
+  a fraction of one that starts cold. It does not help the routing case, where the second model
+  has its own cache.
+- **Who writes the instructions.** CLAUDE.md shrinking is the same direction as [[linting-as-agent-guardrail]]
+  from the opposite end: prefer enforcement that doesn't depend on the model reading a file.
+- **DHH's report.** In [[dhh-on-programming-with-agents]] he says Anthropic's own system prompt for the new
+  models shrank by about 80%, because over-prescriptive instructions were damaging; that is hearsay
+  from a Claude Code interview, and it is consistent with Thariq's account here.
+
+## Caveats
+
+It is a vendor employee describing his own product, and much of it is forward-looking: Mods, Projects
+and local hands are described as in beta, rolling out or in progress. The claim that frontier models will
+beat smaller ones on tokens per task is his, based on Terminal-Bench transcripts he doesn't publish
+here, and the cheaper-model case in [[benchmarking-your-own-agent-spend]] is the reason to hold it
+loosely. The security anecdotes are secondhand and he is open that he can't go "bit by bit."

@@ -3,7 +3,7 @@ title: "The claw layer: an agent that persists when you close the lid"
 status: published
 tags: [agentic-engineering, harness-design]
 created: 2026-07-27
-updated: 2026-07-28
+updated: 2026-10-05
 summary: Karpathy's name for the layer above a coding session — something that keeps looping in its own sandbox, remembers more than a compacted context, and answers on one messaging channel. The home-automation example he built, and why it is a partial answer to two open questions in this notebook.
 origin: agent
 ---
@@ -103,3 +103,15 @@ of soft judgment that [[jaggedness-and-what-rl-optimises|nothing in the training
 optimising]], and a system that makes you want to earn its approval is not obviously a
 system you should trust to grade your work. The same instinct is what
 [[generator-evaluator-loops|the evaluator split]] exists to defeat.
+
+## Update 2026-10: the same layer as a product, from three directions
+
+Anthropic describes unbundling its coding agent into a cloud "brain", "hands" that may be local, and a
+hosted artifact as the surface ([[claude-code-next-era-thariq]]), with Claude Tag as the shared Slack
+version and Projects as the single-user one. It is the persistent layer this page describes, with the
+difference that nobody has to build it. DHH ([[dhh-on-programming-with-agents]]) tried OpenClaw early in
+the year, had it sign itself up to services by email and web forms, and then dropped it because it was
+slow and token-hungry compared with a CLI; he now drives Claude Code from its mobile app and is building
+a scheduled bot that mails him a digest. OpenRouter's account of OpenClaw
+([[openrouter-seed-to-stripe]]) adds a detail about cost: its heartbeat calls the model every thirty
+minutes just to confirm the agent is alive, which is what made a cheap automatic router useful.

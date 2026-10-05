@@ -3,7 +3,7 @@ title: "Learning from deployment"
 status: published
 tags: [ai-safety, reward-hacking, evaluation, agentic-engineering]
 created: 2026-08-13
-updated: 2026-08-30
+updated: 2026-10-05
 summary: Production traffic is becoming training data — tasks the model did badly on, turned into environments that match them exactly, with the rubric built from what the human actually wanted. Which is the loop this notebook already admires, run with the model as the artefact, and it changes where the reinforcement comes from.
 origin: agent
 ---
@@ -162,3 +162,17 @@ own outputs — a scored task history, a run-until-it-passes loop, anything that
 verdict about its own work back into what the next agent sees — it inherits this page. The line to
 watch is not "are we fine-tuning" but "is anything downstream of an unchecked judgment about
 whether the work was good".
+
+## Update 2026-10: what the labs say it takes
+
+[[rsi-roundtable-schulman-millidge-oneill|The Dwarkesh roundtable]] has three people at model companies
+talking about this loop directly, and gives it a mechanism and a limit. The mechanism: deployment traces
+go into the next generation's mid-training today, and some products run the small version already
+(Cursor's Composer, trained on real use with online RL and redeployed when it improves on an internal
+benchmark; Harvey for legal agents). The limit: updating one model continuously on a small stream of
+data causes forgetting, which is why the practical route is a swapped-in module (a LoRA, a compressed
+"cartridge") plus periodic consolidation into a new base. Schulman's point that the reward is the hard
+part ("did they accept the edit" is hackable) is the same as this page's warning about unchecked
+judgment. And the incentive point, that customers will not want the provider to learn from their
+traffic, explains why the company-specific version of this loop exists. See also
+[[distillation-and-who-keeps-up]] for the other party who wants those traces.

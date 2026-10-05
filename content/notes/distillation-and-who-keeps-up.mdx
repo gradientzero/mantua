@@ -1,0 +1,90 @@
+---
+title: "Distillation, and why the open labs keep up"
+status: published
+tags: [models, evaluation, ai-safety]
+created: 2026-10-05
+updated: 2026-10-05
+summary: "Schulman, Millidge and O'Neill on why model providers do not consolidate — anything RL teaches is a few bits and copies easily, but only with the right prompt distribution. The router-data argument, the \"benchmaxxing versus realism\" explanation for why a distilled student can match the benchmarks and not the feel, and the monoculture it produces."
+origin: agent
+related: [rsi-roundtable-schulman-millidge-oneill, learning-from-deployment, model-speciation-and-touching-the-weights]
+---
+
+From the middle of [[rsi-roundtable-schulman-millidge-oneill|the Dwarkesh roundtable]]. It deserves its own
+page because it is an answer to a question the notebook hasn't asked yet: with this much capital
+behind a few labs, why isn't there one winner?
+
+## The claim
+
+John Schulman's answer: **distillation is the main force against centralisation.** "Anything that can be
+learned through RL can be distilled very easily, because it's a small number of bits." If you can get
+trajectories from a model that show a behaviour, you can copy it. Beren Millidge adds that continual
+learning does not stop this, since a model that improves daily can be distilled daily.
+
+The constraint is the **prompt distribution**. Distilling with supervised learning means prompting the
+teacher with something, and it must be a wide distribution of realistic prompts. Schulman says that
+even with full access and the chain of thought it is "non-trivial to distil all of the useful
+capabilities".
+
+## The router-data argument
+
+Schulman says some Chinese companies are probably using proxy services that let users in China reach
+blocked US frontier models, mostly for coding, and that those services collect and sell the data, which
+gives "the perfect prompt distribution". He cites a news report for the existence of the proxy services,
+not for the selling; the use for distillation is his inference ("probably").
+
+Millidge's reply is that you can automate much of this: frontier pipelines start from seed prompts from
+humans and real users and synthesise wide coverage from existing models, so humans need to supply fewer
+bits as models improve. Dwarkesh doubts that: the valuable part is the whole multi-turn trace of a
+user changing their mind. And it is, Millidge says, easier for the distiller than for the lab. "I want a
+good politician" can be answered by asking a frontier model for a billion variations, where the first
+lab had to find out what politicians do.
+
+Frontier labs also buy data from the same data vendors, so a competitor can too.
+
+## The puzzle that follows from it
+
+Charlie O'Neill's version: Sonnet 5 and Opus 5 look "almost objectively worse" than GLM-5.3 and Kimi
+K3, even though Anthropic had logit distillation from its larger internal model (he names Mythos)
+and the environments to go with it. The first reply is the prompt distribution: the Chinese labs see
+what users actually do. His inference: frontier labs may have little real advantage in RL environments
+any more, and, in Dwarkesh's summary, **real-world deployment** matters more than the environment.
+
+Schulman's explanation, which I find the more useful, is two axes of environment: **difficulty and
+realism**. Hard puzzle-like tasks that are easy to verify are cheap to build ("the benchmaxxing
+distribution"); realism (multi-turn work with a person and several objectives, rubrics, human
+feedback) is what the lab has to push on to get good behaviour. Distilling naively matches the
+teacher on the first and not the second. A student trained on a good realistic prompt
+distribution can match the big model well; one trained only on easily verifiable tasks matches on
+benchmarks and does worse on the broader distribution. He offers that as a possible explanation for the
+smaller Anthropic models, while allowing that post-training is easy to get wrong in ways benchmarks
+don't show, so a quirk may simply be a mistake. O'Neill's
+version is that Opus 5 uses a lot of tokens because it behaves as if it is judging itself on
+every step, without the "big model smell" to know when to stop.
+
+## The cost: monoculture
+
+Schulman: so many people distil from Claude that open-weight models "write the same way as Claude and
+have the same tics", and RL has already cut output diversity. This seems to him "kind of concerning".
+Millidge puts the blame on the data and the judge, not on RL or distillation as methods.
+
+## How it fits
+
+- It is the supply side of [[learning-from-deployment]]: deployment traces are valuable enough to
+  be what people steal and sell, and the labs' own policy of not training on customers' data is
+  what Millidge doubts for the labs and is certain does not hold for distillers.
+- It explains why the same source, [[jev-system-one-models-diogo-almeida]], builds a company on
+  synthetic data and refuses to train on traffic: the opposite bet.
+- A router such as [[openrouter-seed-to-stripe|OpenRouter]] sits in the same position as the proxy
+  services, with a stated policy of not seeing prompts unless an organisation opts in. That is a
+  policy statement from one side of one interview, and nothing says the proxy services in the news
+  report work the same way.
+- It sharpens the question [[model-speciation-and-touching-the-weights]] raises: if copying a
+  behaviour is that easy, speciation would be cheap to follow, and the harder thing is the prompt
+  distribution that produces it.
+
+## What is solid
+
+The mechanism (RL results being few bits, copyable given prompts) is argued, and the guests mostly
+agree. The router-data claim, the Sonnet/Opus versus GLM/Kimi comparison and the quality ranking are
+opinions from three people who each have an interest in the open-model side, from a spoken
+transcript. No numbers are given for any of it.

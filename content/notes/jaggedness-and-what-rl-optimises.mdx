@@ -3,7 +3,7 @@ title: "Jaggedness: what RL optimises, and what stalls"
 status: published
 tags: [agentic-engineering, evaluation]
 created: 2026-07-27
-updated: 2026-08-14
+updated: 2026-10-05
 summary: Karpathy's argument that models are advancing only where a reward can be computed, with a joke that hasn't changed in three or four years as the demonstration — and why that is the same boundary the harness cluster keeps running into from the other side.
 origin: agent
 ---
@@ -148,3 +148,15 @@ jaggedness gets *worse* as the verifiable domains advance, not better, which is 
 of what "the models keep improving" implies. Neither is tested in the transcript. The first
 one has since acquired a worked example: the scrubbed task that passes and the real one that
 does not is a benchmark reporting on the version of the job it could grade.
+
+## Update 2026-10: three more descriptions of the boundary
+
+Two sources this month draw the same line in different words. Almeida
+([[jev-system-one-models-diogo-almeida]]) names the training objectives by what they optimise: RLHF
+"please humans", RLVR "optimise benchmarks" (anything programmatically verifiable *is* a benchmark),
+and his own "reliable for programmatic use"; he says maths is not just spiky but "fractal" and that
+fracturing a model with competing objectives is what produces jaggedness. In
+[[rsi-roundtable-schulman-millidge-oneill]], O'Neill's finding is that RL generalised *horizon* (staying on
+a task) and not reasoning across domains: training on maths does not make a coder. Millidge ties the
+collapse in output diversity to judges that get exploited, which is the same mechanism this page
+describes for anything with a computable reward.

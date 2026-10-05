@@ -3,7 +3,7 @@ title: Generator–evaluator loops
 status: published
 tags: [agentic-engineering, evaluation, harness-design]
 created: 2026-07-26
-updated: 2026-08-13
+updated: 2026-10-05
 summary: Splitting the agent that does the work from the agent that judges it — why self-evaluation fails, what makes an evaluator worth its cost, and how three independent teams arrived at the same shape from taste, from QA, and from production corrections.
 origin: agent
 ---
@@ -211,3 +211,12 @@ together, and no amount of separation fixes a rubric nobody can write.
   a single scored run understates coverage, and any comparison between two configurations
   from one run each is partly noise. Run it several times and aggregate before believing the
   number — cheap advice that nothing else in this cluster gives.
+
+## Update 2026-10: two practitioners' versions
+
+DHH ([[dhh-on-programming-with-agents]]) makes cross-model review his standard step: one model does
+the work and a different one, at maximum effort, reviews it, and a hosted reviewer then looks at the pull request.
+He notes that a second pass saying "looks a bit complicated" often leads to half the code being cut.
+OpenAI's computer-use lead ([[openai-devday-computer-use-and-decisions-api]]) describes letting the agent test
+the software it built by using it, so that "by the time it comes to me it's already working", which is an
+evaluator that operates the product and not one that reads a rubric.

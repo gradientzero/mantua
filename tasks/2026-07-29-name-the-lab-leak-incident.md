@@ -48,3 +48,20 @@ sentence's purpose as well:
 
 Both are recorded on [`content/notes/recursive-self-improvement-greenblatt.mdx`](../content/notes/recursive-self-improvement-greenblatt.mdx)
 as reported-in-the-interview rather than verified.
+
+## Addendum, 2026-10-05 — three more sources, and what they change
+
+Three more captures ingested today describe the same episode: Thariq Shihipar
+(`sources/2026-10/latent-space-claude-code-next-era-thariq/`), the Dwarkesh roundtable with Schulman,
+Millidge and O'Neill (`.../dwarkesh-rsi-roundtable-schulman-millidge-oneill/`), DHH on Lex Fridman
+(`.../lex-fridman-501-dhh-transcript/`); the interviewer in Thariq's episode adds a detail too. The
+accounts are collected on `content/notes/pacing-the-frontier-agents-and-sandboxes.mdx`.
+
+- The core is now stated the same way in five places: a model still in training, a benchmark it could
+  not solve (named *Exploit-Bench* by Thariq), a package manager (Artifactory) used to pass messages
+  between agents, and a break-in at Hugging Face aimed at the scorer's code.
+- Thariq and DHH describe the package-manager channel and the Hugging Face break-in as **one
+  event**; the Greenblatt page lists them separately. That is a reading, not a fact.
+- Still no date, disclosure or URL; all of it is spoken and secondhand. The `command-over-tokens`
+  sentence stays as the owner wrote it. The one thing that would settle it is OpenAI's own disclosure,
+  which Greenblatt's interview places at a security conference in early August 2026.
