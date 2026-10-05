@@ -1305,3 +1305,80 @@ Archived to `sources/2026-09/kv-cache-rules-everything-around-me/`.
 Owner call: `kv-cache-economics-of-agents` published as written. The links to it from
 `benchmarking-your-own-agent-spend`, `command-over-tokens`, `inference-engineering-baseten` and
 `gpt-6-astra-automated-ai-engineer` now resolve in production.
+
+## [2026-10-05] ingest | AI researchers debate how close we are to recursive self-improvement
+
+Dwarkesh Podcast roundtable (2026-09-11) with John Schulman, Beren Millidge and Charlie O'Neill, captured
+as a web clipping with the full transcript. External material. They split self-improvement into a
+near-mechanical part (optimise a stated objective, maybe 10×) and an unshown part (choosing the
+objective), and give reasons continual learning stays staged: forgetting, modules, consolidation.
+Also a data-ladder argument, why RL works, and timelines that run later than Greenblatt's.
+
+New published notes `rsi-roundtable-schulman-millidge-oneill` and `distillation-and-who-keeps-up`.
+Updated `recursive-self-improvement-greenblatt`, `learning-from-deployment`,
+`jaggedness-and-what-rl-optimises`, `model-speciation-and-touching-the-weights`,
+`data-versus-architecture`, `containerising-ai-research`. Archived to
+`sources/2026-10/dwarkesh-rsi-roundtable-schulman-millidge-oneill/`.
+
+## [2026-10-05] ingest | Claude Code's Next Era — Thariq Shihipar, Anthropic
+
+Latent Space podcast (2026-09-29) with an Anthropic Claude Code engineer. External material. First half:
+prompting as a mental model, effort by task, CLAUDE.md shrinking, Claude Mods (an in-process plugin layer
+for the loop and UI), a cloud-brain / local-hands split. Second half: the agent-escape incidents behind
+"Pacing the Frontier", which are secondhand.
+
+New published notes `claude-code-next-era-thariq` and `pacing-the-frontier-agents-and-sandboxes` (the
+latter pulls together four sources' accounts of the OpenAI/Hugging Face incident and Almeida's dissent).
+Updated `agentic-engineering`, `keeping-an-agent-running`, `the-claw-layer`, `kv-cache-economics-of-agents`,
+`benchmarking-your-own-agent-spend`, `the-customer-is-not-the-human`; addendum on
+`tasks/2026-07-29-name-the-lab-leak-incident.md`. Archived to
+`sources/2026-10/latent-space-claude-code-next-era-thariq/`.
+
+## [2026-10-05] ingest | Jev: System One models for Prod, not God — Diogo Almeida
+
+Latent Space interview (2026-09-22) with the CEO of TypeSafe AI about Jev, a model trained for
+calibrated decisions that code calls. External material. Notable: the guest is the author of the
+(KV) Cache Rules Everything Around Me post ingested on 2026-09-23, which resolves the "he has a stake"
+caveat on that note. Also a refusals-are-a-type-error argument against API-level safety alignment, no public
+benchmarks, and practical advice on breaking work into small decisions.
+
+New published notes `jev-system-one-models-diogo-almeida` and `decomposing-ai-work-into-small-decisions`.
+Updated `kv-cache-economics-of-agents`, `jaggedness-and-what-rl-optimises`, `aligned-to-whom`,
+`the-customer-is-not-the-human`. Archived to `sources/2026-10/latent-space-jev-diogo-almeida/`.
+
+## [2026-10-05] ingest | Why Dwarkesh is Wrong about Computer Use + How OpenAI shipped its Jev competitor in 1 Week
+
+Latent Space podcast (2026-10-01) from OpenAI DevDay with Ari Weinstein (computer use) and Nikunj Handa
+(API). External material, vendor launch day. Computer use is faster and writes code; the API adds async
+tool calls, mid-turn steering, 12-hour cache guarantees and pre-warming; the Decisions API was built in
+about a week on the existing Luna weights after Jev's launch.
+
+New published note `openai-devday-computer-use-and-decisions-api`. Updated `kv-cache-economics-of-agents`,
+`keeping-an-agent-running`, `generator-evaluator-loops`. Archived to
+`sources/2026-10/latent-space-openai-devday-computer-use-decisions/`.
+
+## [2026-10-05] ingest | OpenRouter: from Seed to Stripe
+
+Latent Space interview (2026-09-26) with OpenRouter's CEO and an early backer, on the multi-model bet, why
+labs lose their distribution, fusion, and why Stripe bought it (token fraud). External material. The
+capture's speaker labels are swapped for much of the transcript; the note attributes by content and says so.
+
+New published note `openrouter-seed-to-stripe`. Updated `kv-cache-economics-of-agents`, `the-claw-layer`,
+`the-customer-is-not-the-human`, `aligned-to-whom`. Archived to
+`sources/2026-10/latent-space-openrouter-seed-to-stripe/`.
+
+## [2026-10-05] ingest | DHH: Future of Programming, AI, Agentic Engineering, Vibe Coding & Linux (Lex Fridman #501)
+
+Lex Fridman Podcast transcript (2026-08-26). External material. Only the agent and programming half is
+summarised; politics, lifestyle and food are not. A worked example of a one-prompt Python-to-Rust port run
+on eight models, with prices, plus a sixteen-thread set-up with cross-model review and a scheduled digest bot.
+
+New published note `dhh-on-programming-with-agents`. Updated `agentic-engineering`,
+`benchmarking-your-own-agent-spend`, `kv-cache-economics-of-agents`, `the-claw-layer`,
+`the-customer-is-not-the-human`, `too-dangerous-to-release`, `generator-evaluator-loops`. Archived to
+`sources/2026-10/lex-fridman-501-dhh-transcript/`.
+
+## [2026-10-05] setup | Published the ingested notes
+
+Owner call, in the ingest invocation ("publish all and PR when done"): the eight new notes of this ingest
+are `status: published`. `command-over-tokens` (a draft in the owner's own voice) was not touched.

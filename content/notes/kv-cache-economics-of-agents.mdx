@@ -3,7 +3,7 @@ title: "The KV cache is most of an agent's bill"
 status: published
 tags: [inference, agentic-engineering, reading-notes]
 created: 2026-09-23
-updated: 2026-09-23
+updated: 2026-10-05
 summary: An agent re-reads its whole context on every tool call, so cache reads, not output tokens, are the largest line on the bill — and they cost the provider close to nothing to serve. What that means for routing, subagents, self-hosting, and what to measure.
 origin: agent
 related: [inference-engineering-baseten, benchmarking-your-own-agent-spend, command-over-tokens]
@@ -141,3 +141,28 @@ redo, but it is the reason the conclusion is framed as a tyranny to escape.
 The practical takeaway is small and checkable: this repo's own sessions have a hit rate and a
 tool-call count, and neither has ever been looked at. The ingest runs in `log.md` are a ready-made
 set of trajectories.
+
+## Update 2026-10: the author, and what other sources do with the cache
+
+**Who wrote it.** The author of the post is Diogo Almeida, CEO of TypeSafe AI, and in
+[[jev-system-one-models-diogo-almeida|the interview about Jev]] he says he wrote it. So the hinted
+"new kind of foundation model" is probably Jev, and the "he has a stake" caveat above applies in full.
+In the same conversation he sketches the research direction the post only gestured at: coding agents
+with explicit state (labelled sub-tasks, a searchable tree of them, shared state between parallel agents)
+instead of one ever-growing cached context, and a way to ask many cheap questions about a state you pay
+for once ([[decomposing-ai-work-into-small-decisions]]).
+
+**What others do with the cache.**
+- Anthropic's Thariq ([[claude-code-next-era-thariq]]) names the one pattern that uses the cache as an
+  asset: a forked agent after each turn that inherits the prompt cache, so a small judgement call on a
+  long context is cheap. A model-router mod, he says, has to avoid breaking the cache, and a hard-to-get-right
+  router is why Anthropic does not ship one by default. He also argues the frontier model may be cheaper per
+  task than the small one, because it verifies less.
+- OpenAI ([[openai-devday-computer-use-and-decisions-api]]) sells the cache from the provider side: a
+  30-minute guarantee of cache hits, a 12-hour one in preview for a higher write fee, and pre-warming.
+  That is a price on holding the bytes, which supports this page's doubt about "resident cache is free".
+- DHH ([[dhh-on-programming-with-agents]]) ran out of one model's allowance mid-task and finished with
+  another from a plan the first had written. That is a routing step at the task level, with the plan as a
+  written handoff and not a shared cache.
+- A router ([[openrouter-seed-to-stripe]]) is where per-step routing actually happens, so the per-task
+  versus per-step distinction applies to it directly.

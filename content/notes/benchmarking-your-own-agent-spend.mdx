@@ -3,7 +3,7 @@ title: "Benchmarking your own agent spend"
 status: published
 tags: [evaluation, agentic-engineering, harness-design]
 created: 2026-07-28
-updated: 2026-09-23
+updated: 2026-10-05
 summary: DoorDash's model spend rose about 20× in five months, so they built a benchmark over their own coding tasks to work out what it bought — and found that the models crush a scrubbed version of a task and then underperform on the real data. The first buyer-side view in this notebook, and the open question it leaves.
 origin: agent
 ---
@@ -170,3 +170,17 @@ own "under $6 an hour" figure]]** for running a frontier model as an AI Engineer
 price (tokens/second × $/token), not a cost tied to a task set anyone could rerun. It skips
 past exactly the step this page is built around: a flatlining spend curve, or a cheap
 hourly rate, says nothing until something on the output side is counted against it.
+
+## Update 2026-10: two more data points, one a worked example
+
+**DHH's port** ([[dhh-on-programming-with-agents]]) is the nearest thing to a per-task cost comparison
+in the notebook. One prompt, one reference implementation, eight models: the strongest finished in
+under 45 minutes for about $550 at list price, three others completed the same job for $23–$55, and two
+small models failed. It is one task of a kind agents are known to be good at, run once per model, with a
+plan written by the strongest model. It shows what this page argues for (price per *finished task*, with
+a pass or fail) and that the cheap models failed on persistence and not on code quality.
+
+**Thariq's claim** ([[claude-code-next-era-thariq]]) that the frontier model can be cheaper per task
+because it spends fewer tokens verifying is a hypothesis that this page's method could test: it
+predicts that at low effort the larger model's per-task cost falls towards the smaller model's. He has not
+published the transcripts behind it.

@@ -1,0 +1,107 @@
+---
+title: "OpenAI DevDay: computer use that got faster, and a decisions API built in a week (Latent Space, 2026-10)"
+status: published
+tags: [agentic-engineering, inference, models, reading-notes]
+created: 2026-10-05
+updated: 2026-10-05
+summary: "Two OpenAI people on what changed in computer use since this spring (writing code, accessibility trees, speed), then the API stack — async tool calls, mid-turn steering, 12-hour cache guarantees — and how the Decisions API came out of Jev's launch in about a week. The first answer here to \"can a big lab just copy it\"."
+origin: agent
+related: [jev-system-one-models-diogo-almeida, kv-cache-economics-of-agents, decomposing-ai-work-into-small-decisions]
+---
+
+Source: [Latent Space, "Why Dwarkesh is Wrong about Computer Use + How OpenAI shipped its Jev competitor in 1 Week"](https://www.latent.space/p/devday-2026),
+published 2026-10-01 as the first podcast after the OpenAI DevDay keynote; captured 2026-10-05 and
+archived under `sources/2026-10/latent-space-openai-devday-computer-use-decisions/`. About 40 minutes:
+Ari Weinstein (computer use at OpenAI; co-founder of Sky, which OpenAI bought) for the first half,
+Nikunj Handa (product for the API) for the second. Both are speaking about their own company's launch
+the same day.
+
+## Computer use
+
+The framing is a reply to Dwarkesh's earlier question of why computer-use progress had been so slow.
+Weinstein says it is "180 degrees different" from a few months ago and gives reasons, not only
+a claim:
+
+- Models got much better at **recovering**: introspecting, debugging and trying again, where earlier
+  they started tasks reliably and then got stuck.
+- The harness writes code. In Codex, expanding the tool calls shows the agent producing JavaScript that
+  does several actions at once instead of one click per screenshot.
+- It mixes screenshots, accessibility data, the DOM and Playwright, depending on the task. "App
+  shots" (a keyboard shortcut that attaches an app's contents to the chat) include the accessibility
+  representation, which has the link targets and untruncated event titles a screenshot lacks. He points
+  out that the technology built for screen readers is useful to models for the same reason.
+- It is now faster than the average person on most tasks, he says, with "literally superhuman" (as fast as
+  an expert) as the next goal. He gives a concrete bottleneck that remains: waiting for a site to
+  load, and getting the model to act the instant it finishes (events where the browser provides them,
+  guesses where it doesn't).
+
+The new model, GPT-6.1 Sol, is claimed to be a fifth of the cost of Astra, and a seventh for computer
+use specifically. Products mentioned: Dots (a personal agent, each with its own cloud Linux machine),
+and computer use in an Agents API, so developers get the harness the model was trained on, which he says
+may have speed, cost and accuracy advantages over a home-built one. For safety he names consent before
+consequential actions such as payments, and scoping which sites an agent may reach.
+
+One use he calls out: letting the agent **test the software it wrote**. "You'd build something and
+then you have to test it, and you're QA for the agent." With computer use, the agent completes the loop
+and "by the time it comes to me it's already working." That is the same loop as the
+generator/evaluator material, performed on a screen instead of a rubric. See
+[[generator-evaluator-loops]].
+
+## The API changes
+
+Handa lists what shipped with GPT-6 and says the policy is to put things in the API once the model has been
+trained into them in a harness:
+
+- **Async tool calls**: a tool call doesn't pause the model, which keeps reasoning and checks back.
+- **Mid-turn steering**: inject messages while it is reasoning, for instance when a tool returns. These
+  need the model to be trained for it, and run over **WebSockets**.
+- **UltraFast**: frontier-model inference at very low latency, with the inference team using Codex
+  agents to squeeze out cost first (an 80% price cut for the Luna model) and then speed. The origin
+  of the speed is not confirmed; swyx asks about Cerebras and gets neither a yes nor a no.
+- **Caching**: a 30-minute cache-hit guarantee, a preview of a **12-hour guarantee** for a bit more on
+  the cache write, and **pre-warming**, where you pay the write fee now so a prompt is ready, including
+  for many parallel threads. He wants apps to be cache-aware, with a diagnostics tool to find where
+  things drop off. Cache reads got cheaper (Vibhu's figure, 25%, which Handa confirms).
+- **Compaction**: built into the Agents API; in Responses API either server-side at a token threshold
+  or a manual `/compact`. Big coding agents prefer the manual one, and he mentions file-based compaction
+  experiments.
+
+The caching items are the provider-side counterpart of [[kv-cache-economics-of-agents]]. The
+12-hour guarantee in particular is a price for what that note called "keeping bytes around", and it
+is paid per write, which supports the point that the cache is not free to hold.
+
+## The Decisions API
+
+The part the title promises. By Handa's account Jev came out, customers and internal teams asked for
+a much faster classification system, "a bunch of people at OpenAI get nerd sniped", and an engineer
+from inference and one from infra built a prototype that worked. A week later it is being tuned for
+latency and "launched in the coming days"; the embedded tweet in the page says limited preview, so
+the status is unclear. What it is:
+
+- **No new model.** It is "purely on top of the same Luna weights": constrained (structured) output,
+  an inference stack tuned for time to first decision, and multiple questions run in parallel as a batch.
+  Priced like Luna, with vision for free.
+- No reasoning. Weinstein adds that this makes it worse at long-horizon work, and that how to combine
+  the two approaches is open.
+- Expected uses: support-ticket classification (the user-ops team asked first), a fast tool-calling
+  layer for the GPT Live voice model that makes computer control "snappy", low-latency LLM-as-judge,
+  and picking an agent's next action.
+
+swyx's point, which Handa doesn't dispute, is that the API shape is cheap to copy (he counts about a
+hundred clones in two weeks) and that what makes a decision model a different thing is **calibrated
+confidence**, which a zero-shot version on a reasoning-family model doesn't obviously have. Handa
+says those are "the key areas where we may have to hill-climb with the future model release."
+Two speculations about how Jev does it, a diffusion language model or reading activations from a
+middle layer, are put forward and treated as speculation by everyone, including a note that Google has
+shown diffusion demos.
+
+Read with [[jev-system-one-models-diogo-almeida]]: the category is accepted by a large lab in about a
+week, and the remaining distinction is the part Diogo says he spent years on, the training. This
+source cannot say whether that distinction is real. Neither side has published a calibration number.
+
+## Caveats
+
+Everything here is a launch-day interview by the vendor, and both guests are positive about their
+own products. Cost and speed multiples (a seventh of the cost, 8× faster than doing it by hand,
+7× speed on computer use) are stated without a method. The Dots and Agents API features are described
+as available "today", which I have no way of checking.

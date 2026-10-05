@@ -3,7 +3,7 @@ title: "Keeping an agent running: goals, loops, hooks and schedules"
 status: published
 tags: [agentic-engineering, harness-design, evaluation]
 created: 2026-07-27
-updated: 2026-09-04
+updated: 2026-10-05
 summary: "Four mechanisms decide what starts an agent's next turn and what stops the sequence — /goal, /loop, Stop hooks and scheduled runs. Notes on the /goal documentation, including the constraint that shapes everything else: its evaluator has no tools and can only judge what the transcript shows."
 origin: agent
 ---
@@ -126,3 +126,14 @@ open in between) merged with the third (a Stop hook), except the script deciding
 stop and restart is the agent's own judgement rather than a deterministic check. Worth
 tracking as a real pattern if it holds up outside a demo; the source gives no way to verify
 that it does.
+
+## Update 2026-10: two more mechanisms, one from each side of the API
+
+Anthropic's Mods ([[claude-code-next-era-thariq]]) are a fifth way to start the next turn: an in-process
+plugin that runs on every turn, can fork a sub-agent that inherits the cache and returns structured
+output, and can change what is displayed. His examples are a "has this task been completed" check that
+triggers a quiz, a supervisor that proposes next steps, and an assumption register. They are Stop
+hooks that can use the conversation state and an agent. OpenAI's side
+([[openai-devday-computer-use-and-decisions-api]]) is the API-level counterpart: async tool calls that
+let the model keep reasoning while a tool runs, and messages injected mid-turn when it returns, both over
+WebSockets and both needing the model to be trained for them.

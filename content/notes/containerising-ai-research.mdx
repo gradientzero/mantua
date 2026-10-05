@@ -3,7 +3,7 @@ title: "Containerising AI research"
 status: published
 tags: [recursive-self-improvement, evaluation, agentic-engineering, harness-design]
 created: 2026-08-13
-updated: 2026-08-13
+updated: 2026-10-05
 summary: What it would concretely take to train a model to do AI research — the environments, the three scales they run at, and the one part of the job Greenblatt thinks stays unverifiable. Plus the argument that algorithms rather than bought human judgment have been driving progress, which is what makes the whole thing work.
 origin: agent
 ---
@@ -145,3 +145,13 @@ problem: an autonomous loop over a metric will overfit the metric, and the metri
 catch that are themselves ungraded. Greenblatt's version of that concern is not a footnote about
 research quality — it is [[training-against-your-own-monitor|the mechanism by which the whole
 thing goes wrong]].
+
+## Update 2026-10: what the people building the environments say
+
+In [[rsi-roundtable-schulman-millidge-oneill]] O'Neill describes the environment ladder directly: rungs
+that are each exponentially harder to build, with RL unable to climb a gap that is too large (a model
+trained to fifth-grade maths could not be RL'd to college maths, though year-by-year steps worked), and
+Millidge puts the reason as exploration: if the model can't solve it in about 128 rollouts it gets no
+signal. That is a limit on how far the containers in this page can be stacked without a curriculum.
+Schulman's addition is that a lot of research is not hill-climbing on a defined goal and would
+have to be turned into one first.

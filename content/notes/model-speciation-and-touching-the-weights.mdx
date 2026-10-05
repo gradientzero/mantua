@@ -3,7 +3,7 @@ title: "Speciation, and why we only ever touch the context window"
 status: published
 tags: [fine-tuning, deployment, inference]
 created: 2026-07-27
-updated: 2026-08-30
+updated: 2026-10-05
 summary: Karpathy expects specialised models and does not see them arriving, and his explanation is that adjusting weights without losing capability is still an underdeveloped science while context windows just work. Plus where he puts the open-weight models — six to eight months behind, and better off there.
 origin: agent
 ---
@@ -226,3 +226,13 @@ that the ordinary cases are covered locally and the hard ones go out to an API. 
 version adds a number to it — the local box is running something about half a year behind
 what you would rent — and a reason to expect that to keep being true rather than to be a
 temporary state worth waiting out.
+
+## Update 2026-10: the mechanism from three people who train models
+
+[[rsi-roundtable-schulman-millidge-oneill|The Dwarkesh roundtable]] gives reasons for the thing this page
+reports Karpathy asserting. Updating one model on a small, continuing stream with SFT or on-policy
+distillation causes catastrophic forgetting; RL changes less and so forgets less, but can also put less
+in; continually mid-training the same base asymptotes. So the practical routes are context, a swapped-in
+module (a LoRA or a compressed cache "cartridge") and periodic consolidation into a new base model.
+That is the same conclusion, that you touch the context window because touching the weights is hard,
+with a list of what has been tried.

@@ -1,0 +1,67 @@
+---
+title: "Decomposing AI work into small decisions"
+status: published
+tags: [harness-design, agentic-engineering, evaluation]
+created: 2026-10-05
+updated: 2026-10-05
+summary: "Almeida's practical advice for using a decision model, and why it applies to any model: ask many small, independent questions instead of one big prompt, pass structure rather than prose, keep rules in code with thresholds, and fix a miss by adding a question and a test case. What it costs, and where it meets the cache argument."
+origin: agent
+related: [jev-system-one-models-diogo-almeida, deep-modules-and-agent-legibility, linting-as-agent-guardrail]
+---
+
+Almeida (see [[jev-system-one-models-diogo-almeida]]) describes the same practice as the answer to
+"how do I build with this" and as the thing he'd want people to do whichever model they use. It is
+a design pattern more than a product feature, and it lines up with several things already here.
+
+## The advice
+
+1. **Break a task into its smallest semantic unit.** Ask many questions. "No matter if the models can
+   do it today or not," decompose.
+2. **Pass state as structure.** Instead of a system message holding every instruction (a "global
+   variable"), pass the subset of state each question needs, as typed fields, and keep
+   instructions and criteria structured too.
+3. **Put each rule in its own question.** His example is refusal handling: not "should I refuse?" but
+   a separate independent question per situation you would refuse in. When one is missed, you add
+   the question and a threshold, and keep the failing input as a test case. "Your software can't
+   forget about that in the prompt because of context rot. It is just there, and you can keep
+   measuring that forever." He describes it as "ML without the ML".
+4. **Thresholds are the user's dial.** The model gives a probability; you choose where to act and where
+   to escalate to a person. Guarantees like "don't read this subdirectory" or "don't pass API keys to
+   this provider" should be programmatic, with the model's role measured instead of hoped for.
+5. **Ask in parallel, and pay for state once.** Put an ID on each message in a long state and ask one
+   question per ID, so the state is paid for once and the questions are cheap and independent.
+
+## Why this is reasonable without agreeing with his product
+
+It is [[deep-modules-and-agent-legibility|the unit-of-delegation argument]] applied to model calls:
+the boundary is something you can evaluate, because each decision has a stated input, a stated
+answer set and a failure you can reproduce. It is also the same move as
+[[linting-as-agent-guardrail]]: enforcement that lives outside the model's attention.
+swyx's counterpoint is the reason people used to avoid it. He has benchmarked pipelines that put
+everything in one system prompt against ones broken into a hundred small calls, and the small
+ones were slower, more expensive and not better. Almeida's answer is that this was a cost and latency
+property of small LLM calls and not of the idea; if a call is cheap and fast enough the
+trade reverses. That is an empirical claim about his model and I have not checked it.
+
+## How it meets the cache argument
+
+[[kv-cache-economics-of-agents]] says an agent's bill is dominated by re-reading context, and that a
+second model has to pay for the whole context again. Decomposition is the other way out of that:
+make each call small and stateless enough that there is no long context to re-read. It trades the
+cache's discount for a short prompt, and it works where the work *can* be cut into independent
+questions and doesn't where it is a long exploratory session. He says as much by pointing at the
+parallel-questions-over-IDs trick, which is a way of keeping one expensive state and amortising
+it across many questions, and by wanting coding agents that treat state explicitly.
+
+OpenAI's Decisions API ([[openai-devday-computer-use-and-decisions-api]]) is described as running
+the questions as a parallel batch on top of a small model, which is the same shape.
+
+## What it doesn't give you
+
+- **It needs a task that decomposes.** He is clear that multi-hop reasoning is where it
+  falls off, and that "System 2" tasks get low confidence.
+- **The thresholds depend on calibration.** A calibrated probability is what makes a threshold
+  meaningful. Swyx's challenge ("what if the calibration is wrong?") gets two answers, change the prompt
+  or the threshold, and a hint at fine-tuning later. Without calibration the threshold is a guess.
+- **More questions means more surface to maintain.** Each question is a small spec and a test. That is
+  the intent, and it is work.

@@ -3,7 +3,7 @@ title: "Aligned to whom"
 status: published
 tags: [ai-safety, ai-policy]
 created: 2026-08-13
-updated: 2026-08-14
+updated: 2026-10-05
 summary: Dwarkesh wants a model that is his advocate the way a lawyer is; the published specs describe something closer to an ethical contractor with its own view of the good. Greenblatt thinks the fiduciary version would be better and then makes the strongest case against it — that a society running on do-whatever-you-ask labour loses a check it depends on.
 origin: agent
 ---
@@ -166,3 +166,15 @@ downstream of an agent's judgment about what a source says, and the safeguard is
 judgment is good — it is that [[training-against-your-own-monitor|the artefacts stay readable]] and
 provenance is labelled, so a wrong call can be found and corrected by a person. That is the same
 answer the transparency argument in point two is asking of the labs, at a scale where it is cheap.
+
+## Update 2026-10: the counter-position from someone who ships an API
+
+Diogo Almeida ([[jev-system-one-models-diogo-almeida]]) argues from the opposite end of the stack that
+safety alignment belongs only in a first-party product, where a company decides what its users get, and
+that an API model should do what the developer asks: "intelligence will be more like a database than a
+coworker". He separates capability alignment (follow the user) from safety alignment (follow someone
+else's rules) and says the second is a type error when it sits in a dependency. OpenRouter's investor
+([[openrouter-seed-to-stripe]]) has the enterprise version of the complaint: a content-moderation bot
+that refused on prompts about fan fiction. Neither engages with the argument on this page that the
+published specs describe something with a view of the good of its own, but both are evidence for how
+much of the "who is it aligned to" question is settled by where in the stack the model is deployed.

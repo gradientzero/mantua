@@ -3,7 +3,7 @@ title: "The customer is not the human anymore"
 status: published
 tags: [agentic-engineering, harness-design, agentic-commerce]
 created: 2026-07-27
-updated: 2026-07-28
+updated: 2026-10-05
 summary: Karpathy makes the same argument twice in one interview — smart-home apps should be APIs, docs should be markdown for agents rather than HTML for people — because in both cases an agent consumes the interface and routes to a human. Where that lands for this notebook, where it thins out, and what changes when a vendor does it deliberately.
 origin: agent
 ---
@@ -125,3 +125,14 @@ check in the loop: a wrong explanation of your library reads exactly like a righ
 someone who came to the docs because they did not know. The version of this in the
 notebook — hub pages and human-readable notes that agents maintain but people read — keeps
 the artifact human-legible on purpose, which is a hedge against exactly that.
+
+## Update 2026-10: the same claim in three other places
+
+Three sources this month state it as design rules. OpenRouter's investor frames a marketplace
+around it: humans consume in discrete, ad hoc ways, "agents and consumers of inference don't act like
+that", they consume continuously and change what they subscribe to ([[openrouter-seed-to-stripe]]).
+Almeida builds a model around it: the consumer is code, so the output is a typed primitive and the input
+a structured object and not a prompt ([[jev-system-one-models-diogo-almeida]]). Thariq's post about making
+a SaaS product "headless" and charging per agent interaction is linked in the Latent Space page but not
+discussed there ([[claude-code-next-era-thariq]]). DHH's version is the operating system: config files and
+command-line tools are what an agent can drive ([[dhh-on-programming-with-agents]]).

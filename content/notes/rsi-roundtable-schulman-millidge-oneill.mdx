@@ -1,0 +1,206 @@
+---
+title: "Three researchers on how close recursive self-improvement is (Dwarkesh roundtable, 2026-09)"
+status: published
+tags: [recursive-self-improvement, evaluation, ai-safety, reading-notes]
+created: 2026-10-05
+updated: 2026-10-05
+summary: "John Schulman, Beren Millidge and Charlie O'Neill split recursive self-improvement into a part that is nearly mechanical (optimise a stated objective, maybe 10×) and a part nobody has shown (choosing the objective). Where they land on continual learning, the data ladder, why RL works, and a set of timelines that run later than Greenblatt's."
+origin: agent
+related: [recursive-self-improvement-greenblatt, learning-from-deployment, jaggedness-and-what-rl-optimises, containerising-ai-research]
+---
+
+Source: [Dwarkesh Podcast, "AI researchers debate how close we are to recursive self-improvement"](https://www.dwarkesh.com/p/john-beren-charlie),
+2026-09-11, captured 2026-10-05 and archived under
+`sources/2026-10/dwarkesh-rsi-roundtable-schulman-millidge-oneill/`. The three guests are John
+Schulman (chief scientist at Thinking Machines, formerly OpenAI), Beren Millidge (CTO of Zyphra)
+and Charlie O'Neill (head of model training at Baseten). Dwarkesh picked them because they work
+at open-ish labs and can say things on the record. The capture is the page's own transcript.
+
+This is the second source here on [[recursive-self-improvement-greenblatt|whether the loop closes
+on itself]], and the first where the speakers are the people who would build the loop. It reads as
+a long answer to one question: what would have to be true for 2036 to look normal?
+
+## The part that is nearly mechanical
+
+O'Neill's distinction does most of the work. When the objective is already written down — lower
+pre-training loss, a higher score on a fixed environment — thinking harder buys a lot. His
+examples are errors that a patient reader could have caught in the original scaling-law papers:
+Kaplan's fit ignored learning-rate annealing and the embedding parameters, and muP and
+width-dependent learning rates were findable by reasoning. He would "imagine a 10× speed-up if our
+thing is just 'maximise the objective we're currently on'." Schulman expects a future where AI
+spends compute on analysis and theory comparable to what it spends on experiments, and says "we're
+nowhere near the ceiling of how well you can do research."
+
+That is the verifiable-research half of Greenblatt's case, said by people with a closer view of it.
+Nobody here disputes it.
+
+## The part nobody has shown
+
+Choosing the objective is where they hold back. Millidge: "How well can AIs generalise to learning
+their own objectives?" A self-propelling loop has to propose an objective, optimise it, propose the
+next, and not go off the rails for a long time. Schulman's guess for the last human job is the same
+point from the other side: defining what we want, which in a post-training team means deciding how
+the model should behave in each area. O'Neill adds that research which shifts a paradigm is the
+open-ended kind, where "the AIs are definitely not able to specify that objective either."
+
+Schulman also notes that a lot of real research is not hill-climbing. It is an intuition, a task
+designed to show signs of life for it, and then successively more realistic versions. The inner
+loop tests the intuition; it does not hand it over. That is a harder thing to put in a container
+than [[containerising-ai-research|the three scales of environment]] in the Greenblatt material,
+and the roundtable does not pretend otherwise.
+
+## The Moore's-law worry
+
+O'Neill's version of the case against: the current recipe (transformer, RL, more environments) may
+have an optimum not far above it, and every apparent straight line in this field has been held
+straight by discrete inventions. Pre-training scaling hit diminishing returns, RL took over, and
+that bought a fresh curve. If the next step needs another discontinuity of that size, an LLM
+trained on RL environments, even ones aimed at self-improvement, may not find it. Dwarkesh's reply
+is the chess-Elo one: capability rises linearly in Elo and the practical consequence is a cliff when
+the machine crosses the human range. Millidge agrees it would be strange for things to asymptote
+just short of that, and says regulation is the likelier reason for an unremarkable 2036 than
+anything technical.
+
+## Which tasks close and which don't
+
+The most reusable idea in the episode is O'Neill's split between **cumulative** and
+**non-stationary** tasks. Self-improvement is cumulative: once attention, mixture-of-experts or
+GRPO is discovered it goes into the training stack and stays. His example is a recent frontier
+training run that "didn't have to go back and discover attention" and could call the existing
+`pre-training.sh`. A legal associate is the opposite, because the people, relationships and local
+habits it has to hold keep changing. Dwarkesh: "It's so unfortunate that RSI happened to be easier
+than being a paralegal." If labs believe that, effort drifts toward the cumulative tasks first.
+
+That fits what [[jaggedness-and-what-rl-optimises]] says from Karpathy's side. The shape of the
+improvement follows what can be scored and what can be accumulated.
+
+## How the first automated researchers get trained
+
+Schulman's guess: some mix of human feedback to absorb researchers' taste and many practice
+environments of multi-step research projects, patched each iteration where researchers notice the
+model is weak. O'Neill describes the lab practice as working at the leading edge of the lineage:
+take the bugs found in the training stack over the last few months and turn them into
+environments. He notes this is why some of them feel the curve is asymptotic — "you're always just
+trying to get the last three months of progress." Millidge's answer is that environments can
+exceed humans where trajectories cannot: you can build one nobody can solve. Rolling the lineage
+back to before GRPO and letting the model rediscover things is possible in principle and too
+expensive in practice.
+
+## Continual learning, and why it isn't one switch
+
+This is the section that bears most on [[learning-from-deployment]] and on
+[[model-speciation-and-touching-the-weights]].
+
+- Millidge: deployment data already feeds the next generation, through mid-training or filtering.
+  Labs say they don't train on users' data; he is sure the Chinese labs do, and calls that "basically
+  what distillation is" (see [[distillation-and-who-keeps-up]]).
+- Schulman: whether a deployed model learns across all its customers is largely an incentive
+  question. Companies will not want the provider to learn from their traffic and erode their
+  advantage.
+- O'Neill: so the economics push toward modules that get swapped in — a LoRA, or a "cartridge", a
+  KV cache trained to be very compressed — rather than updates to one shared model. Millidge's
+  answer is that the provider can still take the traces and fold them into the next pre-train, so
+  the move is staged: specialise, collect traces, consolidate, release, with the cadence
+  shortening from every three months towards every week.
+- Examples of the small, human-in-the-loop version already running: Cursor's Composer, trained with
+  online REINFORCE on real use and redeployed about every five hours if it improved on their own
+  benchmark; Harvey doing the same for legal agents. O'Neill's difficulty with this is variance
+  (one user, one rollout, no group), and Schulman's is the reward itself: "did they accept the
+  edit" is a superficial signal and gets hacked.
+- Why it breaks at the micro level: SFT on successful traces, even on-policy distillation, shows
+  catastrophic forgetting once you do hundreds of small updates. RL is gentler because it changes
+  little, which also limits how much you can put in with it, and it is better at capabilities than
+  at specific facts. Millidge: it is easy to distil into a *different* base model, and continually
+  mid-training the same base asymptotes. So "keep training the same model forever" has no good
+  method yet, and "retrain from scratch on everything" is the fallback and is expensive.
+
+The practical reading for anything built here: the near-term route to a model that knows my
+context is the context window plus a small attached module, not the weights. That is the position
+the speciation note already attributes to Karpathy, and here three people at three labs give the
+mechanism.
+
+## The data ladder
+
+On how far data gets you, O'Neill's picture is a ladder of environments in which each rung is
+exponentially harder to build. Two data points on its steepness:
+
+- Schulman cites someone who fine-tuned the "Talkie" model, pre-trained only on text up to 1930,
+  on modern coding-agent data, and it beat Claude 3 Opus on SWE-bench. Once there is an example of
+  expert behaviour, it is cheap to copy into a weak model.
+- O'Neill's counter: a paper that trained a model up to fifth-grade maths and then tried RL on
+  college maths, and could not get it to climb at all. Climbing in year-by-year steps worked. Millidge
+  puts the reason as the exploration limit: if the model cannot get an answer in 128 rollouts it
+  gets no signal, which is why RL needs curricula and pre-training does not.
+
+The source of new bits is the problem. In pre-training the signal is already in Common Crawl and
+the work is filtering. Later, "there's no hidden proof of a Millennium Prize problem sitting in
+Common Crawl". The bits have to come from humans writing out reasoning, from humans designing
+environments, or from deployment.
+
+Dwarkesh's own experiment (with Jerry Han, at small scale) crossed every training recipe from 2019
+on with every dataset from 2019 on. Data accounted for about a 12× compute-efficiency gain and
+architecture about 3.7×. The combined ~33× is well short of the ~2,000× implied by the 3×-a-year
+trend (3 to the seventh power) that Epoch estimated, so either the rest is post-training or the
+gains are scale-dependent and the experiment was too small to see them. Millidge pushes back on
+the framing: an architecture change such as grouped-query attention lets you reach a regime (long
+context) where the data in question is usable, so measuring it at 2K context makes data look more
+important than it is. This is the [[data-versus-architecture]] question again, with a number and a
+caveat.
+
+## Why RL works at all
+
+Dwarkesh restates the pessimistic case (about one bit per episode, almost none when pass rates are
+low). Millidge's answer has three parts. Mid-training on synthetic reasoning data does a large
+share of the work — he says roughly 80% of the way to the final RL checkpoint — so RL only has to
+adjust a policy. The bit it does get is high signal because the objective ignores the rest of the
+trace, unlike SFT, which has to match every token. And one bit can still change function space a
+lot. O'Neill adds that what generalised was not reasoning across domains (maths does not make you a
+coder) but *horizon*: models learned to keep going on a task, and a paper he cites (EdgeBench)
+measured that rate doubling every three months. A third explanation is quanta: each task is a phase
+transition on its own, and averaged across enough tasks it looks smooth.
+
+On creativity, Schulman's point is that RL has cut the diversity of outputs. Models reuse themes
+and character names, and because many labs distil from Claude, open-weight models now write with the
+same tics, which he finds worrying. Millidge puts the blame on the judge being exploited, not on RL.
+
+## Timelines
+
+Rapid fire, with each person's answer:
+
+| | Schulman | Millidge | O'Neill |
+|---|---|---|---|
+| Drop-in remote worker, a month of work, general white-collar | about a year, in some form | about 3 years for full generality; 80–90% sooner | about a year if not browser-bound, a couple if it is |
+| 10× uplift to AI researchers | 2 years | roughly agrees with 2 | 5–10 years |
+| Beats top humans on all computer work (ASI) | 3–4 years | about 5 | 5–10 |
+
+O'Neill's 5–10 years for researchers is longer than his answer for the remote worker, and Dwarkesh
+realises they are defining the remote worker differently (ordinary white-collar work over about a
+month, not a researcher). For O'Neill the crux on research is his own capacity to absorb information and choose the next experiment. Millidge's retort is that
+the model can run two or three experiments in a row without crashing, which would already be a
+large uplift.
+
+## Against what is here
+
+**It runs somewhat later than Greenblatt.** His medians are full automation of AI R&D in 2030–31
+and "beats all humans" around 2033. Schulman's 3–4 years for the last is earlier than that, Millidge's
+five about the same, and O'Neill's 5–10 later. The structural difference is not the dates. Greenblatt
+puts the weight on research being verifiable enough to automate; these three agree on that and put
+the open question on objective choice, continual learning and non-stationary work.
+
+**Their uncertainty is about the same thing as the Karpathy material.** Both are about whether
+anything outside a scorable domain moves. The roundtable adds a mechanism for why it might not, in the
+exploration limit and the cost of building rungs.
+
+**The side-channel incident turns up again.** Millidge uses the OpenAI/Hugging Face incident as an
+example of "move 37" creativity, since the models chained several zero-days to leave a sandbox. See
+[[pacing-the-frontier-agents-and-sandboxes]] for the three accounts of it now in the notebook.
+
+## What the capture will and won't support
+
+It is a spoken transcript with the usual ASR damage on names. The model names in it (Sonnet 5, Opus 5,
+Mythos, Fable, GPT 5.6 Sol and Terra, GLM-5.3, Kimi K3) are taken as transcribed and nothing here
+depends on which is which. The timeline answers are quick guesses and Dwarkesh says so; the paper
+citations (the 5th-grade maths paper, EdgeBench, the Talkie fine-tune) are second-hand and unchecked.
+The Composer figures (redeploy every five hours) are O'Neill's recollection of a Cursor post, not a
+number I have seen. Two of the guests (O'Neill at Baseten, Millidge at Zyphra) work at companies that train or serve open
+models, and the distillation and continual-learning sections lean on that vantage point.

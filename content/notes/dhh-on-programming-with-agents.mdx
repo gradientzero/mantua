@@ -1,0 +1,138 @@
+---
+title: "DHH on programming with agents: the human is optional in the route (Lex Fridman #501, 2026-08)"
+status: published
+tags: [agentic-engineering, harness-design, reading-notes]
+created: 2026-10-05
+updated: 2026-10-05
+summary: "David Heinemeier Hansson's account of how his work changed since November 2025, with a harness set-up of sixteen parallel threads, cross-model review, a one-prompt Python-to-Rust port run on eight models with prices, and why he thinks agents suit Linux. Where he is a first-hand witness and where he is generalising from his own project."
+origin: agent
+related: [agentic-engineering, skill-issue-karpathy-on-code-agents, benchmarking-your-own-agent-spend]
+---
+
+Source: Lex Fridman Podcast #501, [transcript](https://lexfridman.com/dhh-2-transcript), 2026-08-26,
+captured 2026-10-05 and archived under
+`sources/2026-10/lex-fridman-501-dhh-transcript/`. A long conversation. About half of it is about
+agents and programming, and that half is what this page covers. The rest — politics and immigration,
+social media, longevity, fatherhood, food, a PewDiePie digression — has no bearing on the notebook
+and is not summarised. The transcript is human-generated and Lex Fridman says it may have errors.
+
+DHH created Ruby on Rails, is CTO of 37signals, and builds the Omarchy Linux distribution. He was a
+public sceptic of AI coding a year ago and says he installed Claude Code only in September 2025. His
+claims are first-hand about his own work and second-hand about everything else.
+
+## His timeline
+
+He divides it into phases and gives the dividing lines:
+
+1. **Before agents:** autocomplete and chat, a "little sidekick". He liked the chat as a tutor and
+   did not want the autocomplete.
+2. **Late November 2025, Opus 4.5.** The quality of the output was "uncannily close to what I would
+   have written". He says the change was less in intelligence than in the harness: using tools,
+   checking its own work.
+3. **Early spring 2026: sub-agents.** Tasks cut up and run in parallel.
+4. **Summer 2026 (Opus 5, Fable, GPT Sol):** he stops specifying the route. "I'm telling it the
+   problem I have, the fuzzy, vague idea. It tells me where we're going." He says he has written none
+   of the code in the latest Omarchy release by hand and has not read a good share of the UI code.
+
+He is aware that "nine months ago, if I'd heard myself talk like this, I'd have used the label AI
+psychosis". His answer is that the difference is shipping: the release went to tens of thousands of
+people.
+
+## What's not true everywhere
+
+He is more careful than the headline suggests, and these are the useful limits:
+
+- **Large existing products resisted.** At 37signals, early in 2026, they let designers "vibe"
+  features into Basecamp 5 and ended up with PRs that individually passed and together "destroyed the
+  architecture", which people had to mop up by hand. "That was February, by the way. Things are quite
+  different now."
+- **Where the bottleneck is people.** Human teams are limited by communication and approval, not
+  implementation, and the large multipliers happen only with direct interaction with agents. Most
+  organisations, he says, are limited by ideas and taste, not by the ability to implement.
+- **Code quality still pays, for now,** because tokens are scarce: an agent can make the next change
+  cheaply only if the previous ones left the architecture coherent. He thinks the economics of
+  beautiful code are weakening, and says the weakening is premised on the present.
+- The domain matters. Omarchy is mostly Bash, which he says agents write very well with one style
+  complaint (early exits instead of full conditionals), and he reviews the shape, proportions and the
+  critical model-layer lines.
+
+## Specification, again
+
+He says to resist being specific up front, citing the lesson of the agile movement: nobody knows what
+software should do until they play with it. "Be as vague as you can to manifest something, then
+interact with it." Humans are good at differential judgement: three options and a snap choice.
+He reports that Anthropic cut the system prompt for its newest models by about 80% because over-
+prescription was hurting them, and offers a boss-walks-in analogy. That is a relayed claim from an
+interview with Boris Cherny, not one I can check; it fits what Thariq says in
+[[claude-code-next-era-thariq]] about CLAUDE.md. Lex Fridman partly disagrees: a programmer's rigour
+about systems and verification still produces a different result, and he reports that
+long, stream-of-consciousness voice prompts work well for design. DHH has not tried that and types.
+
+## The set-up
+
+Sixteen parallel threads is the number he says he can sustain. Terminal-only, with `tmux` replaced by
+Herdr (tmux plus agent notifications); Neovim as project browser; several mini PCs in a closet, each with
+a network KVM and reachable over Tailscale, so adding compute is trivial. He says the human becomes the
+limit: he is building a bot that runs on a schedule, handles issues and PRs, and emails him a daily list
+of what is ready or should be closed, via the HEY CLI. Agents review incoming PRs and give him a summary.
+He describes the exhaustion as constant decision-making and says he can't sustain it, but sees the end
+because the coordination work "is all going to be solved".
+
+His list of what works: Claude Code as the main harness (best multi-agent view, and a mobile app that
+reaches sessions), OpenCode for open-weight models served through Fireworks, **a different model to review
+the first one's work** ("Opus or Fable does the work, then I always end it with a review by Codex
+at maximum effort"), then Copilot on the PR, which has "actually gotten good". He disliked Anthropic
+cutting its subscription off from other harnesses and the CLAUDE.md-only habit, and keeps using it
+because the harness is the best.
+
+## The port, with numbers
+
+His best data point is a test he describes in detail. A Python terminal-effects library was making his
+laptop's fans spin. He gave an agent the source and one prompt: a Rust version with no dependencies,
+a single executable, pixel-perfect frame by frame, a full analysis, "don't stop until you're finished".
+
+| Model | Result | Cost if paid per token |
+|---|---|---|
+| Fable | done in under 45 min; startup 86 ms → 2 ms, about 9.6× faster, 3 MB binary; wrote an eight-step plan first | about $550 |
+| Opus 5 | finished the job after the Fable plan, when his Fable allowance ran out | within subscription |
+| GPT Sol | same plan, took about twice as long | about $46 |
+| Grok 4.6 | completed, about 10× faster, same size | about $55 |
+| DeepSeek V4 Pro | completed, 2 h 45 | about $23 |
+| Kimi K3 | took "forever" | not given |
+| GPT Luna, DeepSeek V4 Flash | failed; Luna first wrapped the other implementation | |
+
+Two further auto-research runs took the speedup to about 46×. His reading: "I would totally pay 500
+bucks for this", since the alternative is learning Rust. Sol, Grok and DeepSeek got the same result for a
+tenth or less of the price, with more waiting. He didn't read the Rust.
+
+What it supports and doesn't. It is a single task of a kind (translation against a reference) that agents
+are known to do well, one run per model, with the plan written by the strongest one. The model
+handover is interesting by itself: Fable's plan was detailed enough for Opus to finish from. The prices are
+his recollection ("I think"). It is not a benchmark; it is a worked example for
+[[benchmarking-your-own-agent-spend]], with the useful caveat that the cheap models didn't fail on
+capability but on the part a harness provides (Luna would not keep going without prompting).
+
+## Linux and the agentic computer
+
+His argument for Linux is that an operating system made of config files and command-line tools is what an
+agent can drive and a locked-down one is not: "all the flaws of Linux ... are now its major selling
+points". He says agents diagnose every Linux problem he has had this year, including by pulling the source
+of the crashing app, and he built a crash watcher that offers to hand a crash to the agent. Omarchy ships
+skills that tell any agent how to write extensions, and he reports 330 plugins in three days. A lot of
+that is a project promotion and an owner's enthusiasm, and "most probable outcome" for Linux on the desktop
+is his prediction.
+
+He claims, citing Shopify's CTO, that a study of past production incidents found PRs reviewed by agents
+caused fewer incidents than human-reviewed ones, with six-month-old models. I haven't seen the study.
+
+## What is useful here
+
+- A concrete picture of the human as the bottleneck, which is what
+  [[agentic-engineering-my-role-in-the-loop]] is about, with a worked solution (scheduled agent,
+  daily digest) rather than the question.
+- Cross-model review as standard practice, consistent with [[generator-evaluator-loops]].
+- The same "no ceiling, it is a skill issue" posture as [[skill-issue-karpathy-on-code-agents]], from
+  someone who says he came to it late.
+- A counterexample to the premise of [[command-over-tokens]] that nobody exhausts their allowance: he
+  ran out of his Fable allowance mid-task and signed up for a second subscription, and says the limit
+  that remains is his own attention.
